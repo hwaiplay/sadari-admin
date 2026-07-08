@@ -1,6 +1,7 @@
 HELP.md
 .gradle
 build/
+.run/
 !gradle/wrapper/gradle-wrapper.jar
 !**/src/main/**/build/
 !**/src/test/**/build/
@@ -35,3 +36,22 @@ out/
 
 ### VS Code ###
 .vscode/
+
+### Local config ###
+*.yml
+*.yaml
+*.env
+*.env.*
+
+### Logs ###
+*.log
+logs/
+
+### Frontend ###
+node_modules/
+src/main/frontend/node_modules/
+src/main/frontend/dist/
+
+### OS ###
+.DS_Store
+Thumbs.db

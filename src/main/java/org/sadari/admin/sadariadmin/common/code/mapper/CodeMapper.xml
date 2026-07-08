@@ -1,0 +1,122 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "https://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="org.sadari.admin.sadariadmin.common.code.mapper.CodeMapper">
+    <select id="getCommCodeList" resultType="org.sadari.admin.sadariadmin.common.code.vo.CodeMasterVO">
+        SELECT
+            COMM_CODE,
+            CODE_NAME,
+            CODE_EXPL,
+            USEE_YSNO,
+            REGE_ADMN,
+            REGI_DATE
+        FROM TM_CODEXM
+        ORDER BY COMM_CODE
+    </select>
+
+    <select id="getCommCodeDtl" resultType="org.sadari.admin.sadariadmin.common.code.vo.CodeMasterVO">
+        SELECT
+            COMM_CODE,
+            CODE_NAME,
+            CODE_EXPL,
+            USEE_YSNO,
+            REGE_ADMN,
+            REGI_DATE
+        FROM TM_CODEXM
+        WHERE COMM_CODE = #{commCode}
+    </select>
+
+    <select id="getCommCodeCnt" resultType="int">
+        SELECT COUNT(1)
+        FROM TM_CODEXM
+        WHERE COMM_CODE = #{commCode}
+    </select>
+
+    <insert id="setCommCode">
+        INSERT INTO TM_CODEXM (
+            COMM_CODE,
+            CODE_NAME,
+            CODE_EXPL,
+            USEE_YSNO,
+            REGE_ADMN,
+            REGI_DATE
+        ) VALUES (
+            #{commCode},
+            #{codeName},
+            #{codeExpl},
+            #{useeYsno},
+            #{regeAdmn},
+            SYSDATE
+        )
+    </insert>
+
+    <select id="getCodeList" resultType="org.sadari.admin.sadariadmin.common.code.vo.CodeVO">
+        SELECT
+            COMM_CODE,
+            COMD_CODE,
+            COMD_NAME,
+            CODE_EXPL,
+            USEE_YSNO,
+            REGE_ADMN,
+            SORT_ORDER
+        FROM TB_CODEXD
+        WHERE COMM_CODE = #{commCode}
+        ORDER BY NVL(SORT_ORDER, 9999), COMD_CODE
+    </select>
+
+    <select id="getComdCodeCnt" resultType="int">
+        SELECT COUNT(1)
+        FROM TB_CODEXD
+        WHERE COMM_CODE = #{commCode}
+          AND COMD_CODE = #{comdCode}
+    </select>
+
+    <insert id="setComdCode">
+        INSERT INTO TB_CODEXD (
+            COMM_CODE,
+            COMD_CODE,
+            COMD_NAME,
+            CODE_EXPL,
+            USEE_YSNO,
+            REGE_ADMN,
+            REGI_DATE,
+            SORT_ORDER
+        ) VALUES (
+            #{commCode},
+            #{comdCode},
+            #{comdName},
+            #{codeExpl},
+            #{useeYsno},
+            #{regeAdmn},
+            SYSDATE,
+            #{sortOrder}
+        )
+    </insert>
+
+    <delete id="delComdCode">
+        DELETE FROM TB_CODEXD
+        WHERE COMM_CODE = #{commCode}
+          AND COMD_CODE = #{comdCode}
+    </delete>
+
+    <select id="getCodeName" resultType="string">
+        SELECT COMD_NAME
+        FROM TB_CODEXD
+        WHERE COMM_CODE = #{commCode}
+          AND COMD_CODE = #{comdCode}
+          AND NVL(USEE_YSNO, 'Y') = 'Y'
+    </select>
+
+    <select id="getCodeNameByComdCode" resultType="string">
+        SELECT COMD_NAME
+        FROM (
+            SELECT COMD_NAME
+            FROM TB_CODEXD
+            WHERE COMD_CODE = #{comdCode}
+              AND NVL(USEE_YSNO, 'Y') = 'Y'
+            ORDER BY COMM_CODE
+        )
+        WHERE ROWNUM = 1
+    </select>
+</mapper>
