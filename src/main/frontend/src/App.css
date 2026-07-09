@@ -171,6 +171,36 @@ button:disabled {
   border-color: var(--border);
 }
 
+.delete-button {
+  color: #b42318;
+  background: #fff;
+  border-color: #f1b7b4;
+}
+
+.delete-button:hover {
+  color: #8a1f17;
+  background: #fff4f2;
+}
+
+.icon-toggle-button {
+  width: 32px;
+  height: 32px;
+  display: inline-grid;
+  place-items: center;
+  padding: 0;
+  border-color: var(--border);
+  border-radius: 6px;
+  color: var(--text-h);
+  background: #fff;
+  font-size: 18px;
+  line-height: 1;
+}
+
+.icon-toggle-button:hover {
+  color: var(--button-bg);
+  background: #eef6fd;
+}
+
 .content {
   width: min(100%, 1480px);
   padding: 30px 28px;
@@ -213,8 +243,29 @@ table {
 
 th,
 td {
-  padding: 14px 18px;
+  padding: 12px 16px;
   border-bottom: 1px solid var(--border);
+}
+
+.col-usee {
+  width: 92px;
+  min-width: 92px;
+  max-width: 110px;
+  white-space: nowrap;
+}
+
+.col-sort {
+  width: 72px;
+  min-width: 72px;
+  max-width: 86px;
+  white-space: nowrap;
+}
+
+.col-action {
+  width: 72px;
+  min-width: 72px;
+  max-width: 90px;
+  white-space: nowrap;
 }
 
 th {
@@ -240,6 +291,14 @@ tbody tr:hover td,
 
 tbody tr:last-child td {
   border-bottom: 0;
+}
+
+.empty-row td {
+  padding: 22px;
+  color: var(--muted);
+  text-align: center;
+  background: var(--panel);
+  cursor: default;
 }
 
 .empty {
@@ -296,6 +355,17 @@ tbody tr:last-child td {
   font-size: 13px;
 }
 
+.master-edit-form {
+  display: grid;
+  grid-template-columns: minmax(180px, 0.8fr) minmax(220px, 1.2fr) minmax(260px, 1.5fr) minmax(160px, 0.8fr) auto;
+  align-items: end;
+  gap: 12px;
+}
+
+.master-edit-form input[readonly] {
+  background: #f6f8fa;
+}
+
 .auth-form {
   display: grid;
   grid-template-columns: repeat(3, minmax(150px, 1fr)) auto;
@@ -332,6 +402,13 @@ tbody tr:last-child td {
   gap: 10px;
 }
 
+.section-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+  margin-top: 14px;
+}
+
 .header-actions {
   display: flex;
   gap: 10px;
@@ -365,6 +442,203 @@ tbody tr:last-child td {
   border-top: 1px solid var(--border);
 }
 
+.code-edit-table {
+  margin-top: 12px;
+}
+
+.menu-edit-table {
+  margin-top: 12px;
+}
+
+.menu-info-table {
+  margin-top: 12px;
+}
+
+.menu-info-table table {
+  min-width: 1120px;
+  border-collapse: separate;
+  border-spacing: 0;
+}
+
+.menu-info-table th {
+  width: 88px;
+  padding: 11px 14px;
+  border-right: 1px solid var(--border);
+  color: #526171;
+  background: #f8fbfd;
+  vertical-align: middle;
+  white-space: nowrap;
+}
+
+.menu-info-table td {
+  width: auto;
+  padding: 9px 12px;
+  background: #fff;
+  vertical-align: middle;
+}
+
+.menu-info-table tbody tr {
+  cursor: default;
+}
+
+.menu-info-table input,
+.menu-info-table select {
+  min-width: 0;
+  height: 38px;
+  background: #fff;
+}
+
+.menu-info-table .readonly-cell {
+  color: var(--text-h);
+  background: #fbfcfe;
+}
+
+.menu-edit-table table {
+  min-width: 1180px;
+}
+
+.menu-edit-table th,
+.menu-edit-table td {
+  padding: 10px;
+  vertical-align: top;
+}
+
+.menu-edit-table tbody tr {
+  cursor: default;
+}
+
+.menu-edit-table input,
+.menu-edit-table select {
+  min-width: 120px;
+}
+
+.menu-edit-table .col-usee select,
+.menu-edit-table .col-sort input,
+.code-edit-table .col-usee select,
+.code-edit-table .col-sort input {
+  min-width: 0;
+}
+
+.menu-edit-table .col-usee select,
+.code-edit-table .col-usee select {
+  width: 92px;
+}
+
+.menu-edit-table .col-sort input,
+.code-edit-table .col-sort input {
+  width: 72px;
+}
+
+.menu-edit-table td:nth-child(2) input {
+  min-width: 220px;
+}
+
+.code-edit-table table {
+  min-width: 860px;
+}
+
+.code-edit-table > table > thead > tr > th:first-child,
+.code-edit-table > table > tbody > tr:not(.extension-row) > td:first-child,
+.code-edit-table > table > thead > tr > th:nth-child(2),
+.code-edit-table > table > tbody > tr:not(.extension-row) > td:nth-child(2) {
+  width: 150px;
+  max-width: 150px;
+}
+
+.code-edit-table th,
+.code-edit-table td {
+  padding: 10px;
+  vertical-align: top;
+}
+
+.code-edit-table tbody tr {
+  cursor: default;
+}
+
+.code-edit-table input,
+.code-edit-table select {
+  min-width: 0;
+}
+
+.code-list-table .col-usee,
+.menu-list-table .col-usee {
+  width: 92px;
+}
+
+.menu-list-table .col-sort {
+  width: 72px;
+  text-align: center;
+}
+
+.code-edit-table td:first-child input,
+.code-edit-table td:nth-child(2) input {
+  width: 16ch;
+  min-width: 16ch;
+}
+
+.code-edit-table td:first-child input {
+  background: #f6f8fa;
+}
+
+.code-edit-table td:nth-child(3) input {
+  min-width: 220px;
+}
+
+.extension-row td {
+  background: #f8fbfd;
+}
+
+.extension-info-table {
+  width: 100%;
+  min-width: 760px;
+  border-collapse: separate;
+  border-spacing: 0;
+  overflow: hidden;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: #fff;
+}
+
+.extension-info-table th {
+  width: 112px;
+  padding: 10px 12px;
+  border-right: 1px solid var(--border);
+  color: #526171;
+  background: #f8fbfd;
+  vertical-align: middle;
+  white-space: nowrap;
+}
+
+.extension-info-table td {
+  width: 38%;
+  padding: 9px 12px;
+  background: #fff;
+  vertical-align: middle;
+}
+
+.extension-info-table tbody tr {
+  cursor: default;
+}
+
+.extension-info-table tbody tr:hover td {
+  background: #fff;
+}
+
+.code-edit-table .extension-info-table td input {
+  width: 100%;
+  min-width: 220px;
+  height: 38px;
+  background: #fff;
+}
+
+.add-detail-button {
+  margin-top: 14px;
+}
+
+.new-code-table {
+  margin-top: 12px;
+}
+
 .child-menu-form {
   display: grid;
   grid-template-columns: repeat(4, minmax(160px, 1fr));
@@ -384,6 +658,20 @@ tbody tr:last-child td {
   display: grid;
   grid-template-columns: minmax(0, 1fr) auto;
   gap: 8px;
+}
+
+.duplicate-message {
+  margin: -1px 0 0;
+  font-size: 13px;
+  font-weight: 700;
+}
+
+.duplicate-message.success {
+  color: #16833a;
+}
+
+.duplicate-message.fail {
+  color: #b42318;
 }
 
 .modal-backdrop {

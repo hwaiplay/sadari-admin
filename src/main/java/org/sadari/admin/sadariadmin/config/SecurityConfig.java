@@ -1,6 +1,7 @@
 package org.sadari.admin.sadariadmin.config;
 
 import jakarta.servlet.http.HttpServletResponse;
+import org.sadari.admin.sadariadmin.common.constant.Constant;
 import org.sadari.admin.sadariadmin.common.result.ResultData;
 import org.sadari.admin.sadariadmin.common.result.ResultEnum;
 import org.springframework.context.annotation.Bean;
@@ -16,17 +17,24 @@ import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 
 /**
- * 관리자 API 보안 설정.
+ * 관리자 API 보안 설정
  */
 @Configuration
 public class SecurityConfig {
 
-    /** Redis 인증 필터. */
+    /** Redis 인증 필터 */
     private final RedisAuthenticationFilter redisAuthenticationFilter;
 
-    /** 메뉴 권한 필터. */
+    /** 메뉴 권한 필터 */
     private final MenuAuthorizationFilter menuAuthorizationFilter;
 
+    /**
+     * 관리자 API 보안 설정 생성
+     * @Author SeungHyeon.Kang
+     * @param redisAuthenticationFilter
+     * @param menuAuthorizationFilter
+     * @return
+     */
     public SecurityConfig(
             RedisAuthenticationFilter redisAuthenticationFilter,
             MenuAuthorizationFilter menuAuthorizationFilter
@@ -36,7 +44,10 @@ public class SecurityConfig {
     }
 
     /**
-     * Redis 토큰 기반 인증과 메뉴별 권한을 설정한다.
+     * Spring Security 필터 체인 생성
+     * @Author SeungHyeon.Kang
+     * @param http
+     * @return
      */
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
@@ -46,12 +57,12 @@ public class SecurityConfig {
                 .formLogin(AbstractHttpConfigurer::disable)
                 .httpBasic(AbstractHttpConfigurer::disable)
                 .authorizeHttpRequests(auth -> auth
-                        .requestMatchers("/api/auth/login").permitAll()
-                        .requestMatchers("/api/codes/**").permitAll()
-                        .requestMatchers("/api/auth/logout", "/api/auth/me").authenticated()
-                        .requestMatchers("/api/menu-permissions/**").authenticated()
-                        .requestMatchers("/api/menus/**", "/api/code-manage/**").authenticated()
-                        .requestMatchers("/api/employees/**").authenticated()
+                        .requestMatchers(Constant.API_AUTH_LOGIN).permitAll()
+                        .requestMatchers(Constant.API_CODES_PATTERN).permitAll()
+                        .requestMatchers(Constant.API_AUTH_LOGOUT, Constant.API_AUTH_ME).authenticated()
+                        .requestMatchers(Constant.API_MENU_PERMISSIONS_PATTERN).authenticated()
+                        .requestMatchers(Constant.API_MENUS_PATTERN, Constant.API_CODE_MANAGE_PATTERN).authenticated()
+                        .requestMatchers(Constant.API_EMPLOYEES_PATTERN).authenticated()
                         .anyRequest().permitAll()
                 )
                 .exceptionHandling(exception -> exception
@@ -67,7 +78,12 @@ public class SecurityConfig {
     }
 
     /**
-     * Spring Security 예외 응답을 공통 응답으로 작성한다.
+     * Spring Security 예외 응답 작성
+     * @Author SeungHyeon.Kang
+     * @param response
+     * @param status
+     * @param resultData
+     * @return
      */
     private void writeResult(HttpServletResponse response, int status, ResultData resultData) throws IOException {
         response.setStatus(status);

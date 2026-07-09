@@ -5,8 +5,10 @@ import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import org.sadari.admin.sadariadmin.admin.vo.AdminSessionVO;
+import org.sadari.admin.sadariadmin.common.constant.Constant;
 import org.sadari.admin.sadariadmin.common.result.ResultData;
 import org.sadari.admin.sadariadmin.common.result.ResultEnum;
+import org.sadari.admin.sadariadmin.common.util.StringUtil;
 import org.sadari.admin.sadariadmin.menu.service.MenuPermissionService;
 import org.springframework.http.MediaType;
 import org.springframework.security.core.Authentication;
@@ -18,32 +20,45 @@ import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 
 /**
- * API 요청을 메뉴 권한으로 제어하는 Spring Security 필터.
+ * 메뉴 권한 기반 API 접근 제어 필터
  */
 @Component
 public class MenuAuthorizationFilter extends OncePerRequestFilter {
 
-    private static final String MENU_MNG_URL = "/sadari/adm/menu/list";
-    private static final String CODE_MNG_URL = "/sadari/adm/code/list";
-
-    /** 메뉴 권한 서비스. */
+    /** 메뉴 권한 서비스 */
     private final MenuPermissionService menuPermissionService;
 
+    /**
+     * 메뉴 권한 필터 생성
+     * @Author SeungHyeon.Kang
+     * @param menuPermissionService
+     * @return
+     */
     public MenuAuthorizationFilter(MenuPermissionService menuPermissionService) {
         this.menuPermissionService = menuPermissionService;
     }
 
     /**
-     * 메뉴 권한으로 제어할 API만 필터링한다.
+     * 메뉴 권한 필터 제외 여부 확인
+     * @Author SeungHyeon.Kang
+     * @param request
+     * @return
      */
     @Override
     protected boolean shouldNotFilter(HttpServletRequest request) {
         String uri = request.getRequestURI();
-        return !uri.startsWith("/api/menus") && !uri.startsWith("/api/code-manage");
+        // 메뉴관리 API와 코드관리 API만 메뉴 권한 대상으로 판단한다
+        return !uri.startsWith(Constant.API_MENUS_PREFIX)
+                && !uri.startsWith(Constant.API_CODE_MANAGE_PREFIX);
     }
 
     /**
-     * 요청 API와 HTTP 메서드에 맞는 메뉴 권한을 확인한다.
+     * 메뉴 권한 처리
+     * @Author SeungHyeon.Kang
+     * @param request
+     * @param response
+     * @param filterChain
+     * @return
      */
     @Override
     protected void doFilterInternal(
@@ -51,14 +66,16 @@ public class MenuAuthorizationFilter extends OncePerRequestFilter {
             HttpServletResponse response,
             FilterChain filterChain
     ) throws ServletException, IOException {
-        if ("/api/menus/sidebar".equals(request.getRequestURI())) {
+        // 사이드바 메뉴는 메뉴 목록을 그리기 위한 API이므로 권한 필터 내부 검사를 통과시킨다
+        if (Constant.API_MENU_SIDEBAR.equals(request.getRequestURI())) {
             filterChain.doFilter(request, response);
             return;
         }
 
         AdminSessionVO admin = getAdmin();
         String menuUrlx = getMenuUrlx(request);
-        if (menuUrlx == null || !hasPermission(request, menuUrlx, admin)) {
+        // API 경로에 해당하는 메뉴가 없거나 권한이 없으면 접근 거부로 분기한다
+        if (StringUtil.isEmpty(menuUrlx) || !hasPermission(request, menuUrlx, admin)) {
             writeResult(response, HttpServletResponse.SC_FORBIDDEN, ResultData.fail(ResultEnum.FORBIDDEN));
             return;
         }
@@ -67,34 +84,48 @@ public class MenuAuthorizationFilter extends OncePerRequestFilter {
     }
 
     /**
-     * SecurityContext에서 로그인 관리자 정보를 조회한다.
+     * 로그인 관리자 조회
+     * @Author SeungHyeon.Kang
+     * @return
      */
     private AdminSessionVO getAdmin() {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-        if (authentication == null || !(authentication.getPrincipal() instanceof AdminSessionVO admin)) {
+        // 인증 정보가 없거나 Principal 타입이 관리자 세션이 아니면 미인증 상태로 분기한다
+        if (StringUtil.isEmpty(authentication) || !(authentication.getPrincipal() instanceof AdminSessionVO admin)) {
             return null;
         }
         return admin;
     }
 
     /**
-     * API 경로를 메뉴 URL로 변환한다.
+     * API 경로 메뉴 URL 변환
+     * @Author SeungHyeon.Kang
+     * @param request
+     * @return
      */
     private String getMenuUrlx(HttpServletRequest request) {
         String uri = request.getRequestURI();
-        if (uri.startsWith("/api/menus")) {
-            return MENU_MNG_URL;
+        // 메뉴관리 API는 메뉴관리 화면 URL 권한으로 판단한다
+        if (uri.startsWith(Constant.API_MENUS_PREFIX)) {
+            return Constant.MENU_MANAGE_URL;
         }
-        if (uri.startsWith("/api/code-manage")) {
-            return CODE_MNG_URL;
+        // 코드관리 API는 코드관리 화면 URL 권한으로 판단한다
+        if (uri.startsWith(Constant.API_CODE_MANAGE_PREFIX)) {
+            return Constant.CODE_MANAGE_URL;
         }
         return null;
     }
 
     /**
-     * HTTP 메서드에 따라 조회, 쓰기, 삭제 권한을 확인한다.
+     * HTTP 메서드별 메뉴 권한 확인
+     * @Author SeungHyeon.Kang
+     * @param request
+     * @param menuUrlx
+     * @param admin
+     * @return
      */
     private boolean hasPermission(HttpServletRequest request, String menuUrlx, AdminSessionVO admin) {
+        // 조회 등록 수정 삭제 HTTP 메서드에 따라 메뉴 권한 항목을 분기한다
         return switch (request.getMethod()) {
             case "GET" -> menuPermissionService.hasRead(menuUrlx, admin);
             case "POST", "PUT", "PATCH" -> menuPermissionService.hasWrite(menuUrlx, admin);
@@ -104,7 +135,12 @@ public class MenuAuthorizationFilter extends OncePerRequestFilter {
     }
 
     /**
-     * Spring Security 권한 실패 응답을 공통 응답으로 작성한다.
+     * 공통 결과 응답 작성
+     * @Author SeungHyeon.Kang
+     * @param response
+     * @param status
+     * @param resultData
+     * @return
      */
     private void writeResult(HttpServletResponse response, int status, ResultData resultData) throws IOException {
         response.setStatus(status);

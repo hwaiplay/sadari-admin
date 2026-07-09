@@ -3,14 +3,14 @@ package org.sadari.admin.sadariadmin.emp.vo;
 import lombok.Data;
 
 /**
- * EMP 테이블 목록 조회 VO.
+ * EMP 목록 조회 VO
  */
 @Data
 public class EmpVO {
 
-    /** 사원 번호. */
+    /** 사원 번호 */
     private Integer empno;
 
-    /** 사원명. */
+    /** 사원명 */
     private String ename;
 }

@@ -1,0 +1,8 @@
+export const LOGIN_PATH = '/sadari/adm/login'
+export const HOME_PATH = '/sadari/adm'
+export const MENU_LIST_PATH = '/sadari/adm/menu/list'
+export const MENU_NEW_PATH = '/sadari/adm/menu/new'
+export const MENU_DETAIL_PREFIX = '/sadari/adm/menu/detail'
+export const CODE_LIST_PATH = '/sadari/adm/code/list'
+export const CODE_DETAIL_PREFIX = '/sadari/adm/code/detail'
+

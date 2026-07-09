@@ -4,88 +4,90 @@ import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletRequest;
 import org.sadari.admin.sadariadmin.admin.service.AdminRedisAuthService;
 import org.sadari.admin.sadariadmin.admin.vo.AdminSessionVO;
+import org.sadari.admin.sadariadmin.common.constant.AuthConstant;
+import org.sadari.admin.sadariadmin.common.util.StringUtil;
 import org.sadari.admin.sadariadmin.config.AuthRedisProperties;
 import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.stereotype.Service;
 
 import java.time.Duration;
+import java.util.HashMap;
 import java.util.Map;
 import java.util.UUID;
 
 /**
- * Redis에 관리자 인증 정보를 저장하고 조회한다.
+ * Redis 관리자 인증 정보 서비스 구현체
  */
 @Service
 public class AdminRedisAuthServiceImpl implements AdminRedisAuthService {
 
-    /** Redis 저장 필드: 관리자 번호. */
-    private static final String ADMN_NUMB = "ADMN_NUMB";
-
-    /** Redis 저장 필드: 권한 코드. */
-    private static final String AUTH_ROLE = "AUTH_ROLE";
-
-    /** Redis 저장 필드: 권한 레벨. */
-    private static final String AUTH_LEVEL = "AUTH_LEVEL";
-
-    /** Redis 저장 필드: 관리자 아이디. */
-    private static final String ADMN_IDXX = "ADMN_IDXX";
-
-    /** Redis 저장 필드: 관리자 이름. */
-    private static final String ADMN_NAME = "ADMN_NAME";
-
-    /** Redis 저장 필드: 부서 코드. */
-    private static final String DEPT_CODE = "DEPT_CODE";
-
-    /** 문자열 Redis 접근 도구. */
+    /** 문자열 Redis 접근 도구 */
     private final StringRedisTemplate redisTemplate;
 
-    /** Redis 인증 설정. */
+    /** Redis 인증 설정 */
     private final AuthRedisProperties properties;
 
+    /**
+     * Redis 관리자 인증 정보 서비스 생성
+     * @Author SeungHyeon.Kang
+     * @param redisTemplate
+     * @param properties
+     * @return
+     */
     public AdminRedisAuthServiceImpl(StringRedisTemplate redisTemplate, AuthRedisProperties properties) {
         this.redisTemplate = redisTemplate;
         this.properties = properties;
     }
 
     /**
-     * 관리자 권한 정보를 Redis Hash로 저장한다.
+     * 관리자 인증 토큰 저장
+     * @Author SeungHyeon.Kang
+     * @param admin
+     * @return
      */
     @Override
     public String setAdminToken(AdminSessionVO admin) {
         String token = UUID.randomUUID().toString().replace("-", "");
         String key = getRedisKey(token);
 
-        redisTemplate.opsForHash().putAll(key, Map.of(
-                ADMN_NUMB, String.valueOf(admin.getAdmnNumb()),
-                AUTH_ROLE, admin.getAuthCode(),
-                AUTH_LEVEL, String.valueOf(admin.getAuthLevel()),
-                ADMN_IDXX, admin.getAdmnIdxx(),
-                ADMN_NAME, admin.getAdmnName(),
-                DEPT_CODE, admin.getDeptCode() == null ? "" : admin.getDeptCode()
-        ));
+        Map<String, String> authMap = new HashMap<>();
+        authMap.put(AuthConstant.REDIS_ADMN_NUMB, toRedisValue(admin.getAdmnNumb()));
+        authMap.put(AuthConstant.REDIS_AUTH_ROLE, toRedisValue(admin.getAuthCode()));
+        authMap.put(AuthConstant.REDIS_AUTH_LEVEL, toRedisValue(admin.getAuthLevel()));
+        authMap.put(AuthConstant.REDIS_ADMN_IDXX, toRedisValue(admin.getAdmnIdxx()));
+        authMap.put(AuthConstant.REDIS_ADMN_NAME, toRedisValue(admin.getAdmnName()));
+        authMap.put(AuthConstant.REDIS_DEPT_CODE, toRedisValue(admin.getDeptCode()));
+
+        redisTemplate.opsForHash().putAll(key, authMap);
         redisTemplate.expire(key, Duration.ofSeconds(properties.getTokenTtlSeconds()));
         return token;
     }
 
     /**
-     * 요청 쿠키에서 토큰을 꺼내 Redis 관리자 정보를 조회한다.
+     * 관리자 세션 조회
+     * @Author SeungHyeon.Kang
+     * @param request
+     * @return
      */
     @Override
     public AdminSessionVO getAdminSessionDtl(HttpServletRequest request) {
         String token = getToken(request);
-        if (token == null) {
+        // 쿠키에서 토큰을 찾지 못하면 미인증 상태로 분기한다
+        if (StringUtil.isEmpty(token)) {
             return null;
         }
 
         String key = getRedisKey(token);
+        // Redis에 토큰 키가 없으면 만료되었거나 로그아웃된 상태로 분기한다
         if (Boolean.FALSE.equals(redisTemplate.hasKey(key))) {
             return null;
         }
 
-        Object admnNumb = redisTemplate.opsForHash().get(key, ADMN_NUMB);
-        Object authRole = redisTemplate.opsForHash().get(key, AUTH_ROLE);
-        Object authLevel = redisTemplate.opsForHash().get(key, AUTH_LEVEL);
-        if (admnNumb == null || authRole == null || authLevel == null) {
+        Object admnNumb = redisTemplate.opsForHash().get(key, AuthConstant.REDIS_ADMN_NUMB);
+        Object authRole = redisTemplate.opsForHash().get(key, AuthConstant.REDIS_AUTH_ROLE);
+        Object authLevel = redisTemplate.opsForHash().get(key, AuthConstant.REDIS_AUTH_LEVEL);
+        // 인증에 필요한 필수 Hash 값이 없으면 잘못된 토큰 상태로 분기한다
+        if (StringUtil.isEmpty(admnNumb) || StringUtil.isEmpty(authRole) || StringUtil.isEmpty(authLevel)) {
             return null;
         }
 
@@ -93,49 +95,77 @@ public class AdminRedisAuthServiceImpl implements AdminRedisAuthService {
         admin.setAdmnNumb(Long.valueOf(String.valueOf(admnNumb)));
         admin.setAuthCode(String.valueOf(authRole));
         admin.setAuthLevel(Integer.valueOf(String.valueOf(authLevel)));
-        admin.setAdmnIdxx(getHashValue(key, ADMN_IDXX));
-        admin.setAdmnName(getHashValue(key, ADMN_NAME));
-        admin.setDeptCode(getHashValue(key, DEPT_CODE));
+        admin.setAdmnIdxx(getHashValue(key, AuthConstant.REDIS_ADMN_IDXX));
+        admin.setAdmnName(getHashValue(key, AuthConstant.REDIS_ADMN_NAME));
+        admin.setDeptCode(getHashValue(key, AuthConstant.REDIS_DEPT_CODE));
         redisTemplate.expire(key, Duration.ofSeconds(properties.getTokenTtlSeconds()));
         return admin;
     }
 
     /**
-     * 요청 쿠키의 토큰에 해당하는 Redis 키를 삭제한다.
+     * 관리자 인증 토큰 삭제
+     * @Author SeungHyeon.Kang
+     * @param request
+     * @return
      */
     @Override
     public void delAdminToken(HttpServletRequest request) {
         String token = getToken(request);
-        if (token != null) {
+        // 요청 쿠키에 토큰이 있을 때만 Redis 키를 삭제한다
+        if (!StringUtil.isEmpty(token)) {
             redisTemplate.delete(getRedisKey(token));
         }
     }
 
     /**
-     * Redis 로그인 키를 만든다.
+     * Redis 로그인 키 생성
+     * @Author SeungHyeon.Kang
+     * @param token
+     * @return
      */
     private String getRedisKey(String token) {
         return properties.getRedisKeyPrefix() + ":" + token;
     }
 
     /**
-     * Redis Hash 값을 문자열로 조회한다.
+     * Redis Hash 값 조회
+     * @Author SeungHyeon.Kang
+     * @param key
+     * @param field
+     * @return
      */
     private String getHashValue(String key, String field) {
         Object value = redisTemplate.opsForHash().get(key, field);
-        return value == null ? null : String.valueOf(value);
+        // Redis Hash 필드가 없으면 null로 반환한다
+        return StringUtil.isEmpty(value) ? null : String.valueOf(value);
     }
 
     /**
-     * 요청 쿠키에서 관리자 인증 토큰을 찾는다.
+     * Redis 저장 값 변환
+     * @Author SeungHyeon.Kang
+     * @param value
+     * @return
+     */
+    private String toRedisValue(Object value) {
+        // Redis Hash는 null 값을 저장할 수 없으므로 빈 문자열로 변환한다
+        return StringUtil.isEmpty(value) ? "" : String.valueOf(value);
+    }
+
+    /**
+     * 요청 쿠키 인증 토큰 조회
+     * @Author SeungHyeon.Kang
+     * @param request
+     * @return
      */
     private String getToken(HttpServletRequest request) {
         Cookie[] cookies = request.getCookies();
-        if (cookies == null) {
+        // 요청에 쿠키가 없으면 토큰 없음으로 분기한다
+        if (StringUtil.isEmpty(cookies)) {
             return null;
         }
 
         for (Cookie cookie : cookies) {
+            // 설정된 인증 쿠키명과 일치하는 쿠키 값을 토큰으로 사용한다
             if (properties.getCookieName().equals(cookie.getName())) {
                 return cookie.getValue();
             }

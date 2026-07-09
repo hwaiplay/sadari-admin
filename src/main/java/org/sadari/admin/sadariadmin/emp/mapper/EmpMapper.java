@@ -9,7 +9,9 @@ import java.util.List;
 public interface EmpMapper {
 
     /**
-     * EMP 목록을 조회한다.
+     * EMP 목록 조회
+     * @Author SeungHyeon.Kang
+     * @return
      */
     List<EmpVO> getEmpList();
 }

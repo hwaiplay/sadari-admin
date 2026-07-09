@@ -10,33 +10,83 @@ import java.util.List;
 @Mapper
 public interface MenuMapper {
 
-    /** 로그인한 관리자의 권한 레벨로 노출 가능한 사이드바 메뉴 목록을 조회한다. */
+    /**
+     * 권한 레벨별 사이드바 메뉴 목록 조회
+     * @Author SeungHyeon.Kang
+     * @param authLevel
+     * @return
+     */
     List<MenuVO> getMenuList(@Param("authLevel") Integer authLevel);
 
-    /** 메뉴 URL 기준 권한 레벨을 조회한다. */
+    /**
+     * 메뉴 URL 기준 권한 레벨 조회
+     * @Author SeungHyeon.Kang
+     * @param menuUrlx
+     * @return
+     */
     MenuPermissionVO getMenuPermission(@Param("menuUrlx") String menuUrlx);
 
-    /** 메뉴관리 화면에 표시할 전체 메뉴 목록을 조회한다. */
+    /**
+     * 메뉴관리 전체 목록 조회
+     * @Author SeungHyeon.Kang
+     * @return
+     */
     List<MenuVO> getMenuMngList();
 
-    /** 메뉴 복합키로 메뉴 상세를 조회한다. */
+    /**
+     * 메뉴 상세 조회
+     * @Author SeungHyeon.Kang
+     * @param menuNumb
+     * @param subxNumb
+     * @return
+     */
     MenuVO getMenuDtl(@Param("menuNumb") String menuNumb, @Param("subxNumb") String subxNumb);
 
-    /** 특정 상위 메뉴 아래의 하위 메뉴 목록을 조회한다. */
+    /**
+     * 하위 메뉴 목록 조회
+     * @Author SeungHyeon.Kang
+     * @param menuNumb
+     * @return
+     */
     List<MenuVO> getSubMenuList(@Param("menuNumb") String menuNumb);
 
-    /** 신규 상위 메뉴 번호를 조회한다. */
+    /**
+     * 신규 상위 메뉴 번호 조회
+     * @Author SeungHyeon.Kang
+     * @return
+     */
     String getMenuNumb();
 
-    /** 특정 상위 메뉴 아래의 신규 하위 메뉴 번호를 조회한다. */
+    /**
+     * 신규 하위 메뉴 번호 조회
+     * @Author SeungHyeon.Kang
+     * @param menuNumb
+     * @return
+     */
     String getSubxNumb(@Param("menuNumb") String menuNumb);
 
-    /** 메뉴를 등록한다. */
+    /**
+     * 메뉴 등록
+     * @Author SeungHyeon.Kang
+     * @param menu
+     * @return
+     */
     void setMenu(MenuVO menu);
 
-    /** 메뉴 상세 정보를 수정한다. */
+    /**
+     * 메뉴 수정
+     * @Author SeungHyeon.Kang
+     * @param menu
+     * @return
+     */
     void uptMenu(MenuVO menu);
 
-    /** 메뉴를 삭제한다. */
+    /**
+     * 메뉴 삭제
+     * @Author SeungHyeon.Kang
+     * @param menuNumb
+     * @param subxNumb
+     * @return
+     */
     void delMenu(@Param("menuNumb") String menuNumb, @Param("subxNumb") String subxNumb);
 }

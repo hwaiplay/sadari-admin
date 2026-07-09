@@ -1,122 +1,256 @@
 <?xml version="1.0" encoding="UTF-8" ?>
-<!DOCTYPE mapper
-        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
-        "https://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "https://mybatis.org/dtd/mybatis-3-mapper.dtd">
 <mapper namespace="org.sadari.admin.sadariadmin.common.code.mapper.CodeMapper">
+    <!-- 공통코드 목록을 조회한다 -->
     <select id="getCommCodeList" resultType="org.sadari.admin.sadariadmin.common.code.vo.CodeMasterVO">
-        SELECT
-            COMM_CODE,
-            CODE_NAME,
-            CODE_EXPL,
-            USEE_YSNO,
-            REGE_ADMN,
-            REGI_DATE
-        FROM TM_CODEXM
-        ORDER BY COMM_CODE
+        <bind name="commYsno" value="@org.sadari.admin.sadariadmin.common.constant.Constant@COMM_YSNO"/>
+        <bind name="useeYsnoCode" value="@org.sadari.admin.sadariadmin.common.constant.Constant@USEE_YSNO_CODE"/>
+        /* getCommCodeList */
+        SELECT COMM_CODE
+             , CODE_NAME
+             , CODE_EXPL
+             , USEE_YSNO
+             , FN_GET_CODE_NAME(#{commYsno}, USEE_YSNO, #{useeYsnoCode}) AS USEE_YSNO_NAME
+             , REGI_ADMN
+             , FN_GET_ADMIN_NAME(REGI_ADMN) AS REGI_ADMN_NAME
+             , REGI_DATE
+             , UPDT_ADMN
+             , FN_GET_ADMIN_NAME(UPDT_ADMN) AS UPDT_ADMN_NAME
+             , UPDT_DATE
+          FROM TM_CODEXM
+      ORDER BY COMM_CODE
     </select>
 
+    <!-- 공통코드 상세를 조회한다 -->
     <select id="getCommCodeDtl" resultType="org.sadari.admin.sadariadmin.common.code.vo.CodeMasterVO">
-        SELECT
-            COMM_CODE,
-            CODE_NAME,
-            CODE_EXPL,
-            USEE_YSNO,
-            REGE_ADMN,
-            REGI_DATE
-        FROM TM_CODEXM
-        WHERE COMM_CODE = #{commCode}
+        <bind name="commYsno" value="@org.sadari.admin.sadariadmin.common.constant.Constant@COMM_YSNO"/>
+        <bind name="useeYsnoCode" value="@org.sadari.admin.sadariadmin.common.constant.Constant@USEE_YSNO_CODE"/>
+        /*getCommCodeDtl*/
+        SELECT COMM_CODE
+             , CODE_NAME
+             , CODE_EXPL
+             , USEE_YSNO
+             , FN_GET_CODE_NAME(#{commYsno}, USEE_YSNO, #{useeYsnoCode}) AS USEE_YSNO_NAME
+             , REGI_ADMN
+             , FN_GET_ADMIN_NAME(REGI_ADMN) AS REGI_ADMN_NAME
+             , REGI_DATE
+             , UPDT_ADMN
+             , FN_GET_ADMIN_NAME(UPDT_ADMN) AS UPDT_ADMN_NAME
+             , UPDT_DATE
+          FROM TM_CODEXM
+         WHERE COMM_CODE = #{commCode}
     </select>
 
+    <!-- 공통코드 중복 검사용 개수를 조회한다 -->
     <select id="getCommCodeCnt" resultType="int">
+        /*getCommCodeCnt*/
         SELECT COUNT(1)
-        FROM TM_CODEXM
-        WHERE COMM_CODE = #{commCode}
+          FROM TM_CODEXM
+         WHERE COMM_CODE = #{commCode}
     </select>
 
+    <!-- 공통코드를 등록한다 -->
     <insert id="setCommCode">
+        /*setCommCode*/
         INSERT INTO TM_CODEXM (
-            COMM_CODE,
-            CODE_NAME,
-            CODE_EXPL,
-            USEE_YSNO,
-            REGE_ADMN,
-            REGI_DATE
-        ) VALUES (
-            #{commCode},
-            #{codeName},
-            #{codeExpl},
-            #{useeYsno},
-            #{regeAdmn},
-            SYSDATE
-        )
+                                 COMM_CODE
+                                ,CODE_NAME
+                                ,CODE_EXPL
+                                ,USEE_YSNO
+                                ,REGI_ADMN
+                                ,REGI_DATE
+                                ,UPDT_ADMN
+                                ,UPDT_DATE
+                    ) VALUES (  #{commCode}
+                               ,#{codeName}
+                               ,#{codeExpl}
+                               ,#{useeYsno}
+                               ,#{regiAdmn}
+                               ,SYSDATE
+                               ,#{updtAdmn}
+                               ,SYSDATE
+                             )
     </insert>
 
+    <!-- 공통코드를 수정한다 -->
+    <update id="uptCommCode">
+        /*uptCommCode*/
+        UPDATE TM_CODEXM
+           SET CODE_NAME = #{codeName}
+             , CODE_EXPL = #{codeExpl}
+             , USEE_YSNO = #{useeYsno}
+             , UPDT_ADMN = #{updtAdmn}
+             , UPDT_DATE = SYSDATE
+         WHERE COMM_CODE = #{commCode}
+    </update>
+
+    <!-- 공통코드에 속한 세부코드 목록을 조회한다 -->
     <select id="getCodeList" resultType="org.sadari.admin.sadariadmin.common.code.vo.CodeVO">
-        SELECT
-            COMM_CODE,
-            COMD_CODE,
-            COMD_NAME,
-            CODE_EXPL,
-            USEE_YSNO,
-            REGE_ADMN,
-            SORT_ORDER
-        FROM TB_CODEXD
-        WHERE COMM_CODE = #{commCode}
-        ORDER BY NVL(SORT_ORDER, 9999), COMD_CODE
+        <bind name="commYsno" value="@org.sadari.admin.sadariadmin.common.constant.Constant@COMM_YSNO"/>
+        <bind name="useeYsnoCode" value="@org.sadari.admin.sadariadmin.common.constant.Constant@USEE_YSNO_CODE"/>
+        /*getCodeList*/
+        SELECT COMM_CODE
+             , COMD_CODE
+             , COMD_NAME
+             , CODE_EXPL
+             , OPT1_CODE
+             , OPT1_NAME
+             , OPT2_CODE
+             , OPT2_NAME
+             , OPT3_CODE
+             , OPT3_NAME
+             , OPT4_CODE
+             , OPT4_NAME
+             , USEE_YSNO
+             , FN_GET_CODE_NAME(#{commYsno}, USEE_YSNO, #{useeYsnoCode}) AS USEE_YSNO_NAME
+             , REGI_ADMN
+             , FN_GET_ADMIN_NAME(REGI_ADMN) AS REGI_ADMN_NAME
+             , REGI_DATE
+             , UPDT_ADMN
+             , FN_GET_ADMIN_NAME(UPDT_ADMN) AS UPDT_ADMN_NAME
+             , UPDT_DATE
+             , SORT_ORDER
+          FROM TB_CODEXD
+         WHERE COMM_CODE = #{commCode}
+      ORDER BY NVL(SORT_ORDER, 9999), COMD_CODE
     </select>
 
+    <!-- 세부코드 상세를 조회한다 -->
+    <select id="getCodeDtl" resultType="org.sadari.admin.sadariadmin.common.code.vo.CodeVO">
+        <bind name="commYsno" value="@org.sadari.admin.sadariadmin.common.constant.Constant@COMM_YSNO"/>
+        <bind name="useeYsnoCode" value="@org.sadari.admin.sadariadmin.common.constant.Constant@USEE_YSNO_CODE"/>
+        /*getCodeDtl*/
+        SELECT COMM_CODE
+             , COMD_CODE
+             , COMD_NAME
+             , CODE_EXPL
+             , OPT1_CODE
+             , OPT1_NAME
+             , OPT2_CODE
+             , OPT2_NAME
+             , OPT3_CODE
+             , OPT3_NAME
+             , OPT4_CODE
+             , OPT4_NAME
+             , USEE_YSNO
+             , FN_GET_CODE_NAME(#{commYsno}, USEE_YSNO, #{useeYsnoCode}) AS USEE_YSNO_NAME
+             , REGI_ADMN
+             , FN_GET_ADMIN_NAME(REGI_ADMN) AS REGI_ADMN_NAME
+             , REGI_DATE
+             , UPDT_ADMN
+             , FN_GET_ADMIN_NAME(UPDT_ADMN) AS UPDT_ADMN_NAME
+             , UPDT_DATE
+             , SORT_ORDER
+          FROM TB_CODEXD
+         WHERE COMM_CODE = #{commCode}
+           AND COMD_CODE = #{comdCode}
+    </select>
+
+    <!-- 세부코드 중복 검사용 개수를 조회한다 -->
     <select id="getComdCodeCnt" resultType="int">
+        /*getComdCodeCnt*/
         SELECT COUNT(1)
-        FROM TB_CODEXD
-        WHERE COMM_CODE = #{commCode}
-          AND COMD_CODE = #{comdCode}
+          FROM TB_CODEXD
+         WHERE COMM_CODE = #{commCode}
+           AND COMD_CODE = #{comdCode}
     </select>
 
+    <!-- 세부코드를 등록한다 -->
     <insert id="setComdCode">
+        /*setComdCode*/
         INSERT INTO TB_CODEXD (
-            COMM_CODE,
-            COMD_CODE,
-            COMD_NAME,
-            CODE_EXPL,
-            USEE_YSNO,
-            REGE_ADMN,
-            REGI_DATE,
-            SORT_ORDER
-        ) VALUES (
-            #{commCode},
-            #{comdCode},
-            #{comdName},
-            #{codeExpl},
-            #{useeYsno},
-            #{regeAdmn},
-            SYSDATE,
-            #{sortOrder}
-        )
+                                 COMM_CODE
+                                ,COMD_CODE
+                                ,COMD_NAME
+                                ,CODE_EXPL
+                                ,OPT1_CODE
+                                ,OPT1_NAME
+                                ,OPT2_CODE
+                                ,OPT2_NAME
+                                ,OPT3_CODE
+                                ,OPT3_NAME
+                                ,OPT4_CODE
+                                ,OPT4_NAME
+                                ,USEE_YSNO
+                                ,REGI_ADMN
+                                ,REGI_DATE
+                                ,UPDT_ADMN
+                                ,UPDT_DATE
+                                ,SORT_ORDER
+                    ) VALUES (  #{commCode}
+                               ,#{comdCode}
+                               ,#{comdName}
+                               ,#{codeExpl}
+                               ,#{opt1Code}
+                               ,#{opt1Name}
+                               ,#{opt2Code}
+                               ,#{opt2Name}
+                               ,#{opt3Code}
+                               ,#{opt3Name}
+                               ,#{opt4Code}
+                               ,#{opt4Name}
+                               ,#{useeYsno}
+                               ,#{regiAdmn}
+                               ,SYSDATE
+                               ,#{updtAdmn}
+                               ,SYSDATE
+                               ,#{sortOrder}
+                             )
     </insert>
 
+    <!-- 세부코드를 수정한다 -->
+    <update id="uptComdCode">
+        /*uptComdCode*/
+        UPDATE TB_CODEXD
+           SET COMD_NAME = #{comdName}
+             , CODE_EXPL = #{codeExpl}
+             , OPT1_CODE = #{opt1Code}
+             , OPT1_NAME = #{opt1Name}
+             , OPT2_CODE = #{opt2Code}
+             , OPT2_NAME = #{opt2Name}
+             , OPT3_CODE = #{opt3Code}
+             , OPT3_NAME = #{opt3Name}
+             , OPT4_CODE = #{opt4Code}
+             , OPT4_NAME = #{opt4Name}
+             , USEE_YSNO = #{useeYsno}
+             , UPDT_ADMN = #{updtAdmn}
+             , UPDT_DATE = SYSDATE
+             , SORT_ORDER = #{sortOrder}
+         WHERE COMM_CODE = #{commCode}
+           AND COMD_CODE = #{comdCode}
+    </update>
+
+    <!-- 세부코드를 삭제한다 -->
     <delete id="delComdCode">
+        /*delComdCode*/
         DELETE FROM TB_CODEXD
-        WHERE COMM_CODE = #{commCode}
-          AND COMD_CODE = #{comdCode}
+         WHERE COMM_CODE = #{commCode}
+           AND COMD_CODE = #{comdCode}
     </delete>
 
+    <!-- 공통코드와 세부코드로 세부코드명을 조회한다 -->
     <select id="getCodeName" resultType="string">
+        <bind name="yes" value="@org.sadari.admin.sadariadmin.common.constant.Constant@YES"/>
+        /*getCodeName*/
         SELECT COMD_NAME
-        FROM TB_CODEXD
-        WHERE COMM_CODE = #{commCode}
-          AND COMD_CODE = #{comdCode}
-          AND NVL(USEE_YSNO, 'Y') = 'Y'
+          FROM TB_CODEXD
+         WHERE COMM_CODE = #{commCode}
+           AND COMD_CODE = #{comdCode}
+           AND NVL(USEE_YSNO, #{yes}) = #{yes}
     </select>
 
+    <!-- 세부코드만으로 첫 번째 세부코드명을 조회한다 -->
     <select id="getCodeNameByComdCode" resultType="string">
+        <bind name="yes" value="@org.sadari.admin.sadariadmin.common.constant.Constant@YES"/>
+        /*getCodeNameByComdCode*/
         SELECT COMD_NAME
-        FROM (
-            SELECT COMD_NAME
-            FROM TB_CODEXD
-            WHERE COMD_CODE = #{comdCode}
-              AND NVL(USEE_YSNO, 'Y') = 'Y'
-            ORDER BY COMM_CODE
-        )
-        WHERE ROWNUM = 1
+          FROM (
+                SELECT COMD_NAME
+                  FROM TB_CODEXD
+                 WHERE COMD_CODE = #{comdCode}
+                   AND NVL(USEE_YSNO, #{yes}) = #{yes}
+              ORDER BY COMM_CODE
+               )
+         WHERE ROWNUM = 1
     </select>
 </mapper>

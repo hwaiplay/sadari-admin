@@ -4,11 +4,25 @@ import java.nio.charset.StandardCharsets;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 
+/**
+ * 비밀번호 해시 유틸
+ */
 public final class PasswordHash {
 
+    /**
+     * 비밀번호 해시 유틸 생성 방지
+     * @Author SeungHyeon.Kang
+     * @return
+     */
     private PasswordHash() {
     }
 
+    /**
+     * SHA256 해시 생성
+     * @Author SeungHyeon.Kang
+     * @param value
+     * @return
+     */
     public static String sha256(String value) {
         try {
             MessageDigest digest = MessageDigest.getInstance("SHA-256");

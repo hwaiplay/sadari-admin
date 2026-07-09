@@ -3,37 +3,43 @@
         PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
         "https://mybatis.org/dtd/mybatis-3-mapper.dtd">
 <mapper namespace="org.sadari.admin.sadariadmin.admin.mapper.AdminMapper">
+    <!-- 관리자 아이디로 관리자 상세와 권한 레벨을 조회한다 -->
     <select id="getAdminDtl" resultType="org.sadari.admin.sadariadmin.admin.vo.AdminVO">
-        SELECT
-            A.ADMN_NUMB,
-            A.ADMN_IDXX,
-            A.PASS_WORD,
-            A.ADMN_NAME,
-            A.AUTH_CODE,
-            C.SORT_ORDER AS AUTH_LEVEL,
-            A.DEPT_CODE,
-            A.FAIL_CNTX,
-            A.LGIN_DATE,
-            A.REGI_DATE
-        FROM TM_ADMINX A
-        LEFT JOIN TB_CODEXD C
-               ON C.COMM_CODE = 'AUTH_CODE'
-              AND C.COMD_CODE = A.AUTH_CODE
-              AND NVL(C.USEE_YSNO, 'Y') = 'Y'
-        WHERE A.ADMN_IDXX = #{admnIdxx}
+        <bind name="authCode" value="@org.sadari.admin.sadariadmin.common.constant.AuthConstant@AUTH_CODE"/>
+        <bind name="yes" value="@org.sadari.admin.sadariadmin.common.constant.Constant@YES"/>
+        /*getAdminDtl*/
+        SELECT A.ADMN_NUMB
+             , A.ADMN_IDXX
+             , A.PASS_WORD
+             , A.ADMN_NAME
+             , A.AUTH_CODE
+             , C.SORT_ORDER AS AUTH_LEVEL
+             , A.DEPT_CODE
+             , A.FAIL_CNTX
+             , A.LGIN_DATE
+             , A.REGI_DATE
+          FROM TM_ADMINX A
+     LEFT JOIN TB_CODEXD C
+            ON C.COMM_CODE = #{authCode}
+           AND C.COMD_CODE = A.AUTH_CODE
+           AND NVL(C.USEE_YSNO, #{yes}) = #{yes}
+         WHERE A.ADMN_IDXX = #{admnIdxx}
     </select>
 
+    <!-- 로그인 성공 시 실패 횟수를 초기화하고 마지막 로그인 일자를 갱신한다 -->
     <update id="uptAdminLoginSuccess">
+        /*uptAdminLoginSuccess*/
         UPDATE TM_ADMINX
-        SET
-            FAIL_CNTX = 0,
-            LGIN_DATE = SYSDATE
-        WHERE ADMN_NUMB = #{admnNumb}
+           SET FAIL_CNTX = 0
+             , LGIN_DATE = SYSDATE
+         WHERE ADMN_NUMB = #{admnNumb}
     </update>
 
+    <!-- 로그인 실패 시 실패 횟수를 증가시킨다 -->
     <update id="uptAdminLoginFail">
+        /*uptAdminLoginFail*/
         UPDATE TM_ADMINX
-        SET FAIL_CNTX = FAIL_CNTX + 1
-        WHERE ADMN_NUMB = #{admnNumb}
+           SET FAIL_CNTX = FAIL_CNTX + 1
+         WHERE ADMN_NUMB = #{admnNumb}
     </update>
 </mapper>
