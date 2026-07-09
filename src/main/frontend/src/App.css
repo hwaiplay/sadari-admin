@@ -189,7 +189,7 @@ button:disabled {
   place-items: center;
   padding: 0;
   border-color: var(--border);
-  border-radius: 6px;
+  border-radius: 50%;
   color: var(--text-h);
   background: #fff;
   font-size: 18px;
