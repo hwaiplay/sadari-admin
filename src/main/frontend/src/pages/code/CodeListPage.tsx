@@ -10,6 +10,16 @@ type CodeListPageProps = {
   onOpenRegister: () => void
 }
 
+/**
+ * 코드관리 목록 화면
+ * @Author SeungHyeon.Kang
+ * @param codeMasters
+ * @param permission
+ * @param useeYsnoCodes
+ * @param onSelect
+ * @param onOpenRegister
+ * @return
+ */
 export function CodeListPage({ codeMasters, permission, useeYsnoCodes, onSelect, onOpenRegister }: CodeListPageProps) {
   return (
     <section className="code-manage">

@@ -12,6 +12,16 @@ type MenuListPageProps = {
   onDelete: (menu: Menu) => void
 }
 
+/**
+ * 메뉴관리 목록 화면
+ * @Author SeungHyeon.Kang
+ * @param menuRows
+ * @param permission
+ * @param useeYsnoCodes
+ * @param onMovePath
+ * @param onDelete
+ * @return
+ */
 export function MenuListPage({ menuRows, permission, useeYsnoCodes, onMovePath, onDelete }: MenuListPageProps) {
   return (
     <section className="menu-manage">

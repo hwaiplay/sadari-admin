@@ -10,6 +10,18 @@ type LoginPageProps = {
   onSubmit: (event: FormEvent<HTMLFormElement>) => void
 }
 
+/**
+ * 관리자 로그인 화면
+ * @Author SeungHyeon.Kang
+ * @param admnIdxx
+ * @param passWord
+ * @param submitting
+ * @param error
+ * @param onChangeAdmnIdxx
+ * @param onChangePassWord
+ * @param onSubmit
+ * @return
+ */
 export function LoginPage({ admnIdxx, passWord, submitting, error, onChangeAdmnIdxx, onChangePassWord, onSubmit }: LoginPageProps) {
   return (
     <main className="login-page">
@@ -32,4 +44,3 @@ export function LoginPage({ admnIdxx, passWord, submitting, error, onChangeAdmnI
     </main>
   )
 }
-

@@ -25,6 +25,28 @@ type MenuDetailPageProps = {
   onDelete: (menu: Menu) => void
 }
 
+/**
+ * 메뉴관리 상세 화면
+ * @Author SeungHyeon.Kang
+ * @param isNewPage
+ * @param pageTitle
+ * @param saving
+ * @param menuForm
+ * @param menuDetail
+ * @param childForms
+ * @param subMenus
+ * @param authCodes
+ * @param useeYsnoCodes
+ * @param permission
+ * @param onMovePath
+ * @param onChangeMenuForm
+ * @param onChangeChildForm
+ * @param onSubmit
+ * @param onAddChildForm
+ * @param onSaveAllChildMenus
+ * @param onDelete
+ * @return
+ */
 export function MenuDetailPage({ isNewPage, pageTitle, saving, menuForm, menuDetail, childForms, subMenus, authCodes, useeYsnoCodes, permission, onMovePath, onChangeMenuForm, onChangeChildForm, onSubmit, onAddChildForm, onSaveAllChildMenus, onDelete }: MenuDetailPageProps) {
   return (
     <section className="menu-detail-page">
@@ -148,6 +170,16 @@ type MenuFormTableProps = {
   onChange: (field: keyof MenuForm, value: string) => void
 }
 
+/**
+ * 메뉴 기본정보 입력 표
+ * @Author SeungHyeon.Kang
+ * @param form
+ * @param menuDetail
+ * @param authCodes
+ * @param useeYsnoCodes
+ * @param onChange
+ * @return
+ */
 function MenuFormTable({ form, menuDetail, authCodes, useeYsnoCodes, onChange }: MenuFormTableProps) {
   return (
     <section className="table-wrap menu-info-table">
@@ -187,6 +219,15 @@ function MenuFormTable({ form, menuDetail, authCodes, useeYsnoCodes, onChange }:
   )
 }
 
+/**
+ * 메뉴 입력 표 셀 목록
+ * @Author SeungHyeon.Kang
+ * @param form
+ * @param authCodes
+ * @param useeYsnoCodes
+ * @param onChange
+ * @return
+ */
 function MenuTableCells({ form, authCodes, useeYsnoCodes, onChange }: MenuFormTableProps) {
   return (
     <>

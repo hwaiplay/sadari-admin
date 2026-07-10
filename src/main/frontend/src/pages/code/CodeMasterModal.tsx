@@ -13,6 +13,20 @@ type CodeMasterModalProps = {
   onSubmit: (event: FormEvent<HTMLFormElement>) => void
 }
 
+/**
+ * 공통코드 등록 모달
+ * @Author SeungHyeon.Kang
+ * @param masterForm
+ * @param useeYsnoCodes
+ * @param saving
+ * @param duplicateAvailable
+ * @param duplicateCheckedCode
+ * @param onChange
+ * @param onClose
+ * @param onCheckDuplicate
+ * @param onSubmit
+ * @return
+ */
 export function CodeMasterModal({ masterForm, useeYsnoCodes, saving, duplicateAvailable, duplicateCheckedCode, onChange, onClose, onCheckDuplicate, onSubmit }: CodeMasterModalProps) {
   const checkedCurrentCode = duplicateCheckedCode === masterForm.commCode.trim() && duplicateCheckedCode !== ''
 
@@ -44,4 +58,3 @@ export function CodeMasterModal({ masterForm, useeYsnoCodes, saving, duplicateAv
     </section>
   )
 }
-

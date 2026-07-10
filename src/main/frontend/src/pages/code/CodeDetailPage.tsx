@@ -24,6 +24,28 @@ type CodeDetailPageProps = {
     onSaveAllDetailCodes: () => void
 }
 
+/**
+ * 코드관리 상세 화면
+ * @Author SeungHyeon.Kang
+ * @param selectedMaster
+ * @param pageTitle
+ * @param masterEditForm
+ * @param detailCodes
+ * @param detailEditForms
+ * @param detailForms
+ * @param permission
+ * @param useeYsnoCodes
+ * @param saving
+ * @param onMovePath
+ * @param onChangeMasterForm
+ * @param onSaveMasterForm
+ * @param onAddDetailInput
+ * @param onChangeDetailEditForm
+ * @param onChangeDetailForm
+ * @param onSaveAllDetailEditCodes
+ * @param onSaveAllDetailCodes
+ * @return
+ */
 export function CodeDetailPage({
                                    selectedMaster,
                                    pageTitle,
@@ -296,6 +318,16 @@ type ExtensionRowProps = {
     onChange: (index: number, field: keyof DetailCodeForm, value: string) => void
 }
 
+/**
+ * 세부코드 확장 항목 행
+ * @Author SeungHyeon.Kang
+ * @param form
+ * @param index
+ * @param disabled
+ * @param colSpan
+ * @param onChange
+ * @return
+ */
 function ExtensionRow({form, index, disabled, colSpan, onChange}: ExtensionRowProps) {
     return (
         <tr className="extension-row">

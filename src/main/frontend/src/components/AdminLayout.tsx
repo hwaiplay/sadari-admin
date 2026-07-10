@@ -13,6 +13,18 @@ type AdminLayoutProps = {
   children: ReactNode
 }
 
+/**
+ * 관리자 공통 레이아웃
+ * @Author SeungHyeon.Kang
+ * @param admin
+ * @param menus
+ * @param activePath
+ * @param error
+ * @param onMovePath
+ * @param onLogout
+ * @param children
+ * @return
+ */
 export function AdminLayout({ admin, menus, activePath, error, onMovePath, onLogout, children }: AdminLayoutProps) {
   return (
     <div className="admin-layout">

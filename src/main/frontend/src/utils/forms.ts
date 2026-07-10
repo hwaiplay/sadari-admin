@@ -2,6 +2,13 @@ import { DEFAULT_AUTH_CODE, DEFAULT_USEE_YSNO } from '../constants/codes'
 import type { DetailCodeForm } from '../types/code'
 import type { Menu, MenuForm } from '../types/menu'
 
+/**
+ * 빈 메뉴 입력 폼 생성
+ * @Author SeungHyeon.Kang
+ * @param authCode
+ * @param parentMenuNumb
+ * @return
+ */
 export const emptyMenuForm = (authCode = DEFAULT_AUTH_CODE, parentMenuNumb = ''): MenuForm => ({
   menuNumb: parentMenuNumb,
   subxNumb: '',
@@ -14,6 +21,11 @@ export const emptyMenuForm = (authCode = DEFAULT_AUTH_CODE, parentMenuNumb = '')
   useeYsno: DEFAULT_USEE_YSNO,
 })
 
+/**
+ * 빈 세부코드 입력 폼 생성
+ * @Author SeungHyeon.Kang
+ * @return
+ */
 export const emptyDetailForm = (): DetailCodeForm => ({
   comdCode: '',
   comdName: '',
@@ -30,6 +42,12 @@ export const emptyDetailForm = (): DetailCodeForm => ({
   useeYsno: DEFAULT_USEE_YSNO,
 })
 
+/**
+ * 세부코드 조회값을 입력 폼으로 변환
+ * @Author SeungHyeon.Kang
+ * @param code
+ * @return
+ */
 export const toDetailCodeForm = (code: {
   comdCode: string
   comdName: string
@@ -60,6 +78,12 @@ export const toDetailCodeForm = (code: {
   useeYsno: code.useeYsno ?? DEFAULT_USEE_YSNO,
 })
 
+/**
+ * 메뉴 조회값을 입력 폼으로 변환
+ * @Author SeungHyeon.Kang
+ * @param menu
+ * @return
+ */
 export const toMenuForm = (menu: Menu): MenuForm => ({
   menuNumb: menu.menuNumb,
   subxNumb: menu.subxNumb,

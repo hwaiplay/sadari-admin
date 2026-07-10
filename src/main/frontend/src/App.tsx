@@ -20,6 +20,11 @@ import type { Permission } from './types/common'
 import type { Menu, MenuForm } from './types/menu'
 import { emptyDetailForm, emptyMenuForm, toDetailCodeForm, toMenuForm } from './utils/forms'
 
+/**
+ * 관리자 프론트 루트 컴포넌트
+ * @Author SeungHyeon.Kang
+ * @return
+ */
 function App() {
   const [admin, setAdmin] = useState<AdminSession | null>(null)
   const [menus, setMenus] = useState<Menu[]>([])
@@ -82,27 +87,53 @@ function App() {
 
   const activeMenuName = useMemo(() => menus.find((menu) => menu.menuUrlx === activeMenuPath)?.menuName ?? '', [menus, activeMenuPath])
 
+  /**
+   * 화면 경로 이동
+   * @Author SeungHyeon.Kang
+   * @param path
+   * @return
+   */
   const movePath = (path: string) => {
     if (window.location.pathname !== path) window.history.pushState(null, '', path)
     setCurrentPath(path)
   }
 
+  /**
+   * 사이드바 메뉴 목록 로드
+   * @Author SeungHyeon.Kang
+   * @return
+   */
   const loadSidebarMenuList = async () => {
     setMenus(await getSidebarMenus())
   }
 
+  /**
+   * 권한 코드 목록 로드
+   * @Author SeungHyeon.Kang
+   * @return
+   */
   const loadAuthCodeList = async () => {
     const codes = await getCodeList(AUTH_CODE)
     setAuthCodes(codes)
     return codes
   }
 
+  /**
+   * 사용여부 코드 목록 로드
+   * @Author SeungHyeon.Kang
+   * @return
+   */
   const loadUseeYsnoCodeList = async () => {
     const codes = await getCodeList(COMM_YSNO)
     setUseeYsnoCodes(codes)
     return codes
   }
 
+  /**
+   * 공통코드 등록 폼 초기화
+   * @Author SeungHyeon.Kang
+   * @return
+   */
   const resetMasterForm = () => {
     setMasterForm({ commCode: '', codeName: '', codeExpl: '', useeYsno: DEFAULT_USEE_YSNO, regiAdmn: null, regiAdmnName: null, regiDate: null, updtAdmn: null, updtAdmnName: null, updtDate: null })
     setDuplicateCheckedCode('')
@@ -110,6 +141,11 @@ function App() {
   }
 
   useEffect(() => {
+    /**
+     * 브라우저 뒤로가기 경로 동기화
+     * @Author SeungHyeon.Kang
+     * @return
+     */
     const handlePopState = () => setCurrentPath(window.location.pathname)
     window.addEventListener('popstate', handlePopState)
     return () => window.removeEventListener('popstate', handlePopState)
@@ -142,6 +178,11 @@ function App() {
     else if (isCodeDetailPage) void openCodeDetailPage(codeDetailKey)
   }, [admin, currentPath])
 
+  /**
+   * 메뉴관리 목록 화면 열기
+   * @Author SeungHyeon.Kang
+   * @return
+   */
   const openMenuListPage = async () => {
     setError(null)
     setChildForms([])
@@ -151,6 +192,12 @@ function App() {
     setMenuRows(rows)
   }
 
+  /**
+   * 메뉴 등록 화면 열기
+   * @Author SeungHyeon.Kang
+   * @param parentNumb
+   * @return
+   */
   const openMenuNewPage = async (parentNumb: string) => {
     setError(null)
     const [codes, permission] = await Promise.all([loadAuthCodeList(), getPermission(MENU_LIST_PATH), loadUseeYsnoCodeList()])
@@ -161,6 +208,13 @@ function App() {
     setMenuForm(emptyMenuForm(codes[0]?.comdCode ?? DEFAULT_AUTH_CODE, parentNumb))
   }
 
+  /**
+   * 메뉴 상세 화면 열기
+   * @Author SeungHyeon.Kang
+   * @param menuNumb
+   * @param subxNumb
+   * @return
+   */
   const openMenuDetailPage = async (menuNumb: string, subxNumb: string) => {
     setError(null)
     const [, permission, detail, children] = await Promise.all([loadAuthCodeList(), getPermission(MENU_LIST_PATH), getMenuDetail(menuNumb, subxNumb), getSubMenus(menuNumb), loadUseeYsnoCodeList()])
@@ -171,6 +225,11 @@ function App() {
     setChildForms([])
   }
 
+  /**
+   * 코드관리 목록 화면 열기
+   * @Author SeungHyeon.Kang
+   * @return
+   */
   const openCodeListPage = async () => {
     setError(null)
     const [permission, masters] = await Promise.all([getPermission(CODE_LIST_PATH), getCodeMasters(), loadUseeYsnoCodeList()])
@@ -183,6 +242,12 @@ function App() {
     setDetailForms([])
   }
 
+  /**
+   * 코드관리 상세 화면 열기
+   * @Author SeungHyeon.Kang
+   * @param commCode
+   * @return
+   */
   const openCodeDetailPage = async (commCode: string) => {
     setError(null)
     const [permission, master, details] = await Promise.all([getPermission(CODE_LIST_PATH), getCodeMaster(commCode), getDetailCodes(commCode), loadUseeYsnoCodeList()])
@@ -194,6 +259,12 @@ function App() {
     setDetailForms([])
   }
 
+  /**
+   * 로그인 처리
+   * @Author SeungHyeon.Kang
+   * @param event
+   * @return
+   */
   const handleLogin = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault()
     setSubmitting(true)
@@ -211,6 +282,11 @@ function App() {
     }
   }
 
+  /**
+   * 로그아웃 처리
+   * @Author SeungHyeon.Kang
+   * @return
+   */
   const handleLogout = async () => {
     await logoutAdmin()
     setAdmin(null)
@@ -219,6 +295,12 @@ function App() {
     movePath(LOGIN_PATH)
   }
 
+  /**
+   * 메뉴 저장 처리
+   * @Author SeungHyeon.Kang
+   * @param event
+   * @return
+   */
   const saveMenu = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault()
     setSaving(true)
@@ -235,6 +317,12 @@ function App() {
     }
   }
 
+  /**
+   * 메뉴 삭제 처리
+   * @Author SeungHyeon.Kang
+   * @param menu
+   * @return
+   */
   const deleteMenu = async (menu: Pick<Menu, 'menuNumb' | 'subxNumb'>) => {
     await deleteMenuApi(menu)
     await loadSidebarMenuList()
@@ -242,14 +330,32 @@ function App() {
     else setMenuRows(await getMenuMngList())
   }
 
+  /**
+   * 하위메뉴 입력 폼 추가
+   * @Author SeungHyeon.Kang
+   * @return
+   */
   const addChildForm = () => {
     setChildForms([...childForms, emptyMenuForm(authCodes[0]?.comdCode ?? DEFAULT_AUTH_CODE, menuForm.menuNumb)])
   }
 
+  /**
+   * 하위메뉴 입력값 변경
+   * @Author SeungHyeon.Kang
+   * @param index
+   * @param field
+   * @param value
+   * @return
+   */
   const changeChildForm = (index: number, field: keyof MenuForm, value: string) => {
     setChildForms(childForms.map((form, formIndex) => (formIndex === index ? { ...form, [field]: value } : form)))
   }
 
+  /**
+   * 하위메뉴 입력값 검증
+   * @Author SeungHyeon.Kang
+   * @return
+   */
   const validateChildForms = () => {
     const hasEmptyRequired = childForms.some((form) => !form.menuName.trim() || !form.menuUrlx.trim())
     if (hasEmptyRequired) {
@@ -259,6 +365,11 @@ function App() {
     return true
   }
 
+  /**
+   * 하위메뉴 일괄 저장
+   * @Author SeungHyeon.Kang
+   * @return
+   */
   const saveAllChildMenus = async () => {
     if (childForms.length === 0 || !validateChildForms()) return
     setSaving(true)
@@ -276,10 +387,22 @@ function App() {
     }
   }
 
+  /**
+   * 공통코드 선택
+   * @Author SeungHyeon.Kang
+   * @param master
+   * @return
+   */
   const selectCodeMaster = (master: CodeMaster) => {
     movePath(`${CODE_DETAIL_PREFIX}/${master.commCode}`)
   }
 
+  /**
+   * 선택된 공통코드의 세부코드 로드
+   * @Author SeungHyeon.Kang
+   * @param master
+   * @return
+   */
   const loadSelectedCodeDetails = async (master: CodeMaster) => {
     setSelectedMaster(master)
     setMasterEditForm(master)
@@ -289,6 +412,11 @@ function App() {
     setDetailEditForms(details.map(toDetailCodeForm))
   }
 
+  /**
+   * 공통코드 중복 검사
+   * @Author SeungHyeon.Kang
+   * @return
+   */
   const checkCommCodeDuplicate = async () => {
     const commCode = masterForm.commCode.trim()
     if (!commCode) {
@@ -302,6 +430,12 @@ function App() {
     setError(null)
   }
 
+  /**
+   * 공통코드 저장 처리
+   * @Author SeungHyeon.Kang
+   * @param event
+   * @return
+   */
   const saveCommCode = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault()
     if (!duplicateAvailable || duplicateCheckedCode !== masterForm.commCode.trim()) {
@@ -327,12 +461,30 @@ function App() {
     }
   }
 
+  /**
+   * 세부코드 입력 폼 추가
+   * @Author SeungHyeon.Kang
+   * @return
+   */
   const addDetailInput = () => setDetailForms([...detailForms, emptyDetailForm()])
 
+  /**
+   * 신규 세부코드 입력값 변경
+   * @Author SeungHyeon.Kang
+   * @param index
+   * @param field
+   * @param value
+   * @return
+   */
   const changeDetailForm = (index: number, field: keyof DetailCodeForm, value: string) => {
     setDetailForms(detailForms.map((form, formIndex) => (formIndex === index ? { ...form, [field]: value } : form)))
   }
 
+  /**
+   * 공통코드 수정 저장
+   * @Author SeungHyeon.Kang
+   * @return
+   */
   const saveMasterEditForm = async () => {
     if (!masterEditForm) return
     setSaving(true)
@@ -350,10 +502,24 @@ function App() {
     }
   }
 
+  /**
+   * 기존 세부코드 입력값 변경
+   * @Author SeungHyeon.Kang
+   * @param index
+   * @param field
+   * @param value
+   * @return
+   */
   const changeDetailEditForm = (index: number, field: keyof DetailCodeForm, value: string) => {
     setDetailEditForms(detailEditForms.map((form, formIndex) => (formIndex === index ? { ...form, [field]: value } : form)))
   }
 
+  /**
+   * 세부코드 저장 요청값 변환
+   * @Author SeungHyeon.Kang
+   * @param form
+   * @return
+   */
   const toDetailPayload = (form: DetailCodeForm): DetailCodePayload => ({
     comdCode: form.comdCode.trim(),
     comdName: form.comdName.trim(),
@@ -370,6 +536,11 @@ function App() {
     useeYsno: form.useeYsno,
   })
 
+  /**
+   * 신규 세부코드 입력값 검증
+   * @Author SeungHyeon.Kang
+   * @return
+   */
   const validateNewDetailForms = () => {
     const existingCodes = detailCodes.map((detail) => detail.comdCode)
     const screenCodes = detailForms.map((detail) => detail.comdCode.trim()).filter(Boolean)
@@ -386,6 +557,11 @@ function App() {
     return true
   }
 
+  /**
+   * 신규 세부코드 일괄 저장
+   * @Author SeungHyeon.Kang
+   * @return
+   */
   const saveAllDetailCodes = async () => {
     if (!selectedMaster || detailForms.length === 0 || !validateNewDetailForms()) return
     setSaving(true)
@@ -402,6 +578,11 @@ function App() {
     }
   }
 
+  /**
+   * 기존 세부코드 일괄 수정
+   * @Author SeungHyeon.Kang
+   * @return
+   */
   const saveAllDetailEditCodes = async () => {
     if (!selectedMaster) return
     if (detailEditForms.some((form) => !form.comdName.trim())) {
@@ -421,6 +602,12 @@ function App() {
     }
   }
 
+  /**
+   * 공통코드 등록 입력값 변경
+   * @Author SeungHyeon.Kang
+   * @param form
+   * @return
+   */
   const changeMasterForm = (form: CodeMaster) => {
     setMasterForm(form)
     setDuplicateCheckedCode('')
