@@ -13,7 +13,7 @@
              , A.PASS_WORD
              , A.ADMN_NAME
              , A.AUTH_CODE
-             , C.SORT_ORDER AS AUTH_LEVEL
+             , C.SORT_ORDR AS AUTH_LEVEL
              , A.DEPT_CODE
              , A.FAIL_CNTX
              , A.LGIN_DATE

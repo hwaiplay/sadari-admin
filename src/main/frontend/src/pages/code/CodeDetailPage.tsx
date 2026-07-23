@@ -182,8 +182,8 @@ export function CodeDetailPage({
                                         <td><input value={form.codeExpl}
                                                    onChange={(event) => onChangeDetailEditForm(index, 'codeExpl', event.target.value)}
                                                    readOnly={!permission.writYn}/></td>
-                                        <td className="col-sort"><input type="number" value={form.sortOrder}
-                                                                        onChange={(event) => onChangeDetailEditForm(index, 'sortOrder', event.target.value)}
+                                        <td className="col-sort"><input type="number" value={form.sortOrdr}
+                                                                        onChange={(event) => onChangeDetailEditForm(index, 'sortOrdr', event.target.value)}
                                                                         readOnly={!permission.writYn}/></td>
                                         <td className="col-usee">
                                             <select value={form.useeYsno}
@@ -270,8 +270,8 @@ export function CodeDetailPage({
                                                 <td><input value={form.codeExpl}
                                                            onChange={(event) => onChangeDetailForm(index, 'codeExpl', event.target.value)}/>
                                                 </td>
-                                                <td className="col-sort"><input type="number" value={form.sortOrder}
-                                                                                onChange={(event) => onChangeDetailForm(index, 'sortOrder', event.target.value)}/>
+                                                <td className="col-sort"><input type="number" value={form.sortOrdr}
+                                                                                onChange={(event) => onChangeDetailForm(index, 'sortOrdr', event.target.value)}/>
                                                 </td>
                                                 <td className="col-usee">
                                                     <select value={form.useeYsno}

@@ -57,5 +57,5 @@ public class CodeVO {
     private LocalDateTime updtDate;
 
     /** 정렬 순서 */
-    private Integer sortOrder;
+    private Integer sortOrdr;
 }

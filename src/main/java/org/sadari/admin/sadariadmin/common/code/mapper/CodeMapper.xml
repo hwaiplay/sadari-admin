@@ -109,10 +109,10 @@
              , UPDT_ADMN
              , FN_GET_ADMIN_NAME(UPDT_ADMN) AS UPDT_ADMN_NAME
              , UPDT_DATE
-             , SORT_ORDER
+             , SORT_ORDR
           FROM TB_CODEXD
          WHERE COMM_CODE = #{commCode}
-      ORDER BY NVL(SORT_ORDER, 9999), COMD_CODE
+      ORDER BY NVL(SORT_ORDR, 9999), COMD_CODE
     </select>
 
     <!-- 세부코드 상세를 조회한다 -->
@@ -140,7 +140,7 @@
              , UPDT_ADMN
              , FN_GET_ADMIN_NAME(UPDT_ADMN) AS UPDT_ADMN_NAME
              , UPDT_DATE
-             , SORT_ORDER
+             , SORT_ORDR
           FROM TB_CODEXD
          WHERE COMM_CODE = #{commCode}
            AND COMD_CODE = #{comdCode}
@@ -176,7 +176,7 @@
                                 ,REGI_DATE
                                 ,UPDT_ADMN
                                 ,UPDT_DATE
-                                ,SORT_ORDER
+                                ,SORT_ORDR
                     ) VALUES (  #{commCode}
                                ,#{comdCode}
                                ,#{comdName}
@@ -194,7 +194,7 @@
                                ,SYSDATE
                                ,#{updtAdmn}
                                ,SYSDATE
-                               ,#{sortOrder}
+                               ,#{sortOrdr}
                              )
     </insert>
 
@@ -215,7 +215,7 @@
              , USEE_YSNO = #{useeYsno}
              , UPDT_ADMN = #{updtAdmn}
              , UPDT_DATE = SYSDATE
-             , SORT_ORDER = #{sortOrder}
+             , SORT_ORDR = #{sortOrdr}
          WHERE COMM_CODE = #{commCode}
            AND COMD_CODE = #{comdCode}
     </update>

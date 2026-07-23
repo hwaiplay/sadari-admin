@@ -19,7 +19,7 @@ export type Code = {
   updtAdmn: string | null
   updtAdmnName?: string | null
   updtDate: string | null
-  sortOrder: number | null
+  sortOrdr: number | null
 }
 
 export type CodeMaster = {
@@ -48,7 +48,7 @@ export type DetailCodeForm = {
   opt3Name: string
   opt4Code: string
   opt4Name: string
-  sortOrder: string
+  sortOrdr: string
   useeYsno: string
 }
 
@@ -64,6 +64,6 @@ export type DetailCodePayload = {
   opt3Name: string
   opt4Code: string
   opt4Name: string
-  sortOrder: number
+  sortOrdr: number
   useeYsno: string
 }

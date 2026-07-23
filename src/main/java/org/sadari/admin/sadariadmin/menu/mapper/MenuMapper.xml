@@ -50,7 +50,7 @@
            AND R.COMD_CODE = M.READ_AUTH
            AND NVL(R.USEE_YSNO, #{yes}) = #{yes}
          WHERE NVL(M.USEE_YSNO, #{yes}) = #{yes}
-           AND (M.READ_AUTH IS NULL OR R.SORT_ORDER <![CDATA[ <= ]]> #{authLevel})
+           AND (M.READ_AUTH IS NULL OR R.SORT_ORDR <![CDATA[ <= ]]> #{authLevel})
       ORDER BY NVL(M.SORT_ORDR, 9999)
     </select>
 
@@ -60,9 +60,9 @@
         <bind name="yes" value="@org.sadari.admin.sadariadmin.common.constant.Constant@YES"/>
         /*getMenuPermission*/
         SELECT M.MENU_URLX
-             , R.SORT_ORDER AS READ_LEVEL
-             , W.SORT_ORDER AS WRIT_LEVEL
-             , D.SORT_ORDER AS DELT_LEVEL
+             , R.SORT_ORDR AS READ_LEVEL
+             , W.SORT_ORDR AS WRIT_LEVEL
+             , D.SORT_ORDR AS DELT_LEVEL
           FROM TM_MENUXM M
      LEFT JOIN TB_CODEXD R
             ON R.COMM_CODE = #{authCode}

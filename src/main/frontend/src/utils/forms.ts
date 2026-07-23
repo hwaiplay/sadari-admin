@@ -38,7 +38,7 @@ export const emptyDetailForm = (): DetailCodeForm => ({
   opt3Name: '',
   opt4Code: '',
   opt4Name: '',
-  sortOrder: '10',
+  sortOrdr: '10',
   useeYsno: DEFAULT_USEE_YSNO,
 })
 
@@ -60,7 +60,7 @@ export const toDetailCodeForm = (code: {
   opt3Name?: string | null
   opt4Code?: string | null
   opt4Name?: string | null
-  sortOrder: number | null
+  sortOrdr: number | null
   useeYsno: string | null
 }): DetailCodeForm => ({
   comdCode: code.comdCode,
@@ -74,7 +74,7 @@ export const toDetailCodeForm = (code: {
   opt3Name: code.opt3Name ?? '',
   opt4Code: code.opt4Code ?? '',
   opt4Name: code.opt4Name ?? '',
-  sortOrder: String(code.sortOrder ?? 10),
+  sortOrdr: String(code.sortOrdr ?? 10),
   useeYsno: code.useeYsno ?? DEFAULT_USEE_YSNO,
 })
 

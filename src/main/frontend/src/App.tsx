@@ -532,7 +532,7 @@ function App() {
     opt3Name: form.opt3Name.trim(),
     opt4Code: form.opt4Code.trim(),
     opt4Name: form.opt4Name.trim(),
-    sortOrder: Number(form.sortOrder),
+    sortOrdr: Number(form.sortOrdr),
     useeYsno: form.useeYsno,
   })
 
