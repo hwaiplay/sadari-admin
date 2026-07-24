@@ -61,7 +61,13 @@ public enum ResultEnum {
     CODE_DETAIL_DUPLICATE(2009, "code.detail.duplicate"),
 
     /** 세부코드 없음 */
-    CODE_DETAIL_NOT_FOUND(2004, "code.detail.not-found");
+    CODE_DETAIL_NOT_FOUND(2004, "code.detail.not-found"),
+
+    /** 알림 템플릿 중복 */
+    ALIM_TEMP_DUPLICATE(2009, "alim-temp.duplicate"),
+
+    /** 알림 템플릿 없음 */
+    ALIM_TEMP_NOT_FOUND(2004, "alim-temp.not-found");
 
     /** 응답 코드 */
     private final int code;
@@ -90,4 +96,3 @@ public enum ResultEnum {
         return MessageUtil.getMessage(messageKey);
     }
 }
-

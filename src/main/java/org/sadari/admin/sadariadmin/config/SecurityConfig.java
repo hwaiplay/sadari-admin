@@ -61,7 +61,7 @@ public class SecurityConfig {
                         .requestMatchers(Constant.API_CODES_PATTERN).permitAll()
                         .requestMatchers(Constant.API_AUTH_LOGOUT, Constant.API_AUTH_ME).authenticated()
                         .requestMatchers(Constant.API_MENU_PERMISSIONS_PATTERN).authenticated()
-                        .requestMatchers(Constant.API_MENUS_PATTERN, Constant.API_CODE_MANAGE_PATTERN).authenticated()
+                        .requestMatchers(Constant.API_MENUS_PATTERN, Constant.API_CODE_MANAGE_PATTERN, Constant.API_ALIM_TEMP_PATTERN).authenticated()
                         .requestMatchers(Constant.API_EMPLOYEES_PATTERN).authenticated()
                         .anyRequest().permitAll()
                 )

@@ -25,6 +25,7 @@
     <select id="getMenuList" resultType="org.sadari.admin.sadariadmin.menu.vo.MenuVO">
         <bind name="authCode" value="@org.sadari.admin.sadariadmin.common.constant.AuthConstant@AUTH_CODE"/>
         <bind name="yes" value="@org.sadari.admin.sadariadmin.common.constant.Constant@YES"/>
+        <bind name="topMenuSubxNumb" value="@org.sadari.admin.sadariadmin.common.constant.Constant@TOP_MENU_SUBX_NUMB"/>
         <bind name="commYsno" value="@org.sadari.admin.sadariadmin.common.constant.Constant@COMM_YSNO"/>
         <bind name="useeYsnoCode" value="@org.sadari.admin.sadariadmin.common.constant.Constant@USEE_YSNO_CODE"/>
         /*getMenuList*/
@@ -45,13 +46,20 @@
              , FN_GET_ADMIN_NAME(M.UPDT_ADMN) AS UPDT_ADMN_NAME
              , M.UPDT_DATE
           FROM TM_MENUXM M
+     LEFT JOIN TM_MENUXM P
+            ON P.MENU_NUMB = M.MENU_NUMB
+           AND P.SUBX_NUMB = #{topMenuSubxNumb}
      LEFT JOIN TB_CODEXD R
             ON R.COMM_CODE = #{authCode}
            AND R.COMD_CODE = M.READ_AUTH
            AND NVL(R.USEE_YSNO, #{yes}) = #{yes}
          WHERE NVL(M.USEE_YSNO, #{yes}) = #{yes}
            AND (M.READ_AUTH IS NULL OR R.SORT_ORDR <![CDATA[ <= ]]> #{authLevel})
-      ORDER BY NVL(M.SORT_ORDR, 9999)
+      ORDER BY NVL(P.SORT_ORDR, M.SORT_ORDR)
+             , TO_NUMBER(M.MENU_NUMB)
+             , CASE WHEN M.SUBX_NUMB = #{topMenuSubxNumb} THEN 0 ELSE 1 END
+             , NVL(M.SORT_ORDR, 9999)
+             , TO_NUMBER(M.SUBX_NUMB)
     </select>
 
     <!-- 메뉴 URL 기준으로 조회 쓰기 삭제 권한 레벨을 조회한다 -->
@@ -83,12 +91,23 @@
 
     <!-- 메뉴관리 화면에 표시할 전체 메뉴 목록을 조회한다 -->
     <select id="getMenuMngList" resultType="org.sadari.admin.sadariadmin.menu.vo.MenuVO">
+        <bind name="topMenuSubxNumb" value="@org.sadari.admin.sadariadmin.common.constant.Constant@TOP_MENU_SUBX_NUMB"/>
         <bind name="commYsno" value="@org.sadari.admin.sadariadmin.common.constant.Constant@COMM_YSNO"/>
         <bind name="useeYsnoCode" value="@org.sadari.admin.sadariadmin.common.constant.Constant@USEE_YSNO_CODE"/>
         /*getMenuMngList*/
         SELECT <include refid="menuColumns"/>
-          FROM TM_MENUXM
-      ORDER BY NVL(SORT_ORDR, 9999) DESC
+          FROM TM_MENUXM M
+         WHERE M.SUBX_NUMB = #{topMenuSubxNumb}
+      ORDER BY NVL((
+                    SELECT P.SORT_ORDR
+                      FROM TM_MENUXM P
+                     WHERE P.MENU_NUMB = M.MENU_NUMB
+                       AND P.SUBX_NUMB = #{topMenuSubxNumb}
+                   ), M.SORT_ORDR)
+             , TO_NUMBER(M.MENU_NUMB)
+             , CASE WHEN M.SUBX_NUMB = #{topMenuSubxNumb} THEN 0 ELSE 1 END
+             , NVL(M.SORT_ORDR, 9999)
+             , TO_NUMBER(M.SUBX_NUMB)
     </select>
 
     <!-- 메뉴 번호와 하위 메뉴 번호로 메뉴 상세를 조회한다 -->

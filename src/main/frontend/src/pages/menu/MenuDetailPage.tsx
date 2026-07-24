@@ -65,7 +65,7 @@ export function MenuDetailPage({ isNewPage, pageTitle, saving, menuForm, menuDet
             <p>메뉴 기본 정보와 권한을 설정합니다.</p>
           </div>
         </div>
-        <MenuFormTable form={menuForm} menuDetail={menuDetail} authCodes={authCodes} useeYsnoCodes={useeYsnoCodes} onChange={onChangeMenuForm} />
+        <MenuFormTable isNewPage={isNewPage} form={menuForm} menuDetail={menuDetail} authCodes={authCodes} useeYsnoCodes={useeYsnoCodes} onChange={onChangeMenuForm} />
         {permission.writYn && <div className="section-actions"><button type="submit" disabled={saving}>{saving ? '저장 중' : isNewPage ? '저장' : '수정'}</button></div>}
       </form>
 
@@ -163,6 +163,7 @@ export function MenuDetailPage({ isNewPage, pageTitle, saving, menuForm, menuDet
 }
 
 type MenuFormTableProps = {
+  isNewPage?: boolean
   form: MenuForm
   menuDetail?: Menu | null
   authCodes: Code[]
@@ -180,7 +181,7 @@ type MenuFormTableProps = {
  * @param onChange
  * @return
  */
-function MenuFormTable({ form, menuDetail, authCodes, useeYsnoCodes, onChange }: MenuFormTableProps) {
+function MenuFormTable({ isNewPage = false, form, menuDetail, authCodes, useeYsnoCodes, onChange }: MenuFormTableProps) {
   return (
     <section className="table-wrap menu-info-table">
       <table>
@@ -208,10 +209,15 @@ function MenuFormTable({ form, menuDetail, authCodes, useeYsnoCodes, onChange }:
           <tr>
             <th>정렬</th>
             <td><input type="number" value={form.sortOrdr} onChange={(event) => onChange('sortOrdr', event.target.value)} required /></td>
-            <th>수정자</th>
-            <td className="readonly-cell">{menuDetail?.updtAdmnName ?? menuDetail?.updtAdmn ?? ''}</td>
-            <th>수정일</th>
-            <td className="readonly-cell">{formatDate(menuDetail?.updtDate ?? null)}</td>
+            {!isNewPage && (
+              <>
+                <th>수정자</th>
+                <td className="readonly-cell">{menuDetail?.updtAdmnName ?? menuDetail?.updtAdmn ?? ''}</td>
+                <th>수정일</th>
+                <td className="readonly-cell">{formatDate(menuDetail?.updtDate ?? null)}</td>
+              </>
+            )}
+            {isNewPage && <td colSpan={4} />}
           </tr>
         </tbody>
       </table>

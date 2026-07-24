@@ -23,6 +23,9 @@ public final class Constant {
     /** 사용 여부 옵션 코드 */
     public static final String USEE_YSNO_CODE = "USEE_YSNO";
 
+    /** 알림 상황 공통코드 */
+    public static final String ALIM_SITU = "ALIM_SITU";
+
     /** 상위 메뉴 SUBX NUMB 값 */
     public static final String TOP_MENU_SUBX_NUMB = "0";
 
@@ -37,6 +40,9 @@ public final class Constant {
 
     /** 코드관리 화면 URL */
     public static final String CODE_MANAGE_URL = "/sadari/adm/code/list";
+
+    /** 알림 템플릿 관리 화면 URL */
+    public static final String ALIM_TEMP_MANAGE_URL = "/sadari/adm/alimTemp/list";
 
     /** 로그인 API URL */
     public static final String API_AUTH_LOGIN = "/api/auth/login";
@@ -71,6 +77,9 @@ public final class Constant {
     /** 코드관리 API URL 패턴 */
     public static final String API_CODE_MANAGE_PATTERN = "/api/code-manage/**";
 
+    /** 알림 템플릿 관리 API URL 패턴 */
+    public static final String API_ALIM_TEMP_PATTERN = "/api/alim-temps/**";
+
     /** 직원 API URL 패턴 */
     public static final String API_EMPLOYEES_PATTERN = "/api/employees/**";
 
@@ -82,6 +91,9 @@ public final class Constant {
 
     /** 코드관리 API URL 접두어 */
     public static final String API_CODE_MANAGE_PREFIX = "/api/code-manage";
+
+    /** 알림 템플릿 관리 API URL 접두어 */
+    public static final String API_ALIM_TEMP_PREFIX = "/api/alim-temps";
 
     /**
      * 공통 상수 생성 방지

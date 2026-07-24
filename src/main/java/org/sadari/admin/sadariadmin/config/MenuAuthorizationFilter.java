@@ -49,7 +49,8 @@ public class MenuAuthorizationFilter extends OncePerRequestFilter {
         String uri = request.getRequestURI();
         // 메뉴관리 API와 코드관리 API만 메뉴 권한 대상으로 판단한다
         return !uri.startsWith(Constant.API_MENUS_PREFIX)
-                && !uri.startsWith(Constant.API_CODE_MANAGE_PREFIX);
+                && !uri.startsWith(Constant.API_CODE_MANAGE_PREFIX)
+                && !uri.startsWith(Constant.API_ALIM_TEMP_PREFIX);
     }
 
     /**
@@ -112,6 +113,10 @@ public class MenuAuthorizationFilter extends OncePerRequestFilter {
         // 코드관리 API는 코드관리 화면 URL 권한으로 판단한다
         if (uri.startsWith(Constant.API_CODE_MANAGE_PREFIX)) {
             return Constant.CODE_MANAGE_URL;
+        }
+        // 알림 템플릿 관리 API는 알림 템플릿 관리 화면 URL 권한으로 판단한다
+        if (uri.startsWith(Constant.API_ALIM_TEMP_PREFIX)) {
+            return Constant.ALIM_TEMP_MANAGE_URL;
         }
         return null;
     }

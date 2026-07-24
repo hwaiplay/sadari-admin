@@ -5,4 +5,6 @@ export const MENU_NEW_PATH = '/sadari/adm/menu/new'
 export const MENU_DETAIL_PREFIX = '/sadari/adm/menu/detail'
 export const CODE_LIST_PATH = '/sadari/adm/code/list'
 export const CODE_DETAIL_PREFIX = '/sadari/adm/code/detail'
-
+export const ALIM_TEMP_LIST_PATH = '/sadari/adm/alimTemp/list'
+export const ALIM_TEMP_NEW_PATH = '/sadari/adm/alimTemp/new'
+export const ALIM_TEMP_DETAIL_PREFIX = '/sadari/adm/alimTemp/detail'

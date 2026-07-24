@@ -1,19 +1,23 @@
 import { useEffect, useMemo, useState } from 'react'
 import type { FormEvent } from 'react'
 import { getAdminSession, loginAdmin, logoutAdmin } from './api/adminApi'
+import { checkAlimTempDuplicate, getAlimTempDetail, getAlimTempList, saveAlimTempApi } from './api/alimTempApi'
 import { checkMasterDuplicate, createCodeMaster, createDetailCode, getCodeList, getCodeMaster, getCodeMasters, getDetailCodes, updateCodeMaster, updateDetailCode } from './api/codeApi'
 import { deleteMenuApi, getMenuDetail, getMenuMngList, getPermission, getSidebarMenus, getSubMenus, saveMenuApi } from './api/menuApi'
 import './App.css'
-import { DEFAULT_AUTH_CODE, DEFAULT_USEE_YSNO, AUTH_CODE, COMM_YSNO } from './constants/codes'
-import { CODE_DETAIL_PREFIX, CODE_LIST_PATH, HOME_PATH, LOGIN_PATH, MENU_DETAIL_PREFIX, MENU_LIST_PATH, MENU_NEW_PATH } from './constants/routes'
+import { DEFAULT_AUTH_CODE, DEFAULT_USEE_YSNO, ALIM_SITU, AUTH_CODE, COMM_YSNO } from './constants/codes'
+import { ALIM_TEMP_DETAIL_PREFIX, ALIM_TEMP_LIST_PATH, ALIM_TEMP_NEW_PATH, CODE_DETAIL_PREFIX, CODE_LIST_PATH, HOME_PATH, LOGIN_PATH, MENU_DETAIL_PREFIX, MENU_LIST_PATH, MENU_NEW_PATH } from './constants/routes'
 import { AdminLayout } from './components/AdminLayout'
 import { LoginPage } from './pages/LoginPage'
+import { AlimTempDetailPage } from './pages/alim/AlimTempDetailPage'
+import { AlimTempListPage } from './pages/alim/AlimTempListPage'
 import { CodeDetailPage } from './pages/code/CodeDetailPage'
 import { CodeListPage } from './pages/code/CodeListPage'
 import { CodeMasterModal } from './pages/code/CodeMasterModal'
 import { MenuDetailPage } from './pages/menu/MenuDetailPage'
 import { MenuListPage } from './pages/menu/MenuListPage'
 import type { AdminSession } from './types/admin'
+import type { AlimTemp, AlimTempForm } from './types/alim'
 import type { Code, CodeMaster, DetailCodeForm, DetailCodePayload } from './types/code'
 import { emptyPermission } from './types/common'
 import type { Permission } from './types/common'
@@ -32,9 +36,11 @@ function App() {
   const [menuDetail, setMenuDetail] = useState<Menu | null>(null)
   const [subMenus, setSubMenus] = useState<Menu[]>([])
   const [authCodes, setAuthCodes] = useState<Code[]>([])
+  const [alimSituCodes, setAlimSituCodes] = useState<Code[]>([])
   const [useeYsnoCodes, setUseeYsnoCodes] = useState<Code[]>([])
   const [menuPermission, setMenuPermission] = useState<Permission>(emptyPermission)
   const [codePermission, setCodePermission] = useState<Permission>(emptyPermission)
+  const [alimTempPermission, setAlimTempPermission] = useState<Permission>(emptyPermission)
   const [menuForm, setMenuForm] = useState<MenuForm>(emptyMenuForm())
   const [childForms, setChildForms] = useState<MenuForm[]>([])
   const [codeMasters, setCodeMasters] = useState<CodeMaster[]>([])
@@ -47,6 +53,9 @@ function App() {
   const [duplicateCheckedCode, setDuplicateCheckedCode] = useState('')
   const [duplicateAvailable, setDuplicateAvailable] = useState(false)
   const [detailForms, setDetailForms] = useState<DetailCodeForm[]>([])
+  const [alimTemps, setAlimTemps] = useState<AlimTemp[]>([])
+  const [alimTempDetail, setAlimTempDetail] = useState<AlimTemp | null>(null)
+  const [alimTempForm, setAlimTempForm] = useState<AlimTempForm>({ alimSitu: '', tempCode: '', tempTitl: '', alimTitl: '', tempCont: '', linkUrlx: '', useeYsno: DEFAULT_USEE_YSNO })
   const [admnIdxx, setAdmnIdxx] = useState('admin')
   const [passWord, setPassWord] = useState('')
   const [checkingSession, setCheckingSession] = useState(true)
@@ -73,15 +82,25 @@ function App() {
     return commCode ?? ''
   }, [currentPath])
 
+  const alimTempDetailKey = useMemo(() => {
+    if (!currentPath.startsWith(ALIM_TEMP_DETAIL_PREFIX)) return null
+    const [, , , , , alimSitu, tempCode] = currentPath.split('/')
+    return alimSitu && tempCode ? { alimSitu: decodeURIComponent(alimSitu), tempCode: decodeURIComponent(tempCode) } : null
+  }, [currentPath])
+
   const isMenuListPage = currentPath === MENU_LIST_PATH
   const isMenuNewPage = currentPath === MENU_NEW_PATH || currentPath.startsWith(`${MENU_NEW_PATH}/`)
   const isMenuDetailPage = detailKey !== null
   const isCodeListPage = currentPath === CODE_LIST_PATH
   const isCodeDetailPage = Boolean(codeDetailKey)
+  const isAlimTempListPage = currentPath === ALIM_TEMP_LIST_PATH
+  const isAlimTempNewPage = currentPath === ALIM_TEMP_NEW_PATH
+  const isAlimTempDetailPage = alimTempDetailKey !== null
 
   const activeMenuPath = useMemo(() => {
     if (currentPath === MENU_NEW_PATH || currentPath.startsWith(`${MENU_NEW_PATH}/`) || currentPath.startsWith(MENU_DETAIL_PREFIX)) return MENU_LIST_PATH
     if (currentPath.startsWith(CODE_DETAIL_PREFIX)) return CODE_LIST_PATH
+    if (currentPath === ALIM_TEMP_NEW_PATH || currentPath.startsWith(ALIM_TEMP_DETAIL_PREFIX)) return ALIM_TEMP_LIST_PATH
     return currentPath
   }, [currentPath])
 
@@ -115,6 +134,17 @@ function App() {
   const loadAuthCodeList = async () => {
     const codes = await getCodeList(AUTH_CODE)
     setAuthCodes(codes)
+    return codes
+  }
+
+  /**
+   * 알림상황 코드 목록 로드
+   * @Author SeungHyeon.Kang
+   * @return
+   */
+  const loadAlimSituCodeList = async () => {
+    const codes = await getCodeList(ALIM_SITU)
+    setAlimSituCodes(codes)
     return codes
   }
 
@@ -176,6 +206,9 @@ function App() {
     else if (detailKey) void openMenuDetailPage(detailKey.menuNumb, detailKey.subxNumb)
     else if (isCodeListPage) void openCodeListPage()
     else if (isCodeDetailPage) void openCodeDetailPage(codeDetailKey)
+    else if (isAlimTempListPage) void openAlimTempListPage()
+    else if (isAlimTempNewPage) void openAlimTempNewPage()
+    else if (alimTempDetailKey) void openAlimTempDetailPage(alimTempDetailKey.alimSitu, alimTempDetailKey.tempCode)
   }, [admin, currentPath])
 
   /**
@@ -257,6 +290,47 @@ function App() {
     setDetailCodes(details)
     setDetailEditForms(details.map(toDetailCodeForm))
     setDetailForms([])
+  }
+
+  /**
+   * 알림 템플릿 목록 화면 열기
+   * @Author SeungHyeon.Kang
+   * @return
+   */
+  const openAlimTempListPage = async () => {
+    setError(null)
+    const [permission, rows] = await Promise.all([getPermission(ALIM_TEMP_LIST_PATH), getAlimTempList(), loadUseeYsnoCodeList()])
+    setAlimTempPermission(permission)
+    setAlimTemps(rows)
+    setAlimTempDetail(null)
+  }
+
+  /**
+   * 알림 템플릿 등록 화면 열기
+   * @Author SeungHyeon.Kang
+   * @return
+   */
+  const openAlimTempNewPage = async () => {
+    setError(null)
+    const [permission, situCodes] = await Promise.all([getPermission(ALIM_TEMP_LIST_PATH), loadAlimSituCodeList(), loadUseeYsnoCodeList()])
+    setAlimTempPermission(permission)
+    setAlimTempDetail(null)
+    setAlimTempForm({ alimSitu: situCodes[0]?.comdCode ?? '', tempCode: '', tempTitl: '', alimTitl: '', tempCont: '', linkUrlx: '', useeYsno: DEFAULT_USEE_YSNO })
+  }
+
+  /**
+   * 알림 템플릿 상세 화면 열기
+   * @Author SeungHyeon.Kang
+   * @param alimSitu
+   * @param tempCode
+   * @return
+   */
+  const openAlimTempDetailPage = async (alimSitu: string, tempCode: string) => {
+    setError(null)
+    const [permission, detail] = await Promise.all([getPermission(ALIM_TEMP_LIST_PATH), getAlimTempDetail(alimSitu, tempCode), loadAlimSituCodeList(), loadUseeYsnoCodeList()])
+    setAlimTempPermission(permission)
+    setAlimTempDetail(detail)
+    setAlimTempForm({ alimSitu: detail.alimSitu, tempCode: detail.tempCode, tempTitl: detail.tempTitl, alimTitl: detail.alimTitl ?? '', tempCont: detail.tempCont, linkUrlx: detail.linkUrlx, useeYsno: detail.useeYsno ?? DEFAULT_USEE_YSNO })
   }
 
   /**
@@ -614,6 +688,57 @@ function App() {
     setDuplicateAvailable(false)
   }
 
+  /**
+   * 알림 템플릿 저장값 검증
+   * @Author SeungHyeon.Kang
+   * @return
+   */
+  const validateAlimTempForm = () => {
+    const hasRequired = alimTempForm.alimSitu.trim() && alimTempForm.tempCode.trim() && alimTempForm.tempTitl.trim() && alimTempForm.tempCont.trim() && alimTempForm.linkUrlx.trim()
+    // 필수값이 하나라도 없으면 저장 요청을 보내지 않는다
+    if (!hasRequired) {
+      setError('알림상황, 템플릿코드, 관리용 제목, 템플릿 내용, 이동 URL을 입력해 주세요.')
+      return false
+    }
+    // 템플릿 코드는 영문 대문자와 밑줄만 허용한다
+    if (!/^[A-Z_]+$/.test(alimTempForm.tempCode.trim())) {
+      setError('템플릿코드는 영문 대문자와 _만 입력할 수 있습니다.')
+      return false
+    }
+    return true
+  }
+
+  /**
+   * 알림 템플릿 저장 처리
+   * @Author SeungHyeon.Kang
+   * @param event
+   * @return
+   */
+  const saveAlimTemp = async (event: FormEvent<HTMLFormElement>) => {
+    event.preventDefault()
+    if (!validateAlimTempForm()) return
+    setSaving(true)
+    setError(null)
+    try {
+      const oldAlimSitu = alimTempDetail?.alimSitu
+      const oldTempCode = alimTempDetail?.tempCode
+      const changedKey = isAlimTempNewPage || oldAlimSitu !== alimTempForm.alimSitu || oldTempCode !== alimTempForm.tempCode.trim()
+      // 신규 등록이거나 복합키가 변경된 경우에는 같은 알림 상황 안의 템플릿 코드 중복 여부를 먼저 확인한다
+      if (changedKey && await checkAlimTempDuplicate(alimTempForm.alimSitu, alimTempForm.tempCode.trim())) {
+        setError('같은 알림상황 안에서 이미 사용 중인 템플릿코드입니다.')
+        return
+      }
+      const result = await saveAlimTempApi(alimTempForm, isAlimTempDetailPage, oldAlimSitu, oldTempCode)
+      alert(result.message)
+      const saved = result.data
+      movePath(`${ALIM_TEMP_DETAIL_PREFIX}/${encodeURIComponent(saved.alimSitu)}/${encodeURIComponent(saved.tempCode)}`)
+    } catch (err: unknown) {
+      setError(err instanceof Error ? err.message : '알림 템플릿 저장 중 오류가 발생했습니다.')
+    } finally {
+      setSaving(false)
+    }
+  }
+
   if (checkingSession) return <main className="login-page"><div className="panel">세션을 확인하고 있습니다.</div></main>
 
   if (!admin || currentPath === LOGIN_PATH) {
@@ -674,6 +799,22 @@ function App() {
           onChangeDetailForm={changeDetailForm}
           onSaveAllDetailEditCodes={() => void saveAllDetailEditCodes()}
           onSaveAllDetailCodes={() => void saveAllDetailCodes()}
+        />
+      )}
+      {isAlimTempListPage && <AlimTempListPage alimTemps={alimTemps} permission={alimTempPermission} useeYsnoCodes={useeYsnoCodes} onMovePath={movePath} />}
+      {(isAlimTempDetailPage || isAlimTempNewPage) && (
+        <AlimTempDetailPage
+          isNewPage={isAlimTempNewPage}
+          pageTitle={isAlimTempNewPage ? '알림 템플릿 등록' : `${activeMenuName || '알림 템플릿 관리'} 상세`}
+          saving={saving}
+          alimTempForm={alimTempForm}
+          alimTempDetail={alimTempDetail}
+          alimSituCodes={alimSituCodes}
+          useeYsnoCodes={useeYsnoCodes}
+          permission={alimTempPermission}
+          onMovePath={movePath}
+          onChange={(field, value) => setAlimTempForm({ ...alimTempForm, [field]: value })}
+          onSubmit={saveAlimTemp}
         />
       )}
       {showMasterForm && (
