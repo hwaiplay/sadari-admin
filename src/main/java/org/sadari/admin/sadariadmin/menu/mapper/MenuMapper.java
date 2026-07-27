@@ -75,6 +75,14 @@ public interface MenuMapper {
     void setMenu(MenuVO menu);
 
     /**
+     * 신규 메뉴 전체 권한그룹 권한 등록
+     * @Author SeungHyeon.Kang
+     * @param menu
+     * @return
+     */
+    void setMenuAuth(MenuVO menu);
+
+    /**
      * 메뉴 수정
      * @Author SeungHyeon.Kang
      * @param menu
@@ -90,4 +98,13 @@ public interface MenuMapper {
      * @return
      */
     void delMenu(@Param("menuNumb") String menuNumb, @Param("subxNumb") String subxNumb);
+
+    /**
+     * 메뉴별 권한 삭제
+     * @Author SeungHyeon.Kang
+     * @param menuNumb
+     * @param subxNumb
+     * @return
+     */
+    void delMenuAuth(@Param("menuNumb") String menuNumb, @Param("subxNumb") String subxNumb);
 }

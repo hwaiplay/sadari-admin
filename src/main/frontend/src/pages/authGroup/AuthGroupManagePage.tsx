@@ -190,10 +190,6 @@ export function AuthGroupManagePage({ currentPath, onMovePath, onError }: AuthGr
     <section className="menu-detail-page">
       <section className="content-header">
         <h1>{isNew ? '권한그룹 등록' : '권한그룹관리 상세'}</h1>
-        <div className="header-actions">
-          {!isNew && permission.deltYsno === 'Y' && <button type="button" className="delete-button" onClick={() => void remove()}>삭제</button>}
-          <button type="button" className="subtle-button" onClick={() => onMovePath(AUTH_GROUP_LIST_PATH)}>목록</button>
-        </div>
       </section>
       <form noValidate onSubmit={submit}>
         <section className="detail-panel">
@@ -216,7 +212,6 @@ export function AuthGroupManagePage({ currentPath, onMovePath, onError }: AuthGr
               <th>사용여부</th><td><select value={form.useeYsno} onChange={(event) => setForm({ ...form, useeYsno: event.target.value })}>{useeCodes.map((code) => <option key={code.comdCode} value={code.comdCode}>{code.opt1Name ?? code.comdName}</option>)}</select></td>
             </tr></tbody></table>
           </section>
-          {!isNew && <div className="detail-audit-actions"><AuditInfoTable regiAdmn={form.regiAdmn} regiAdmnName={form.regiAdmnName} regiDate={form.regiDate} updtAdmn={form.updtAdmn} updtAdmnName={form.updtAdmnName} updtDate={form.updtDate} /></div>}
         </section>
         <section className="detail-panel">
           <div className="detail-title"><div><h2>메뉴 권한</h2><p>조회, 쓰기, 삭제 권한을 메뉴별로 설정합니다.</p></div></div>
@@ -233,13 +228,18 @@ export function AuthGroupManagePage({ currentPath, onMovePath, onError }: AuthGr
               ))}</tbody>
             </table>
           </section>
-          {permission.writYsno === 'Y' && <div className="section-actions">
-            <button type="button" disabled={saving} onClick={() => void submit()}>
-              {saving ? '저장 중' : isNew ? '저장' : '수정'}
-            </button>
-          </div>}
         </section>
       </form>
+      {!isNew && <AuditInfoTable regiAdmn={form.regiAdmn} regiAdmnName={form.regiAdmnName} regiDate={form.regiDate} updtAdmn={form.updtAdmn} updtAdmnName={form.updtAdmnName} updtDate={form.updtDate} />}
+      <div className="detail-footer">
+        <div className="detail-footer-left">
+          <button type="button" className="subtle-button" onClick={() => onMovePath(AUTH_GROUP_LIST_PATH)}>목록</button>
+          {!isNew && permission.deltYsno === 'Y' && <button type="button" className="delete-button" onClick={() => void remove()}>삭제</button>}
+        </div>
+        <div className="detail-footer-right">
+          {permission.writYsno === 'Y' && <button type="button" disabled={saving} onClick={() => void submit()}>{saving ? '저장 중' : isNew ? '저장' : '수정'}</button>}
+        </div>
+      </div>
     </section>
   )
 }

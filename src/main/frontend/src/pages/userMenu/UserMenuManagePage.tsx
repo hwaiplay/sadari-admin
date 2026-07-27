@@ -118,37 +118,30 @@ export function UserMenuManagePage({currentPath, onMovePath, onError}: UserMenuM
     }
 
     /** 사용자 메뉴 저장 */
-    const saveMenu = async (event: FormEvent<HTMLFormElement>) => {
-        event.preventDefault()
-        setSaving(true)
-        onError(null)
-        try {
-            const result = await saveUserMenuApi(form, Boolean(detailKey))
-            alert(result.message)
-            onMovePath(`${USER_MENU_DETAIL_PREFIX}/${result.data.menuNumb}/${result.data.subxNumb}`)
-        } catch (error: unknown) {
-            onError(error instanceof Error ? error.message : '사용자 메뉴 저장 중 오류가 발생했습니다.')
-        } finally {
-            setSaving(false)
+    const saveMenu = async (event?: FormEvent<HTMLFormElement>) => {
+        event?.preventDefault()
+        if (!form.menuName.trim() || !form.menuUrlx.trim()) {
+            alert('메뉴명과 URL을 입력해 주세요.')
+            return
         }
-    }
-
-    /** 하위 메뉴 일괄 저장 */
-    const saveChildren = async () => {
-        if (childForms.length === 0) return
         if (childForms.some((child) => !child.menuName.trim() || !child.menuUrlx.trim())) {
-            onError('하위메뉴명과 URL을 입력해 주세요.')
+            alert('하위메뉴명과 URL을 입력해 주세요.')
             return
         }
         setSaving(true)
         onError(null)
         try {
-            const results = await Promise.all(childForms.map((child) => saveUserMenuApi(child, false)))
-            alert(results.at(-1)?.message ?? '저장했습니다.')
-            setChildForms([])
-            setSubMenus(await getUserSubMenus(form.menuNumb))
+            const result = await saveUserMenuApi(form, Boolean(detailKey))
+            await Promise.all(childForms.map((child) => saveUserMenuApi(child, false)))
+            alert(result.message)
+            if (detailKey) {
+                setChildForms([])
+                setSubMenus(await getUserSubMenus(form.menuNumb))
+            } else {
+                onMovePath(`${USER_MENU_DETAIL_PREFIX}/${result.data.menuNumb}/${result.data.subxNumb}`)
+            }
         } catch (error: unknown) {
-            onError(error instanceof Error ? error.message : '사용자 하위 메뉴 저장 중 오류가 발생했습니다.')
+            onError(error instanceof Error ? error.message : '사용자 메뉴 저장 중 오류가 발생했습니다.')
         } finally {
             setSaving(false)
         }
@@ -220,12 +213,6 @@ export function UserMenuManagePage({currentPath, onMovePath, onError}: UserMenuM
         <section className="menu-detail-page">
             <section className="content-header">
                 <h1>{isNew ? '사용자 메뉴 등록' : '사용자 메뉴관리 상세'}</h1>
-                <div className="header-actions">
-                    {!isNew && detail && permission.deltYsno === 'Y' && <button type="button" className="delete-button"
-                                                onClick={() => void deleteMenu(detail)}>삭제</button>}
-                    <button type="button" className="subtle-button" onClick={() => onMovePath(USER_MENU_LIST_PATH)}>목록
-                    </button>
-                </div>
             </section>
             <form className="detail-panel" onSubmit={saveMenu}>
                 <div className="detail-title">
@@ -233,23 +220,6 @@ export function UserMenuManagePage({currentPath, onMovePath, onError}: UserMenuM
                 </div>
                 <UserMenuFormTable form={form} ysnoCodes={ysnoCodes}
                                    onChange={changeForm}/>
-                {!isNew && detail ? (
-                    <div className="detail-audit-actions">
-                        <AuditInfoTable
-                            regiAdmn={detail.regiAdmn}
-                            regiAdmnName={detail.regiAdmnName}
-                            regiDate={detail.regiDate}
-                            updtAdmn={detail.updtAdmn}
-                            updtAdmnName={detail.updtAdmnName}
-                            updtDate={detail.updtDate}
-                        />
-                        {permission.writYsno === 'Y' && <div className="section-actions">
-                            <button type="submit" disabled={saving}>{saving ? '저장 중' : '수정'}</button>
-                        </div>}
-                    </div>
-                ) : permission.writYsno === 'Y' ? <div className="section-actions">
-                    <button type="submit" disabled={saving}>{saving ? '저장 중' : '저장'}</button>
-                </div> : null}
             </form>
             {!isNew && form.subxNumb === '0' && (
                 <>
@@ -285,15 +255,21 @@ export function UserMenuManagePage({currentPath, onMovePath, onError}: UserMenuM
                                                                                                    onChange={(field, value) => changeChildForm(index, field, value)}/>)}</tbody>
                                     </table>
                                 </section>
-                                {permission.writYsno === 'Y' && <div className="section-actions">
-                                    <button type="button" disabled={saving} onClick={() => void saveChildren()}>저장
-                                    </button>
-                                </div>}
                             </>
                         )}
                     </section>
                 </>
             )}
+            {!isNew && detail && <AuditInfoTable regiAdmn={detail.regiAdmn} regiAdmnName={detail.regiAdmnName} regiDate={detail.regiDate} updtAdmn={detail.updtAdmn} updtAdmnName={detail.updtAdmnName} updtDate={detail.updtDate}/>}
+            <div className="detail-footer">
+                <div className="detail-footer-left">
+                    <button type="button" className="subtle-button" onClick={() => onMovePath(USER_MENU_LIST_PATH)}>목록</button>
+                    {!isNew && detail && permission.deltYsno === 'Y' && <button type="button" className="delete-button" onClick={() => void deleteMenu(detail)}>삭제</button>}
+                </div>
+                <div className="detail-footer-right">
+                    {permission.writYsno === 'Y' && <button type="button" disabled={saving} onClick={() => void saveMenu()}>{saving ? '저장 중' : isNew ? '저장' : '수정'}</button>}
+                </div>
+            </div>
         </section>
     )
 }

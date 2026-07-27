@@ -23,6 +23,7 @@ type CodeDetailPageProps = {
     onChangeDetailForm: (index: number, field: keyof DetailCodeForm, value: string) => void
     onSaveAllDetailEditCodes: () => void
     onSaveAllDetailCodes: () => void
+    onSaveAll: () => void
 }
 
 /**
@@ -57,13 +58,11 @@ export function CodeDetailPage({
                                    saving,
                                    onMovePath,
                                    onChangeMasterForm,
-                                   onSaveMasterForm,
                                    onAddDetailInput,
                                    onRemoveDetailInput,
                                    onChangeDetailEditForm,
                                    onChangeDetailForm,
-                                   onSaveAllDetailEditCodes,
-                                   onSaveAllDetailCodes
+                                   onSaveAll
                                }: CodeDetailPageProps) {
     const permission = useMenuPermission()
     const [openedEditRows, setOpenedEditRows] = useState<Set<string>>(new Set())
@@ -106,10 +105,6 @@ export function CodeDetailPage({
             <section className="content-header">
                 <div>
                     <h1>{pageTitle}</h1>
-                </div>
-                <div className="header-actions">
-                    <button type="button" className="subtle-button" onClick={() => onMovePath(CODE_LIST_PATH)}>목록
-                    </button>
                 </div>
             </section>
 
@@ -154,19 +149,6 @@ export function CodeDetailPage({
                         </tbody>
                     </table>
                 </section>
-                <div className="detail-audit-actions">
-                    <AuditInfoTable
-                        regiAdmn={selectedMaster.regiAdmn}
-                        regiAdmnName={selectedMaster.regiAdmnName}
-                        regiDate={selectedMaster.regiDate}
-                        updtAdmn={selectedMaster.updtAdmn}
-                        updtAdmnName={selectedMaster.updtAdmnName}
-                        updtDate={selectedMaster.updtDate}
-                    />
-                    {permission.writYsno === 'Y' && <div className="section-actions">
-                        <button type="button" disabled={saving} onClick={onSaveMasterForm}>수정</button>
-                    </div>}
-                </div>
             </section>
 
             <section className="detail-panel">
@@ -234,11 +216,6 @@ export function CodeDetailPage({
                         </tbody>
                     </table>
                 </section>
-                {permission.writYsno === 'Y' && <div className="section-actions">
-                    <button type="button" disabled={saving || detailEditForms.length === 0}
-                            onClick={onSaveAllDetailEditCodes}>수정
-                    </button>
-                </div>}
             </section>
 
             <section className="detail-panel">
@@ -312,14 +289,27 @@ export function CodeDetailPage({
                                 </tbody>
                             </table>
                         </section>
-                        {permission.writYsno === 'Y' && <div className="section-actions">
-                            <button type="button" disabled={saving} onClick={onSaveAllDetailCodes}>저장</button>
-                        </div>}
                     </>
                 ) : (
                     <div className="empty small">추가할 세부코드가 없습니다.</div>
                 )}
             </section>
+            <AuditInfoTable
+                regiAdmn={selectedMaster.regiAdmn}
+                regiAdmnName={selectedMaster.regiAdmnName}
+                regiDate={selectedMaster.regiDate}
+                updtAdmn={selectedMaster.updtAdmn}
+                updtAdmnName={selectedMaster.updtAdmnName}
+                updtDate={selectedMaster.updtDate}
+            />
+            <div className="detail-footer">
+                <div className="detail-footer-left">
+                    <button type="button" className="subtle-button" onClick={() => onMovePath(CODE_LIST_PATH)}>목록</button>
+                </div>
+                <div className="detail-footer-right">
+                    {permission.writYsno === 'Y' && <button type="button" disabled={saving} onClick={onSaveAll}>{saving ? '저장 중' : '수정'}</button>}
+                </div>
+            </div>
         </section>
     )
 }

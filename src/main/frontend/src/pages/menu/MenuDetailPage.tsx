@@ -1,8 +1,8 @@
 import type { FormEvent } from 'react'
-import { MENU_DETAIL_PREFIX, MENU_LIST_PATH } from '../../constants/routes'
+import { MENU_LIST_PATH } from '../../constants/routes'
 import type { Code } from '../../types/code'
 import type { Menu, MenuForm } from '../../types/menu'
-import { formatDate, getUseeYsnoCodeName } from '../../utils/code'
+import { formatDate } from '../../utils/code'
 import { AuditInfoTable } from '../../components/AuditInfoTable'
 import { useMenuPermission } from '../../contexts/MenuPermissionContext'
 
@@ -18,9 +18,12 @@ type MenuDetailPageProps = {
   onMovePath: (path: string) => void
   onChangeMenuForm: (field: keyof MenuForm, value: string) => void
   onChangeChildForm: (index: number, field: keyof MenuForm, value: string) => void
+  onChangeSubMenu: (index: number, field: 'menuName' | 'menuUrlx' | 'useeYsno' | 'sortOrdr', value: string) => void
   onSubmit: (event: FormEvent<HTMLFormElement>) => void
   onAddChildForm: () => void
   onSaveAllChildMenus: () => void
+  onSaveAllSubMenus: () => void
+  onSaveAll: () => void
   onDelete: (menu: Menu) => void
 }
 
@@ -44,16 +47,12 @@ type MenuDetailPageProps = {
  * @param onDelete
  * @return
  */
-export function MenuDetailPage({ isNewPage, pageTitle, saving, menuForm, menuDetail, childForms, subMenus, useeYsnoCodes, onMovePath, onChangeMenuForm, onChangeChildForm, onSubmit, onAddChildForm, onSaveAllChildMenus, onDelete }: MenuDetailPageProps) {
+export function MenuDetailPage({ isNewPage, pageTitle, saving, menuForm, menuDetail, childForms, subMenus, useeYsnoCodes, onMovePath, onChangeMenuForm, onChangeChildForm, onChangeSubMenu, onSubmit, onAddChildForm, onDelete, onSaveAll }: MenuDetailPageProps) {
   const permission = useMenuPermission()
   return (
     <section className="menu-detail-page">
       <section className="content-header">
         <h1>{pageTitle}</h1>
-        <div className="header-actions">
-          {!isNewPage && permission.deltYsno === 'Y' && <button type="button" className="delete-button" onClick={() => onDelete({ ...menuForm, sortOrdr: Number(menuForm.sortOrdr), regiAdmn: null, regiAdmnName: null, regiDate: null, updtAdmn: null, updtAdmnName: null, updtDate: null })}>삭제</button>}
-          <button type="button" className="subtle-button" onClick={() => onMovePath(MENU_LIST_PATH)}>목록</button>
-        </div>
       </section>
 
       <form className="detail-panel" onSubmit={onSubmit}>
@@ -64,19 +63,6 @@ export function MenuDetailPage({ isNewPage, pageTitle, saving, menuForm, menuDet
           </div>
         </div>
         <MenuFormTable form={menuForm} useeYsnoCodes={useeYsnoCodes} onChange={onChangeMenuForm} />
-        {!isNewPage && menuDetail ? (
-          <div className="detail-audit-actions">
-            <AuditInfoTable
-              regiAdmn={menuDetail.regiAdmn}
-              regiAdmnName={menuDetail.regiAdmnName}
-              regiDate={menuDetail.regiDate}
-              updtAdmn={menuDetail.updtAdmn}
-              updtAdmnName={menuDetail.updtAdmnName}
-              updtDate={menuDetail.updtDate}
-            />
-            {permission.writYsno === 'Y' && <div className="section-actions"><button type="submit" disabled={saving}>{saving ? '저장 중' : '수정'}</button></div>}
-          </div>
-        ) : permission.writYsno === 'Y' ? <div className="section-actions"><button type="submit" disabled={saving}>{saving ? '저장 중' : '저장'}</button></div> : null}
       </form>
 
       {!isNewPage && menuForm.subxNumb === '0' && (
@@ -107,12 +93,16 @@ export function MenuDetailPage({ isNewPage, pageTitle, saving, menuForm, menuDet
                       <td colSpan={7}>하위메뉴가 없습니다.</td>
                     </tr>
                   ) : (
-                    subMenus.map((menu) => (
-                      <tr key={`${menu.menuNumb}-${menu.subxNumb}`} onClick={() => onMovePath(`${MENU_DETAIL_PREFIX}/${menu.menuNumb}/${menu.subxNumb}`)}>
-                        <td>{menu.menuName}</td>
-                        <td>{menu.menuUrlx}</td>
-                        <td className="col-usee">{getUseeYsnoCodeName(useeYsnoCodes, menu.useeYsno, menu.useeYsnoName)}</td>
-                        <td className="col-sort">{menu.sortOrdr}</td>
+                    subMenus.map((menu, index) => (
+                      <tr key={`${menu.menuNumb}-${menu.subxNumb}`} className="editable-row">
+                        <td><input value={menu.menuName} onChange={(event) => onChangeSubMenu(index, 'menuName', event.target.value)} /></td>
+                        <td><input value={menu.menuUrlx} onChange={(event) => onChangeSubMenu(index, 'menuUrlx', event.target.value)} /></td>
+                        <td className="col-usee">
+                          <select value={menu.useeYsno ?? 'Y'} onChange={(event) => onChangeSubMenu(index, 'useeYsno', event.target.value)}>
+                            {useeYsnoCodes.map((code) => <option key={code.comdCode} value={code.comdCode}>{code.opt1Name ?? code.comdName}</option>)}
+                          </select>
+                        </td>
+                        <td className="col-sort"><input type="number" min="1" value={menu.sortOrdr ?? 1} onChange={(event) => onChangeSubMenu(index, 'sortOrdr', event.target.value)} /></td>
                         <td>{menu.updtAdmnName ?? menu.updtAdmn}</td>
                         <td>{formatDate(menu.updtDate)}</td>
                         <td className="col-action">
@@ -155,7 +145,6 @@ export function MenuDetailPage({ isNewPage, pageTitle, saving, menuForm, menuDet
                     </tbody>
                   </table>
                 </section>
-                {permission.writYsno === 'Y' && <div className="section-actions"><button type="button" disabled={saving} onClick={onSaveAllChildMenus}>저장</button></div>}
               </>
             ) : (
               <div className="empty small">추가할 하위메뉴가 없습니다.</div>
@@ -163,6 +152,25 @@ export function MenuDetailPage({ isNewPage, pageTitle, saving, menuForm, menuDet
           </section>
         </>
       )}
+      {!isNewPage && menuDetail && (
+        <AuditInfoTable
+          regiAdmn={menuDetail.regiAdmn}
+          regiAdmnName={menuDetail.regiAdmnName}
+          regiDate={menuDetail.regiDate}
+          updtAdmn={menuDetail.updtAdmn}
+          updtAdmnName={menuDetail.updtAdmnName}
+          updtDate={menuDetail.updtDate}
+        />
+      )}
+      <div className="detail-footer">
+        <div className="detail-footer-left">
+          <button type="button" className="subtle-button" onClick={() => onMovePath(MENU_LIST_PATH)}>목록</button>
+          {!isNewPage && permission.deltYsno === 'Y' && <button type="button" className="delete-button" onClick={() => onDelete({ ...menuForm, sortOrdr: Number(menuForm.sortOrdr), regiAdmn: null, regiAdmnName: null, regiDate: null, updtAdmn: null, updtAdmnName: null, updtDate: null })}>삭제</button>}
+        </div>
+        <div className="detail-footer-right">
+          {permission.writYsno === 'Y' && <button type="button" disabled={saving} onClick={onSaveAll}>{saving ? '저장 중' : isNewPage ? '저장' : '수정'}</button>}
+        </div>
+      </div>
     </section>
   )
 }

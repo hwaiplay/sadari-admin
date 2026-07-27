@@ -28,19 +28,22 @@ export function AuditInfoTable({
                                    updtAdmnName,
                                    updtDate
                                }: AuditInfoTableProps) {
+    const regiName = regiAdmnName ?? regiAdmn ?? ''
+    const updtName = updtAdmnName ?? updtAdmn ?? ''
+    const regiText = regiName ? `${regiName}(${formatDate(regiDate ?? null)})` : ''
+    const updtText = updtName ? `${updtName}(${formatDate(updtDate ?? null)})` : ''
+
     return (
         <section className="table-wrap audit-info-table">
             <table>
                 <tbody>
                 <tr>
-                    <th>등록자</th>
-                    <td className="readonly-cell">{regiAdmnName ?? regiAdmn ?? ''}</td>
-                    <th>등록일</th>
-                    <td className="readonly-cell">{formatDate(regiDate ?? null)}</td>
-                    <th>수정자</th>
-                    <td className="readonly-cell">{updtAdmnName ?? updtAdmn ?? ''}</td>
-                    <th>수정일</th>
-                    <td className="readonly-cell">{formatDate(updtDate ?? null)}</td>
+                    <th>등록</th>
+                    <td className="readonly-cell">{regiText}</td>
+                </tr>
+                <tr>
+                    <th>수정</th>
+                    <td className="readonly-cell">{updtText}</td>
                 </tr>
                 </tbody>
             </table>

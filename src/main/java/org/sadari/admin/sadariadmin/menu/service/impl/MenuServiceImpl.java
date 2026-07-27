@@ -112,6 +112,7 @@ public class MenuServiceImpl implements MenuService {
         setMenuKey(menu);
         setMenuDefault(menu, admin);
         menuMapper.setMenu(menu);
+        menuMapper.setMenuAuth(menu);
         return menuMapper.getMenuDtl(menu.getMenuNumb(), menu.getSubxNumb());
     }
 
@@ -144,6 +145,7 @@ public class MenuServiceImpl implements MenuService {
     @Transactional
     public void delMenu(String menuNumb, String subxNumb, AdminSessionVO admin) {
         checkLogin(admin);
+        menuMapper.delMenuAuth(menuNumb, subxNumb);
         menuMapper.delMenu(menuNumb, subxNumb);
     }
 

@@ -166,6 +166,35 @@
                              )
     </insert>
 
+    <!-- 신규 메뉴를 모든 권한그룹에서 조회, 쓰기, 삭제할 수 있도록 등록한다 -->
+    <insert id="setMenuAuth">
+        <bind name="yes" value="@org.sadari.admin.sadariadmin.common.constant.Constant@YES"/>
+        /*setMenuAuth*/
+        INSERT INTO TB_AUTHMN (
+                                 AUTH_CODE
+                               , MENU_NUMB
+                               , SUBX_NUMB
+                               , READ_YSNO
+                               , WRIT_YSNO
+                               , DELT_YSNO
+                               , REGI_ADMN
+                               , REGI_DATE
+                               , UPDT_ADMN
+                               , UPDT_DATE
+                    )
+        SELECT A.AUTH_CODE
+             , #{menuNumb}
+             , #{subxNumb}
+             , #{yes}
+             , #{yes}
+             , #{yes}
+             , #{regiAdmn}
+             , SYSTIMESTAMP
+             , #{updtAdmn}
+             , SYSTIMESTAMP
+          FROM TM_AUTHXM A
+    </insert>
+
     <!-- 메뉴 상세 정보를 수정한다 -->
     <update id="uptMenu">
         /*uptMenu*/
@@ -184,6 +213,14 @@
     <delete id="delMenu">
         /*delMenu*/
         DELETE FROM TM_ADMENU
+         WHERE MENU_NUMB = #{menuNumb}
+           AND SUBX_NUMB = #{subxNumb}
+    </delete>
+
+    <!-- 메뉴에 연결된 전체 권한그룹 권한을 삭제한다 -->
+    <delete id="delMenuAuth">
+        /*delMenuAuth*/
+        DELETE FROM TB_AUTHMN
          WHERE MENU_NUMB = #{menuNumb}
            AND SUBX_NUMB = #{subxNumb}
     </delete>

@@ -49,9 +49,6 @@ export function AlimTempDetailPage({ isNewPage, pageTitle, saving, alimTempForm,
     <section className="alim-temp-detail-page">
       <section className="content-header">
         <h1>{pageTitle}</h1>
-        <div className="header-actions">
-          <button type="button" className="subtle-button" onClick={() => onMovePath(ALIM_TEMP_LIST_PATH)}>목록</button>
-        </div>
       </section>
 
       <form className="detail-panel" onSubmit={onSubmit}>
@@ -102,20 +99,14 @@ export function AlimTempDetailPage({ isNewPage, pageTitle, saving, alimTempForm,
             </tbody>
           </table>
         </section>
-        {!isNewPage && alimTempDetail ? (
-          <div className="detail-audit-actions">
-            <AuditInfoTable
-              regiAdmn={alimTempDetail.regiAdmn}
-              regiAdmnName={alimTempDetail.regiAdmnName}
-              regiDate={alimTempDetail.regiDate}
-              updtAdmn={alimTempDetail.updtAdmn}
-              updtAdmnName={alimTempDetail.updtAdmnName}
-              updtDate={alimTempDetail.updtDate}
-            />
-            {permission.writYsno === 'Y' && <div className="section-actions"><button type="submit" disabled={saving}>{saving ? '저장 중' : '수정'}</button></div>}
-          </div>
-        ) : permission.writYsno === 'Y' ? <div className="section-actions"><button type="submit" disabled={saving}>{saving ? '저장 중' : '저장'}</button></div> : null}
       </form>
+      {!isNewPage && alimTempDetail && <AuditInfoTable regiAdmn={alimTempDetail.regiAdmn} regiAdmnName={alimTempDetail.regiAdmnName} regiDate={alimTempDetail.regiDate} updtAdmn={alimTempDetail.updtAdmn} updtAdmnName={alimTempDetail.updtAdmnName} updtDate={alimTempDetail.updtDate} />}
+      <div className="detail-footer">
+        <div className="detail-footer-left"><button type="button" className="subtle-button" onClick={() => onMovePath(ALIM_TEMP_LIST_PATH)}>목록</button></div>
+        <div className="detail-footer-right">
+          {permission.writYsno === 'Y' && <button type="button" disabled={saving} onClick={() => document.querySelector<HTMLFormElement>('.alim-temp-detail-page form')?.requestSubmit()}>{saving ? '저장 중' : isNewPage ? '저장' : '수정'}</button>}
+        </div>
+      </div>
     </section>
   )
 }

@@ -356,28 +356,6 @@ function App() {
   }
 
   /**
-   * 메뉴 저장 처리
-   * @Author SeungHyeon.Kang
-   * @param event
-   * @return
-   */
-  const saveMenu = async (event: FormEvent<HTMLFormElement>) => {
-    event.preventDefault()
-    setSaving(true)
-    setError(null)
-    try {
-      const savedMenu = await saveMenuApi(menuForm, isMenuDetailPage)
-      alert(savedMenu.message)
-      await loadSidebarMenuList()
-      movePath(`${MENU_DETAIL_PREFIX}/${savedMenu.data.menuNumb}/${savedMenu.data.subxNumb}`)
-    } catch (err: unknown) {
-      setError(err instanceof Error ? err.message : '메뉴 저장 중 오류가 발생했습니다.')
-    } finally {
-      setSaving(false)
-    }
-  }
-
-  /**
    * 메뉴 삭제 처리
    * @Author SeungHyeon.Kang
    * @param menu
@@ -386,8 +364,112 @@ function App() {
   const deleteMenu = async (menu: Pick<Menu, 'menuNumb' | 'subxNumb'>) => {
     await deleteMenuApi(menu)
     await loadSidebarMenuList()
-    if (isMenuDetailPage) movePath(MENU_LIST_PATH)
+    if (isMenuDetailPage && menu.menuNumb === menuForm.menuNumb && menu.subxNumb === menuForm.subxNumb) movePath(MENU_LIST_PATH)
+    else if (isMenuDetailPage) await openMenuDetailPage(menuForm.menuNumb, menuForm.subxNumb)
     else setMenuRows(await getMenuMngList())
+  }
+
+  /**
+   * 기존 하위메뉴 입력값 변경
+   * @Author SeungHyeon.Kang
+   * @param index
+   * @param field
+   * @param value
+   * @return
+   */
+  const changeSubMenu = (index: number, field: 'menuName' | 'menuUrlx' | 'useeYsno' | 'sortOrdr', value: string) => {
+    setSubMenus(subMenus.map((menu, menuIndex) => (
+      menuIndex === index
+        ? { ...menu, [field]: field === 'sortOrdr' ? Number(value) : value }
+        : menu
+    )))
+  }
+
+  /**
+   * 기존 하위메뉴 일괄 수정
+   * @Author SeungHyeon.Kang
+   * @return
+   */
+  const saveAllSubMenus = async () => {
+    if (subMenus.some((menu) => !menu.menuName.trim() || !menu.menuUrlx.trim())) {
+      alert('하위메뉴명과 URL을 입력해 주세요.')
+      return
+    }
+    setSaving(true)
+    setError(null)
+    try {
+      const results = await Promise.all(subMenus.map((menu) => saveMenuApi(toMenuForm(menu), true)))
+      alert(results.at(-1)?.message ?? '수정했습니다.')
+      await openMenuDetailPage(menuForm.menuNumb, menuForm.subxNumb)
+      await loadSidebarMenuList()
+    } catch (err: unknown) {
+      setError(err instanceof Error ? err.message : '하위메뉴 수정 중 오류가 발생했습니다.')
+    } finally {
+      setSaving(false)
+    }
+  }
+
+  /**
+   * 메뉴 상세 전체 정보 저장
+   * @Author SeungHyeon.Kang
+   * @return
+   */
+  const saveAllMenuDetail = async () => {
+    if (!menuForm.menuName.trim() || !menuForm.menuUrlx.trim()) {
+      alert('메뉴명과 URL을 입력해 주세요.')
+      return
+    }
+    if (subMenus.some((menu) => !menu.menuName.trim() || !menu.menuUrlx.trim())
+      || childForms.some((menu) => !menu.menuName.trim() || !menu.menuUrlx.trim())) {
+      alert('하위메뉴명과 URL을 입력해 주세요.')
+      return
+    }
+    setSaving(true)
+    setError(null)
+    try {
+      const result = await saveMenuApi(menuForm, isMenuDetailPage)
+      if (isMenuDetailPage) {
+        await Promise.all(subMenus.map((menu) => saveMenuApi(toMenuForm(menu), true)))
+        await Promise.all(childForms.map((menu) => saveMenuApi(menu, false)))
+        await openMenuDetailPage(menuForm.menuNumb, menuForm.subxNumb)
+        await loadSidebarMenuList()
+      } else {
+        movePath(`${MENU_DETAIL_PREFIX}/${result.data.menuNumb}/${result.data.subxNumb}`)
+      }
+      alert(result.message)
+    } catch (err: unknown) {
+      setError(err instanceof Error ? err.message : '메뉴 저장 중 오류가 발생했습니다.')
+    } finally {
+      setSaving(false)
+    }
+  }
+
+  /**
+   * 코드 상세 전체 정보 저장
+   * @Author SeungHyeon.Kang
+   * @return
+   */
+  const saveAllCodeDetail = async () => {
+    if (!selectedMaster || !masterEditForm) return
+    if (!masterEditForm.codeName.trim() || detailEditForms.some((form) => !form.comdName.trim())
+      || detailForms.some((form) => !form.comdCode.trim() || !form.comdName.trim())) {
+      alert('필수값을 입력해 주세요.')
+      return
+    }
+    if (!validateNewDetailForms()) return
+    setSaving(true)
+    setError(null)
+    try {
+      const masterResult = await updateCodeMaster(masterEditForm.commCode, masterEditForm)
+      await Promise.all(detailEditForms.map((form) => updateDetailCode(selectedMaster.commCode, form.comdCode, toDetailPayload(form))))
+      await Promise.all(detailForms.map((form) => createDetailCode(selectedMaster.commCode, toDetailPayload(form))))
+      alert(masterResult.message)
+      await openCodeDetailPage(selectedMaster.commCode)
+    } catch (err: unknown) {
+      setError(err instanceof Error ? err.message : '코드 상세 저장 중 오류가 발생했습니다.')
+    } finally {
+      setSaving(false)
+    }
   }
 
   /**
@@ -767,9 +849,12 @@ function App() {
           onMovePath={movePath}
           onChangeMenuForm={(field, value) => setMenuForm({ ...menuForm, [field]: value })}
           onChangeChildForm={changeChildForm}
-          onSubmit={saveMenu}
+          onChangeSubMenu={changeSubMenu}
+          onSubmit={(event) => { event.preventDefault(); void saveAllMenuDetail() }}
           onAddChildForm={addChildForm}
           onSaveAllChildMenus={() => void saveAllChildMenus()}
+          onSaveAllSubMenus={() => void saveAllSubMenus()}
+          onSaveAll={() => void saveAllMenuDetail()}
           onDelete={(menu) => void deleteMenu(menu)}
         />
       )}
@@ -795,6 +880,7 @@ function App() {
           onChangeDetailForm={changeDetailForm}
           onSaveAllDetailEditCodes={() => void saveAllDetailEditCodes()}
           onSaveAllDetailCodes={() => void saveAllDetailCodes()}
+          onSaveAll={() => void saveAllCodeDetail()}
         />
       )}
       {isAlimTempListPage && <AlimTempListPage alimTemps={alimTemps} useeYsnoCodes={useeYsnoCodes} onMovePath={movePath} />}
