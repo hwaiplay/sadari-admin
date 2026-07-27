@@ -1,0 +1,129 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "https://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="org.sadari.admin.sadariadmin.usermenu.mapper.UserMenuMapper">
+    <!-- 사용자 메뉴 공통 조회 컬럼 목록 -->
+    <sql id="userMenuColumns">
+          MENU_NUMB
+        , SUBX_NUMB
+        , MENU_NAME
+        , MENU_URLX
+        , SORT_ORDR
+        , SHOW_YSNO
+        , FN_GET_CODE_NAME(#{commYsno}, SHOW_YSNO, #{useeYsnoCode}) AS SHOW_YSNO_NAME
+        , USEE_YSNO
+        , FN_GET_CODE_NAME(#{commYsno}, USEE_YSNO, #{useeYsnoCode}) AS USEE_YSNO_NAME
+        , REGI_ADMN
+        , FN_GET_ADMIN_NAME(REGI_ADMN) AS REGI_ADMN_NAME
+        , REGI_DATE
+        , UPDT_ADMN
+        , FN_GET_ADMIN_NAME(UPDT_ADMN) AS UPDT_ADMN_NAME
+        , UPDT_DATE
+    </sql>
+
+    <!-- 사용자 메뉴관리 화면에 표시할 상위 메뉴 목록을 조회한다 -->
+    <select id="getUserMenuList" resultType="org.sadari.admin.sadariadmin.usermenu.vo.UserMenuVO">
+        <bind name="topMenuSubxNumb" value="@org.sadari.admin.sadariadmin.common.constant.Constant@TOP_MENU_SUBX_NUMB"/>
+        <bind name="commYsno" value="@org.sadari.admin.sadariadmin.common.constant.Constant@COMM_YSNO"/>
+        <bind name="useeYsnoCode" value="@org.sadari.admin.sadariadmin.common.constant.Constant@USEE_YSNO_CODE"/>
+        /*getUserMenuList*/
+        SELECT <include refid="userMenuColumns"/>
+          FROM TM_URMENU
+         WHERE SUBX_NUMB = #{topMenuSubxNumb}
+      ORDER BY NVL(SORT_ORDR, 9999)
+             , TO_NUMBER(MENU_NUMB)
+    </select>
+
+    <!-- 메뉴 번호와 하위 메뉴 번호로 사용자 메뉴 상세를 조회한다 -->
+    <select id="getUserMenuDtl" resultType="org.sadari.admin.sadariadmin.usermenu.vo.UserMenuVO">
+        <bind name="commYsno" value="@org.sadari.admin.sadariadmin.common.constant.Constant@COMM_YSNO"/>
+        <bind name="useeYsnoCode" value="@org.sadari.admin.sadariadmin.common.constant.Constant@USEE_YSNO_CODE"/>
+        /*getUserMenuDtl*/
+        SELECT <include refid="userMenuColumns"/>
+          FROM TM_URMENU
+         WHERE MENU_NUMB = #{menuNumb}
+           AND SUBX_NUMB = #{subxNumb}
+    </select>
+
+    <!-- 특정 상위 메뉴의 사용자 하위 메뉴 목록을 조회한다 -->
+    <select id="getUserSubMenuList" resultType="org.sadari.admin.sadariadmin.usermenu.vo.UserMenuVO">
+        <bind name="topMenuSubxNumb" value="@org.sadari.admin.sadariadmin.common.constant.Constant@TOP_MENU_SUBX_NUMB"/>
+        <bind name="commYsno" value="@org.sadari.admin.sadariadmin.common.constant.Constant@COMM_YSNO"/>
+        <bind name="useeYsnoCode" value="@org.sadari.admin.sadariadmin.common.constant.Constant@USEE_YSNO_CODE"/>
+        /*getUserSubMenuList*/
+        SELECT <include refid="userMenuColumns"/>
+          FROM TM_URMENU
+         WHERE MENU_NUMB = #{menuNumb}
+           AND SUBX_NUMB != #{topMenuSubxNumb}
+      ORDER BY NVL(SORT_ORDR, 9999)
+             , TO_NUMBER(SUBX_NUMB)
+    </select>
+
+    <!-- 신규 사용자 상위 메뉴 번호를 조회한다 -->
+    <select id="getUserMenuNumb" resultType="string">
+        <bind name="topMenuSubxNumb" value="@org.sadari.admin.sadariadmin.common.constant.Constant@TOP_MENU_SUBX_NUMB"/>
+        /*getUserMenuNumb*/
+        SELECT TO_CHAR(NVL(MAX(TO_NUMBER(MENU_NUMB)), 0) + 1)
+          FROM TM_URMENU
+         WHERE SUBX_NUMB = #{topMenuSubxNumb}
+    </select>
+
+    <!-- 특정 사용자 상위 메뉴 아래의 신규 하위 메뉴 번호를 조회한다 -->
+    <select id="getUserSubxNumb" resultType="string">
+        /*getUserSubxNumb*/
+        SELECT TO_CHAR(NVL(MAX(TO_NUMBER(SUBX_NUMB)), -1) + 1)
+          FROM TM_URMENU
+         WHERE MENU_NUMB = #{menuNumb}
+    </select>
+
+    <!-- 사용자 메뉴 정보를 등록한다 -->
+    <insert id="setUserMenu">
+        /*setUserMenu*/
+        INSERT INTO TM_URMENU (
+                                 MENU_NUMB
+                                ,SUBX_NUMB
+                                ,MENU_NAME
+                                ,MENU_URLX
+                                ,SORT_ORDR
+                                ,SHOW_YSNO
+                                ,USEE_YSNO
+                                ,REGI_ADMN
+                                ,REGI_DATE
+                                ,UPDT_ADMN
+                                ,UPDT_DATE
+                    ) VALUES (  #{menuNumb}
+                               ,#{subxNumb}
+                               ,#{menuName}
+                               ,#{menuUrlx}
+                               ,#{sortOrdr,jdbcType=NUMERIC}
+                               ,#{showYsno}
+                               ,#{useeYsno}
+                               ,#{regiAdmn}
+                               ,SYSTIMESTAMP
+                               ,#{updtAdmn}
+                               ,SYSTIMESTAMP
+                             )
+    </insert>
+
+    <!-- 사용자 메뉴 상세 정보를 수정한다 -->
+    <update id="uptUserMenu">
+        /*uptUserMenu*/
+        UPDATE TM_URMENU
+           SET MENU_NAME = #{menuName}
+             , MENU_URLX = #{menuUrlx}
+             , SORT_ORDR = #{sortOrdr,jdbcType=NUMERIC}
+             , SHOW_YSNO = #{showYsno}
+             , USEE_YSNO = #{useeYsno}
+             , UPDT_ADMN = #{updtAdmn}
+             , UPDT_DATE = SYSTIMESTAMP
+         WHERE MENU_NUMB = #{menuNumb}
+           AND SUBX_NUMB = #{subxNumb}
+    </update>
+
+    <!-- 메뉴 번호와 하위 메뉴 번호로 사용자 메뉴를 삭제한다 -->
+    <delete id="delUserMenu">
+        /*delUserMenu*/
+        DELETE FROM TM_URMENU
+         WHERE MENU_NUMB = #{menuNumb}
+           AND SUBX_NUMB = #{subxNumb}
+    </delete>
+</mapper>

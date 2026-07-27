@@ -2,6 +2,7 @@ package org.sadari.admin.sadariadmin.menu.service;
 
 import org.sadari.admin.sadariadmin.admin.vo.AdminSessionVO;
 import org.sadari.admin.sadariadmin.menu.vo.MenuVO;
+import org.sadari.admin.sadariadmin.menu.vo.MenuPermissionVO;
 
 import java.util.List;
 
@@ -14,7 +15,10 @@ public interface MenuService {
      * @param authLevel
      * @return
      */
-    List<MenuVO> getMenuList(Integer authLevel);
+    List<MenuVO> getMenuList(AdminSessionVO admin);
+
+    /** 관리자 메뉴 권한 조회 */
+    MenuPermissionVO getMenuPermission(String menuUrlx, AdminSessionVO admin);
 
     /**
      * 메뉴관리 목록 조회

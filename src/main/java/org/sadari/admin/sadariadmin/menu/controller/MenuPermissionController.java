@@ -1,47 +1,31 @@
 package org.sadari.admin.sadariadmin.menu.controller;
 
 import org.sadari.admin.sadariadmin.admin.vo.AdminSessionVO;
-import org.sadari.admin.sadariadmin.common.constant.Constant;
 import org.sadari.admin.sadariadmin.common.result.ResultData;
-import org.sadari.admin.sadariadmin.menu.service.MenuPermissionService;
+import org.sadari.admin.sadariadmin.menu.service.MenuService;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
-/**
- * 메뉴 권한 조회 API 컨트롤러
- */
+/** 관리자 메뉴 권한 조회 API */
 @RestController
-@RequestMapping(Constant.API_MENU_PERMISSIONS_PREFIX)
 public class MenuPermissionController {
 
-    /** 메뉴 권한 서비스 */
-    private final MenuPermissionService menuPermissionService;
+    /** 메뉴 관리 서비스 */
+    private final MenuService menuService;
 
-    /**
-     * 메뉴 권한 조회 API 컨트롤러 생성
-     * @Author SeungHyeon.Kang
-     * @param menuPermissionService
-     * @return
-     */
-    public MenuPermissionController(MenuPermissionService menuPermissionService) {
-        this.menuPermissionService = menuPermissionService;
+    /** 관리자 메뉴 권한 조회 API 생성 */
+    public MenuPermissionController(MenuService menuService) {
+        this.menuService = menuService;
     }
 
-    /**
-     * 로그인 관리자 메뉴 권한 조회
-     * @Author SeungHyeon.Kang
-     * @param menuUrlx
-     * @param admin
-     * @return
-     */
-    @GetMapping
-    public ResultData getPermission(
+    /** 로그인 관리자의 메뉴 권한 조회 */
+    @GetMapping("/api/menu-permissions")
+    public ResultData getMenuPermission(
             @RequestParam String menuUrlx,
             @AuthenticationPrincipal AdminSessionVO admin
     ) {
-        return ResultData.success(menuPermissionService.getPermission(menuUrlx, admin));
+        return ResultData.success(menuService.getMenuPermission(menuUrlx, admin));
     }
 }

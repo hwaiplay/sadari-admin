@@ -8,6 +8,7 @@ import org.sadari.admin.sadariadmin.common.util.StringUtil;
 import org.sadari.admin.sadariadmin.menu.mapper.MenuMapper;
 import org.sadari.admin.sadariadmin.menu.service.MenuService;
 import org.sadari.admin.sadariadmin.menu.vo.MenuVO;
+import org.sadari.admin.sadariadmin.menu.vo.MenuPermissionVO;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -38,8 +39,19 @@ public class MenuServiceImpl implements MenuService {
      * @return
      */
     @Override
-    public List<MenuVO> getMenuList(Integer authLevel) {
-        return menuMapper.getMenuList(authLevel);
+    public List<MenuVO> getMenuList(AdminSessionVO admin) {
+        checkLogin(admin);
+        return menuMapper.getMenuList(admin.getAuthCode());
+    }
+
+    /** 관리자 메뉴 권한 조회 */
+    @Override
+    public MenuPermissionVO getMenuPermission(String menuUrlx, AdminSessionVO admin) {
+        checkLogin(admin);
+        if (StringUtil.isEmpty(menuUrlx)) {
+            throw new BusinessException(HttpStatus.BAD_REQUEST, ResultEnum.COMMON_REQUIRED_VALUE);
+        }
+        return menuMapper.getMenuPermission(admin.getAuthCode(), menuUrlx.trim());
     }
 
     /**
@@ -163,24 +175,12 @@ public class MenuServiceImpl implements MenuService {
      * @return
      */
     private void setMenuDefault(MenuVO menu, AdminSessionVO admin) {
-        // 조회 권한이 없으면 로그인 관리자의 권한을 기본 권한으로 사용한다
-        if (StringUtil.isEmpty(menu.getReadAuth())) {
-            menu.setReadAuth(admin.getAuthCode());
-        }
-        // 쓰기 권한이 없으면 조회 권한과 동일한 권한을 사용한다
-        if (StringUtil.isEmpty(menu.getWritAuth())) {
-            menu.setWritAuth(menu.getReadAuth());
-        }
-        // 삭제 권한이 없으면 조회 권한과 동일한 권한을 사용한다
-        if (StringUtil.isEmpty(menu.getDeltAuth())) {
-            menu.setDeltAuth(menu.getReadAuth());
-        }
         // 사용 여부가 없으면 사용 상태로 저장한다
         if (StringUtil.isEmpty(menu.getUseeYsno())) {
             menu.setUseeYsno(Constant.YES);
         }
         // 정렬 순서가 없으면 시스템 기본 정렬 순서를 사용한다
-        if (StringUtil.isEmpty(menu.getSortOrdr())) {
+        if (StringUtil.isEmpty(menu.getSortOrdr()) || menu.getSortOrdr() < Constant.DEFAULT_MENU_SORT_ORDR) {
             menu.setSortOrdr(Constant.DEFAULT_MENU_SORT_ORDR);
         }
         menu.setRegiAdmn(admin.getAdmnNumb());

@@ -1,0 +1,153 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "https://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="org.sadari.admin.sadariadmin.authgroup.mapper.AuthGroupMapper">
+    <!-- 권한그룹 목록을 조회한다 -->
+    <select id="getAuthGroupList" resultType="org.sadari.admin.sadariadmin.authgroup.vo.AuthGroupVO">
+        <bind name="commYsno" value="@org.sadari.admin.sadariadmin.common.constant.Constant@COMM_YSNO"/>
+        <bind name="useeYsnoCode" value="@org.sadari.admin.sadariadmin.common.constant.Constant@USEE_YSNO_CODE"/>
+        /*getAuthGroupList*/
+        SELECT A.AUTH_CODE
+             , A.AUTH_NAME
+             , A.USEE_YSNO
+             , FN_GET_CODE_NAME(#{commYsno}, A.USEE_YSNO, #{useeYsnoCode}) AS USEE_YSNO_NAME
+             , A.REGI_ADMN
+             , FN_GET_ADMIN_NAME(A.REGI_ADMN) AS REGI_ADMN_NAME
+             , A.REGI_DATE
+             , A.UPDT_ADMN
+             , FN_GET_ADMIN_NAME(A.UPDT_ADMN) AS UPDT_ADMN_NAME
+             , A.UPDT_DATE
+          FROM TM_AUTHXM A
+      ORDER BY A.AUTH_CODE
+    </select>
+
+    <!-- 권한그룹 상세를 조회한다 -->
+    <select id="getAuthGroup" resultType="org.sadari.admin.sadariadmin.authgroup.vo.AuthGroupVO">
+        <bind name="commYsno" value="@org.sadari.admin.sadariadmin.common.constant.Constant@COMM_YSNO"/>
+        <bind name="useeYsnoCode" value="@org.sadari.admin.sadariadmin.common.constant.Constant@USEE_YSNO_CODE"/>
+        /*getAuthGroup*/
+        SELECT A.AUTH_CODE
+             , A.AUTH_NAME
+             , A.USEE_YSNO
+             , FN_GET_CODE_NAME(#{commYsno}, A.USEE_YSNO, #{useeYsnoCode}) AS USEE_YSNO_NAME
+             , A.REGI_ADMN
+             , FN_GET_ADMIN_NAME(A.REGI_ADMN) AS REGI_ADMN_NAME
+             , A.REGI_DATE
+             , A.UPDT_ADMN
+             , FN_GET_ADMIN_NAME(A.UPDT_ADMN) AS UPDT_ADMN_NAME
+             , A.UPDT_DATE
+          FROM TM_AUTHXM A
+         WHERE A.AUTH_CODE = #{authCode}
+    </select>
+
+    <!-- 권한 코드 중복 건수를 조회한다 -->
+    <select id="getAuthGroupCount" resultType="int">
+        /*getAuthGroupCount*/
+        SELECT COUNT(*)
+          FROM TM_AUTHXM
+         WHERE AUTH_CODE = #{authCode}
+    </select>
+
+    <!-- 전체 관리자 메뉴와 권한그룹의 메뉴별 권한을 조회한다 -->
+    <select id="getAuthMenuList" resultType="org.sadari.admin.sadariadmin.authgroup.vo.AuthMenuVO">
+        <bind name="no" value="@org.sadari.admin.sadariadmin.common.constant.Constant@NO"/>
+        <bind name="yes" value="@org.sadari.admin.sadariadmin.common.constant.Constant@YES"/>
+        <bind name="topMenuSubxNumb" value="@org.sadari.admin.sadariadmin.common.constant.Constant@TOP_MENU_SUBX_NUMB"/>
+        /*getAuthMenuList*/
+        SELECT #{authCode} AS AUTH_CODE
+             , M.MENU_NUMB
+             , M.SUBX_NUMB
+             , M.MENU_NAME
+             , M.MENU_URLX
+             , M.SORT_ORDR
+             , NVL(A.READ_YSNO, #{no}) AS READ_YSNO
+             , NVL(A.WRIT_YSNO, #{no}) AS WRIT_YSNO
+             , NVL(A.DELT_YSNO, #{no}) AS DELT_YSNO
+          FROM TM_ADMENU M
+     LEFT JOIN TB_AUTHMN A
+            ON A.AUTH_CODE = #{authCode}
+           AND A.MENU_NUMB = M.MENU_NUMB
+           AND A.SUBX_NUMB = M.SUBX_NUMB
+     LEFT JOIN TM_ADMENU P
+            ON P.MENU_NUMB = M.MENU_NUMB
+           AND P.SUBX_NUMB = #{topMenuSubxNumb}
+         WHERE NVL(M.USEE_YSNO, #{yes}) = #{yes}
+      ORDER BY NVL(P.SORT_ORDR, M.SORT_ORDR)
+             , TO_NUMBER(M.MENU_NUMB)
+             , CASE WHEN M.SUBX_NUMB = #{topMenuSubxNumb} THEN 0 ELSE 1 END
+             , NVL(M.SORT_ORDR, 9999)
+             , TO_NUMBER(M.SUBX_NUMB)
+    </select>
+
+    <!-- 권한그룹을 등록한다 -->
+    <insert id="setAuthGroup">
+        /*setAuthGroup*/
+        INSERT INTO TM_AUTHXM (
+                                 AUTH_CODE
+                               , AUTH_NAME
+                               , USEE_YSNO
+                               , REGI_ADMN
+                               , REGI_DATE
+                               , UPDT_ADMN
+                               , UPDT_DATE
+                    ) VALUES (  #{authCode}
+                              , #{authName}
+                              , #{useeYsno}
+                              , #{regiAdmn}
+                              , SYSTIMESTAMP
+                              , #{updtAdmn}
+                              , SYSTIMESTAMP
+                             )
+    </insert>
+
+    <!-- 권한그룹을 수정한다 -->
+    <update id="uptAuthGroup">
+        /*uptAuthGroup*/
+        UPDATE TM_AUTHXM
+           SET AUTH_NAME = #{authName}
+             , USEE_YSNO = #{useeYsno}
+             , UPDT_ADMN = #{updtAdmn}
+             , UPDT_DATE = SYSTIMESTAMP
+         WHERE AUTH_CODE = #{authCode}
+    </update>
+
+    <!-- 메뉴별 권한을 등록한다 -->
+    <insert id="setAuthMenu">
+        /*setAuthMenu*/
+        INSERT INTO TB_AUTHMN (
+                                 AUTH_CODE
+                               , MENU_NUMB
+                               , SUBX_NUMB
+                               , READ_YSNO
+                               , WRIT_YSNO
+                               , DELT_YSNO
+                               , REGI_ADMN
+                               , REGI_DATE
+                               , UPDT_ADMN
+                               , UPDT_DATE
+                    ) VALUES (  #{authCode}
+                              , #{menuNumb}
+                              , #{subxNumb}
+                              , #{readYsno}
+                              , #{writYsno}
+                              , #{deltYsno}
+                              , #{regiAdmn}
+                              , SYSTIMESTAMP
+                              , #{updtAdmn}
+                              , SYSTIMESTAMP
+                             )
+    </insert>
+
+    <!-- 권한그룹에 연결된 메뉴 권한을 삭제한다 -->
+    <delete id="delAuthMenu">
+        /*delAuthMenu*/
+        DELETE FROM TB_AUTHMN
+         WHERE AUTH_CODE = #{authCode}
+    </delete>
+
+    <!-- 권한그룹을 삭제한다 -->
+    <delete id="delAuthGroup">
+        /*delAuthGroup*/
+        DELETE FROM TM_AUTHXM
+         WHERE AUTH_CODE = #{authCode}
+    </delete>
+</mapper>

@@ -148,6 +148,10 @@ public class CodeManageService {
         if (StringUtil.isEmpty(code.getUseeYsno())) {
             code.setUseeYsno(Constant.YES);
         }
+        // 정렬 순서가 없거나 1보다 작으면 최초 정렬값을 사용한다
+        if (StringUtil.isEmpty(code.getSortOrdr()) || code.getSortOrdr() < Constant.DEFAULT_MENU_SORT_ORDR) {
+            code.setSortOrdr(Constant.DEFAULT_MENU_SORT_ORDR);
+        }
         code.setRegiAdmn(String.valueOf(admin.getAdmnNumb()));
         code.setUpdtAdmn(String.valueOf(admin.getAdmnNumb()));
         codeMapper.setComdCode(code);
@@ -177,6 +181,10 @@ public class CodeManageService {
         code.setComdCode(comdCode);
         if (StringUtil.isEmpty(code.getUseeYsno())) {
             code.setUseeYsno(Constant.YES);
+        }
+        // 정렬 순서가 없거나 1보다 작으면 최초 정렬값을 사용한다
+        if (StringUtil.isEmpty(code.getSortOrdr()) || code.getSortOrdr() < Constant.DEFAULT_MENU_SORT_ORDR) {
+            code.setSortOrdr(Constant.DEFAULT_MENU_SORT_ORDR);
         }
         code.setUpdtAdmn(String.valueOf(admin.getAdmnNumb()));
         codeMapper.uptComdCode(code);

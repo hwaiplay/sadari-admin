@@ -1,5 +1,4 @@
 import { fetchJson, fetchResult } from './client'
-import type { Permission } from '../types/common'
 import type { Menu, MenuForm } from '../types/menu'
 
 /**
@@ -8,14 +7,6 @@ import type { Menu, MenuForm } from '../types/menu'
  * @return
  */
 export const getSidebarMenus = () => fetchJson<Menu[]>('/api/menus/sidebar', undefined, '메뉴 목록 조회에 실패했습니다.')
-
-/**
- * 메뉴 권한 조회
- * @Author SeungHyeon.Kang
- * @param menuUrlx
- * @return
- */
-export const getPermission = (menuUrlx: string) => fetchJson<Permission>(`/api/menu-permissions?menuUrlx=${encodeURIComponent(menuUrlx)}`, undefined, '권한 조회에 실패했습니다.')
 
 /**
  * 메뉴관리 목록 조회
@@ -54,9 +45,6 @@ export const saveMenuApi = (form: MenuForm, detail: boolean) => {
     subxNumb: form.subxNumb || null,
     menuName: form.menuName.trim(),
     menuUrlx: form.menuUrlx.trim(),
-    readAuth: form.readAuth,
-    writAuth: form.writAuth,
-    deltAuth: form.deltAuth,
     sortOrdr: Number(form.sortOrdr),
     useeYsno: form.useeYsno,
   }

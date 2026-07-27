@@ -1,9 +1,10 @@
 import type { FormEvent } from 'react'
 import { MENU_DETAIL_PREFIX, MENU_LIST_PATH } from '../../constants/routes'
 import type { Code } from '../../types/code'
-import type { Permission } from '../../types/common'
 import type { Menu, MenuForm } from '../../types/menu'
 import { formatDate, getUseeYsnoCodeName } from '../../utils/code'
+import { AuditInfoTable } from '../../components/AuditInfoTable'
+import { useMenuPermission } from '../../contexts/MenuPermissionContext'
 
 type MenuDetailPageProps = {
   isNewPage: boolean
@@ -13,9 +14,7 @@ type MenuDetailPageProps = {
   menuDetail: Menu | null
   childForms: MenuForm[]
   subMenus: Menu[]
-  authCodes: Code[]
   useeYsnoCodes: Code[]
-  permission: Permission
   onMovePath: (path: string) => void
   onChangeMenuForm: (field: keyof MenuForm, value: string) => void
   onChangeChildForm: (index: number, field: keyof MenuForm, value: string) => void
@@ -35,9 +34,7 @@ type MenuDetailPageProps = {
  * @param menuDetail
  * @param childForms
  * @param subMenus
- * @param authCodes
  * @param useeYsnoCodes
- * @param permission
  * @param onMovePath
  * @param onChangeMenuForm
  * @param onChangeChildForm
@@ -47,13 +44,14 @@ type MenuDetailPageProps = {
  * @param onDelete
  * @return
  */
-export function MenuDetailPage({ isNewPage, pageTitle, saving, menuForm, menuDetail, childForms, subMenus, authCodes, useeYsnoCodes, permission, onMovePath, onChangeMenuForm, onChangeChildForm, onSubmit, onAddChildForm, onSaveAllChildMenus, onDelete }: MenuDetailPageProps) {
+export function MenuDetailPage({ isNewPage, pageTitle, saving, menuForm, menuDetail, childForms, subMenus, useeYsnoCodes, onMovePath, onChangeMenuForm, onChangeChildForm, onSubmit, onAddChildForm, onSaveAllChildMenus, onDelete }: MenuDetailPageProps) {
+  const permission = useMenuPermission()
   return (
     <section className="menu-detail-page">
       <section className="content-header">
         <h1>{pageTitle}</h1>
         <div className="header-actions">
-          {!isNewPage && permission.deltYn && <button type="button" className="delete-button" onClick={() => onDelete({ ...menuForm, sortOrdr: Number(menuForm.sortOrdr), regiAdmn: null, regiAdmnName: null, regiDate: null, updtAdmn: null, updtAdmnName: null, updtDate: null })}>삭제</button>}
+          {!isNewPage && permission.deltYsno === 'Y' && <button type="button" className="delete-button" onClick={() => onDelete({ ...menuForm, sortOrdr: Number(menuForm.sortOrdr), regiAdmn: null, regiAdmnName: null, regiDate: null, updtAdmn: null, updtAdmnName: null, updtDate: null })}>삭제</button>}
           <button type="button" className="subtle-button" onClick={() => onMovePath(MENU_LIST_PATH)}>목록</button>
         </div>
       </section>
@@ -65,8 +63,20 @@ export function MenuDetailPage({ isNewPage, pageTitle, saving, menuForm, menuDet
             <p>메뉴 기본 정보와 권한을 설정합니다.</p>
           </div>
         </div>
-        <MenuFormTable isNewPage={isNewPage} form={menuForm} menuDetail={menuDetail} authCodes={authCodes} useeYsnoCodes={useeYsnoCodes} onChange={onChangeMenuForm} />
-        {permission.writYn && <div className="section-actions"><button type="submit" disabled={saving}>{saving ? '저장 중' : isNewPage ? '저장' : '수정'}</button></div>}
+        <MenuFormTable form={menuForm} useeYsnoCodes={useeYsnoCodes} onChange={onChangeMenuForm} />
+        {!isNewPage && menuDetail ? (
+          <div className="detail-audit-actions">
+            <AuditInfoTable
+              regiAdmn={menuDetail.regiAdmn}
+              regiAdmnName={menuDetail.regiAdmnName}
+              regiDate={menuDetail.regiDate}
+              updtAdmn={menuDetail.updtAdmn}
+              updtAdmnName={menuDetail.updtAdmnName}
+              updtDate={menuDetail.updtDate}
+            />
+            {permission.writYsno === 'Y' && <div className="section-actions"><button type="submit" disabled={saving}>{saving ? '저장 중' : '수정'}</button></div>}
+          </div>
+        ) : permission.writYsno === 'Y' ? <div className="section-actions"><button type="submit" disabled={saving}>{saving ? '저장 중' : '저장'}</button></div> : null}
       </form>
 
       {!isNewPage && menuForm.subxNumb === '0' && (
@@ -88,13 +98,13 @@ export function MenuDetailPage({ isNewPage, pageTitle, saving, menuForm, menuDet
                     <th className="col-sort">정렬</th>
                     <th>수정자</th>
                     <th>수정일</th>
-                    {permission.deltYn && <th className="col-action">삭제</th>}
+                    <th className="col-action">삭제</th>
                   </tr>
                 </thead>
                 <tbody>
                   {subMenus.length === 0 ? (
                     <tr className="empty-row">
-                      <td colSpan={permission.deltYn ? 7 : 6}>하위메뉴가 없습니다.</td>
+                      <td colSpan={7}>하위메뉴가 없습니다.</td>
                     </tr>
                   ) : (
                     subMenus.map((menu) => (
@@ -105,11 +115,9 @@ export function MenuDetailPage({ isNewPage, pageTitle, saving, menuForm, menuDet
                         <td className="col-sort">{menu.sortOrdr}</td>
                         <td>{menu.updtAdmnName ?? menu.updtAdmn}</td>
                         <td>{formatDate(menu.updtDate)}</td>
-                        {permission.deltYn && (
-                          <td className="col-action">
-                            <button type="button" className="delete-button" onClick={(event) => { event.stopPropagation(); onDelete(menu) }}>삭제</button>
-                          </td>
-                        )}
+                        <td className="col-action">
+                          {permission.deltYsno === 'Y' && <button type="button" className="delete-button" onClick={(event) => { event.stopPropagation(); onDelete(menu) }}>삭제</button>}
+                        </td>
                       </tr>
                     ))
                   )}
@@ -124,7 +132,7 @@ export function MenuDetailPage({ isNewPage, pageTitle, saving, menuForm, menuDet
                 <h2>하위메뉴 등록</h2>
                 <p>추가할 하위메뉴를 여러 개 입력한 뒤 한번에 저장합니다.</p>
               </div>
-              {permission.writYn && <button type="button" className="subtle-button" onClick={onAddChildForm}>하위메뉴 추가</button>}
+              {permission.writYsno === 'Y' && <button type="button" className="subtle-button" onClick={onAddChildForm}>하위메뉴 추가</button>}
             </div>
             {childForms.length > 0 ? (
               <>
@@ -135,22 +143,19 @@ export function MenuDetailPage({ isNewPage, pageTitle, saving, menuForm, menuDet
                         <th>메뉴명</th>
                         <th>URL</th>
                         <th className="col-usee">사용여부</th>
-                        <th>조회권한</th>
-                        <th>쓰기권한</th>
-                        <th>삭제권한</th>
                         <th className="col-sort">정렬</th>
                       </tr>
                     </thead>
                     <tbody>
                       {childForms.map((form, index) => (
                         <tr key={index} className="editable-row">
-                          <MenuTableCells form={form} authCodes={authCodes} useeYsnoCodes={useeYsnoCodes} onChange={(field, value) => onChangeChildForm(index, field, value)} />
+                          <MenuTableCells form={form} useeYsnoCodes={useeYsnoCodes} onChange={(field, value) => onChangeChildForm(index, field, value)} />
                         </tr>
                       ))}
                     </tbody>
                   </table>
                 </section>
-                <div className="section-actions"><button type="button" disabled={saving} onClick={onSaveAllChildMenus}>저장</button></div>
+                {permission.writYsno === 'Y' && <div className="section-actions"><button type="button" disabled={saving} onClick={onSaveAllChildMenus}>저장</button></div>}
               </>
             ) : (
               <div className="empty small">추가할 하위메뉴가 없습니다.</div>
@@ -163,10 +168,7 @@ export function MenuDetailPage({ isNewPage, pageTitle, saving, menuForm, menuDet
 }
 
 type MenuFormTableProps = {
-  isNewPage?: boolean
   form: MenuForm
-  menuDetail?: Menu | null
-  authCodes: Code[]
   useeYsnoCodes: Code[]
   onChange: (field: keyof MenuForm, value: string) => void
 }
@@ -176,12 +178,11 @@ type MenuFormTableProps = {
  * @Author SeungHyeon.Kang
  * @param form
  * @param menuDetail
- * @param authCodes
  * @param useeYsnoCodes
  * @param onChange
  * @return
  */
-function MenuFormTable({ isNewPage = false, form, menuDetail, authCodes, useeYsnoCodes, onChange }: MenuFormTableProps) {
+function MenuFormTable({ form, useeYsnoCodes, onChange }: MenuFormTableProps) {
   return (
     <section className="table-wrap menu-info-table">
       <table>
@@ -199,25 +200,9 @@ function MenuFormTable({ isNewPage = false, form, menuDetail, authCodes, useeYsn
             </td>
           </tr>
           <tr>
-            <th>조회권한</th>
-            <td><select value={form.readAuth} onChange={(event) => onChange('readAuth', event.target.value)}>{authCodes.map((code) => <option key={code.comdCode} value={code.comdCode}>{code.comdName}</option>)}</select></td>
-            <th>쓰기권한</th>
-            <td><select value={form.writAuth} onChange={(event) => onChange('writAuth', event.target.value)}>{authCodes.map((code) => <option key={code.comdCode} value={code.comdCode}>{code.comdName}</option>)}</select></td>
-            <th>삭제권한</th>
-            <td><select value={form.deltAuth} onChange={(event) => onChange('deltAuth', event.target.value)}>{authCodes.map((code) => <option key={code.comdCode} value={code.comdCode}>{code.comdName}</option>)}</select></td>
-          </tr>
-          <tr>
             <th>정렬</th>
-            <td><input type="number" value={form.sortOrdr} onChange={(event) => onChange('sortOrdr', event.target.value)} required /></td>
-            {!isNewPage && (
-              <>
-                <th>수정자</th>
-                <td className="readonly-cell">{menuDetail?.updtAdmnName ?? menuDetail?.updtAdmn ?? ''}</td>
-                <th>수정일</th>
-                <td className="readonly-cell">{formatDate(menuDetail?.updtDate ?? null)}</td>
-              </>
-            )}
-            {isNewPage && <td colSpan={4} />}
+            <td><input type="number" min="1" value={form.sortOrdr} onChange={(event) => onChange('sortOrdr', event.target.value)} required /></td>
+            <td colSpan={4} />
           </tr>
         </tbody>
       </table>
@@ -229,12 +214,11 @@ function MenuFormTable({ isNewPage = false, form, menuDetail, authCodes, useeYsn
  * 메뉴 입력 표 셀 목록
  * @Author SeungHyeon.Kang
  * @param form
- * @param authCodes
  * @param useeYsnoCodes
  * @param onChange
  * @return
  */
-function MenuTableCells({ form, authCodes, useeYsnoCodes, onChange }: MenuFormTableProps) {
+function MenuTableCells({ form, useeYsnoCodes, onChange }: MenuFormTableProps) {
   return (
     <>
       <td><input value={form.menuName} onChange={(event) => onChange('menuName', event.target.value)} required /></td>
@@ -244,10 +228,7 @@ function MenuTableCells({ form, authCodes, useeYsnoCodes, onChange }: MenuFormTa
           {useeYsnoCodes.map((code) => <option key={code.comdCode} value={code.comdCode}>{code.opt1Name ?? code.comdName}</option>)}
         </select>
       </td>
-      <td><select value={form.readAuth} onChange={(event) => onChange('readAuth', event.target.value)}>{authCodes.map((code) => <option key={code.comdCode} value={code.comdCode}>{code.comdName}</option>)}</select></td>
-      <td><select value={form.writAuth} onChange={(event) => onChange('writAuth', event.target.value)}>{authCodes.map((code) => <option key={code.comdCode} value={code.comdCode}>{code.comdName}</option>)}</select></td>
-      <td><select value={form.deltAuth} onChange={(event) => onChange('deltAuth', event.target.value)}>{authCodes.map((code) => <option key={code.comdCode} value={code.comdCode}>{code.comdName}</option>)}</select></td>
-      <td className="col-sort"><input type="number" value={form.sortOrdr} onChange={(event) => onChange('sortOrdr', event.target.value)} required /></td>
+      <td className="col-sort"><input type="number" min="1" value={form.sortOrdr} onChange={(event) => onChange('sortOrdr', event.target.value)} required /></td>
     </>
   )
 }

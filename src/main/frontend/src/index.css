@@ -1,22 +1,30 @@
 :root {
-  --text: #56616f;
-  --text-h: #101820;
-  --muted: #6c7784;
-  --bg: #f6f8fa;
+  --text: #53616d;
+  --text-h: #17212b;
+  --muted: #71808d;
+  --bg: #f3f5f7;
   --panel: #fff;
-  --border: #d9e0e7;
-  --table-head: #edf2f7;
+  --border: #dce2e7;
+  --border-light: #edf0f2;
+  --border-strong: #cbd3da;
+  --table-border: #c6d0d8;
+  --table-head: #e9eef2;
   --input-bg: #fff;
-  --button-bg: #1769aa;
-  --button-border: #1769aa;
-  --shadow: 0 12px 32px rgba(16, 24, 32, 0.08);
+  --readonly: #f6f8f9;
+  --accent: #145d78;
+  --accent-soft: #eaf4f7;
+  --focus: rgba(20, 93, 120, 0.14);
+  --button-bg: #145d78;
+  --button-border: #145d78;
+  --button-hover: #0f4c63;
+  --shadow: 0 14px 36px rgba(23, 33, 43, 0.09);
 
   --sans: system-ui, 'Segoe UI', Roboto, sans-serif;
   --heading: system-ui, 'Segoe UI', Roboto, sans-serif;
 
-  font: 16px/145% var(--sans);
+  font: 14px/145% var(--sans);
   letter-spacing: 0;
-  color-scheme: light dark;
+  color-scheme: light;
   color: var(--text);
   background: var(--bg);
   font-synthesis: none;
@@ -31,13 +39,14 @@
 
 body {
   margin: 0;
+  min-width: 320px;
 }
 
 h1 {
   font-family: var(--heading);
-  font-size: 34px;
-  line-height: 1.15;
-  font-weight: 700;
+  font-size: 25px;
+  line-height: 1.25;
+  font-weight: 800;
   letter-spacing: 0;
   color: var(--text-h);
   margin: 0;

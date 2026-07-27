@@ -25,22 +25,16 @@ public class SecurityConfig {
     /** Redis 인증 필터 */
     private final RedisAuthenticationFilter redisAuthenticationFilter;
 
-    /** 메뉴 권한 필터 */
-    private final MenuAuthorizationFilter menuAuthorizationFilter;
-
     /**
      * 관리자 API 보안 설정 생성
      * @Author SeungHyeon.Kang
      * @param redisAuthenticationFilter
-     * @param menuAuthorizationFilter
      * @return
      */
     public SecurityConfig(
-            RedisAuthenticationFilter redisAuthenticationFilter,
-            MenuAuthorizationFilter menuAuthorizationFilter
+            RedisAuthenticationFilter redisAuthenticationFilter
     ) {
         this.redisAuthenticationFilter = redisAuthenticationFilter;
-        this.menuAuthorizationFilter = menuAuthorizationFilter;
     }
 
     /**
@@ -60,8 +54,8 @@ public class SecurityConfig {
                         .requestMatchers(Constant.API_AUTH_LOGIN).permitAll()
                         .requestMatchers(Constant.API_CODES_PATTERN).permitAll()
                         .requestMatchers(Constant.API_AUTH_LOGOUT, Constant.API_AUTH_ME).authenticated()
-                        .requestMatchers(Constant.API_MENU_PERMISSIONS_PATTERN).authenticated()
-                        .requestMatchers(Constant.API_MENUS_PATTERN, Constant.API_CODE_MANAGE_PATTERN, Constant.API_ALIM_TEMP_PATTERN).authenticated()
+                        .requestMatchers(Constant.API_MENU_PERMISSION).authenticated()
+                        .requestMatchers(Constant.API_MENUS_PATTERN, Constant.API_USER_MENUS_PATTERN, Constant.API_CODE_MANAGE_PATTERN, Constant.API_ALIM_TEMP_PATTERN, Constant.API_AUTH_GROUP_PATTERN).authenticated()
                         .requestMatchers(Constant.API_EMPLOYEES_PATTERN).authenticated()
                         .anyRequest().permitAll()
                 )
@@ -71,8 +65,7 @@ public class SecurityConfig {
                         .accessDeniedHandler((request, response, accessDeniedException) ->
                                 writeResult(response, HttpServletResponse.SC_FORBIDDEN, ResultData.fail(ResultEnum.FORBIDDEN)))
                 )
-                .addFilterBefore(redisAuthenticationFilter, UsernamePasswordAuthenticationFilter.class)
-                .addFilterAfter(menuAuthorizationFilter, RedisAuthenticationFilter.class);
+                .addFilterBefore(redisAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);
 
         return http.build();
     }

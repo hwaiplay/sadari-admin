@@ -1,12 +1,11 @@
 import { ALIM_TEMP_DETAIL_PREFIX, ALIM_TEMP_NEW_PATH } from '../../constants/routes'
 import type { AlimTemp } from '../../types/alim'
 import type { Code } from '../../types/code'
-import type { Permission } from '../../types/common'
 import { formatDate, getUseeYsnoCodeName } from '../../utils/code'
+import { useMenuPermission } from '../../contexts/MenuPermissionContext'
 
 type AlimTempListPageProps = {
   alimTemps: AlimTemp[]
-  permission: Permission
   useeYsnoCodes: Code[]
   onMovePath: (path: string) => void
 }
@@ -15,12 +14,12 @@ type AlimTempListPageProps = {
  * 알림 템플릿 목록 화면
  * @Author SeungHyeon.Kang
  * @param alimTemps
- * @param permission
  * @param useeYsnoCodes
  * @param onMovePath
  * @return
  */
-export function AlimTempListPage({ alimTemps, permission, useeYsnoCodes, onMovePath }: AlimTempListPageProps) {
+export function AlimTempListPage({ alimTemps, useeYsnoCodes, onMovePath }: AlimTempListPageProps) {
+  const permission = useMenuPermission()
   return (
     <section className="alim-temp-manage">
       <section className="content-header">
@@ -59,7 +58,7 @@ export function AlimTempListPage({ alimTemps, permission, useeYsnoCodes, onMoveP
           </tbody>
         </table>
       </section>
-      {permission.writYn && <button type="button" className="floating-button" onClick={() => onMovePath(ALIM_TEMP_NEW_PATH)}>등록</button>}
+      {permission.writYsno === 'Y' && <button type="button" className="floating-button" onClick={() => onMovePath(ALIM_TEMP_NEW_PATH)}>등록</button>}
     </section>
   )
 }

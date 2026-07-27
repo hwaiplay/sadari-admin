@@ -30,19 +30,10 @@ public final class Constant {
     public static final String TOP_MENU_SUBX_NUMB = "0";
 
     /** 메뉴 기본 정렬 순서 */
-    public static final int DEFAULT_MENU_SORT_ORDR = 10;
+    public static final int DEFAULT_MENU_SORT_ORDR = 1;
 
     /** 관리자 URL 접두어 */
     public static final String ADMIN_URL_PREFIX = "/sadari/adm";
-
-    /** 메뉴관리 화면 URL */
-    public static final String MENU_MANAGE_URL = "/sadari/adm/menu/list";
-
-    /** 코드관리 화면 URL */
-    public static final String CODE_MANAGE_URL = "/sadari/adm/code/list";
-
-    /** 알림 템플릿 관리 화면 URL */
-    public static final String ALIM_TEMP_MANAGE_URL = "/sadari/adm/alimTemp/list";
 
     /** 로그인 API URL */
     public static final String API_AUTH_LOGIN = "/api/auth/login";
@@ -62,23 +53,26 @@ public final class Constant {
     /** 로그인 사용자 조회 API URL */
     public static final String API_AUTH_ME = "/api/auth/me";
 
-    /** 메뉴 권한 조회 API URL 패턴 */
-    public static final String API_MENU_PERMISSIONS_PATTERN = "/api/menu-permissions/**";
-
-    /** 메뉴 권한 조회 API URL 접두어 */
-    public static final String API_MENU_PERMISSIONS_PREFIX = "/api/menu-permissions";
-
     /** 사이드바 메뉴 API URL */
     public static final String API_MENU_SIDEBAR = "/api/menus/sidebar";
 
     /** 메뉴 API URL 패턴 */
     public static final String API_MENUS_PATTERN = "/api/menus/**";
 
+    /** 사용자 메뉴 API URL 패턴 */
+    public static final String API_USER_MENUS_PATTERN = "/api/user-menus/**";
+
     /** 코드관리 API URL 패턴 */
     public static final String API_CODE_MANAGE_PATTERN = "/api/code-manage/**";
 
     /** 알림 템플릿 관리 API URL 패턴 */
     public static final String API_ALIM_TEMP_PATTERN = "/api/alim-temps/**";
+
+    /** 권한그룹 관리 API URL 패턴 */
+    public static final String API_AUTH_GROUP_PATTERN = "/api/auth-groups/**";
+
+    /** 메뉴 권한 조회 API URL */
+    public static final String API_MENU_PERMISSION = "/api/menu-permissions";
 
     /** 직원 API URL 패턴 */
     public static final String API_EMPLOYEES_PATTERN = "/api/employees/**";
@@ -89,11 +83,17 @@ public final class Constant {
     /** 메뉴 API URL 접두어 */
     public static final String API_MENUS_PREFIX = "/api/menus";
 
+    /** 사용자 메뉴 API URL 접두어 */
+    public static final String API_USER_MENUS_PREFIX = "/api/user-menus";
+
     /** 코드관리 API URL 접두어 */
     public static final String API_CODE_MANAGE_PREFIX = "/api/code-manage";
 
     /** 알림 템플릿 관리 API URL 접두어 */
     public static final String API_ALIM_TEMP_PREFIX = "/api/alim-temps";
+
+    /** 권한그룹 관리 API URL 접두어 */
+    public static final String API_AUTH_GROUP_PREFIX = "/api/auth-groups";
 
     /**
      * 공통 상수 생성 방지

@@ -5,7 +5,7 @@ import lombok.Data;
 import java.time.LocalDateTime;
 
 /**
- * TM_MENUXM 메뉴 관리 VO
+ * TM_ADMENU 관리자 메뉴 관리 VO
  */
 @Data
 public class MenuVO {
@@ -21,15 +21,6 @@ public class MenuVO {
 
     /** 메뉴 URL */
     private String menuUrlx;
-
-    /** 조회 권한 코드 */
-    private String readAuth;
-
-    /** 쓰기 권한 코드 */
-    private String writAuth;
-
-    /** 삭제 권한 코드 */
-    private String deltAuth;
 
     /** 정렬 순서 */
     private Integer sortOrdr;

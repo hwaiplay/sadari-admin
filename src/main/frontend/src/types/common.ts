@@ -4,15 +4,3 @@ export type ApiResult<T> = {
   data: T
 }
 
-export type Permission = {
-  readYn: boolean
-  writYn: boolean
-  deltYn: boolean
-}
-
-export const emptyPermission: Permission = {
-  readYn: false,
-  writYn: false,
-  deltYn: false,
-}
-

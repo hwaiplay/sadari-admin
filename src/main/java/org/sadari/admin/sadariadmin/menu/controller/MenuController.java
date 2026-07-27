@@ -42,7 +42,7 @@ public class MenuController {
      */
     @GetMapping("/sidebar")
     public ResultData getMenuList(@AuthenticationPrincipal AdminSessionVO admin) {
-        return ResultData.success(menuService.getMenuList(admin.getAuthLevel()));
+        return ResultData.success(menuService.getMenuList(admin));
     }
 
     /**

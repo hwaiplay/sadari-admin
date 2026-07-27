@@ -3,10 +3,10 @@ import type { FormEvent } from 'react'
 import { getAdminSession, loginAdmin, logoutAdmin } from './api/adminApi'
 import { checkAlimTempDuplicate, getAlimTempDetail, getAlimTempList, saveAlimTempApi } from './api/alimTempApi'
 import { checkMasterDuplicate, createCodeMaster, createDetailCode, getCodeList, getCodeMaster, getCodeMasters, getDetailCodes, updateCodeMaster, updateDetailCode } from './api/codeApi'
-import { deleteMenuApi, getMenuDetail, getMenuMngList, getPermission, getSidebarMenus, getSubMenus, saveMenuApi } from './api/menuApi'
+import { deleteMenuApi, getMenuDetail, getMenuMngList, getSidebarMenus, getSubMenus, saveMenuApi } from './api/menuApi'
 import './App.css'
-import { DEFAULT_AUTH_CODE, DEFAULT_USEE_YSNO, ALIM_SITU, AUTH_CODE, COMM_YSNO } from './constants/codes'
-import { ALIM_TEMP_DETAIL_PREFIX, ALIM_TEMP_LIST_PATH, ALIM_TEMP_NEW_PATH, CODE_DETAIL_PREFIX, CODE_LIST_PATH, HOME_PATH, LOGIN_PATH, MENU_DETAIL_PREFIX, MENU_LIST_PATH, MENU_NEW_PATH } from './constants/routes'
+import { DEFAULT_USEE_YSNO, ALIM_SITU, COMM_YSNO } from './constants/codes'
+import { ALIM_TEMP_DETAIL_PREFIX, ALIM_TEMP_LIST_PATH, ALIM_TEMP_NEW_PATH, AUTH_GROUP_DETAIL_PREFIX, AUTH_GROUP_LIST_PATH, AUTH_GROUP_NEW_PATH, CODE_DETAIL_PREFIX, CODE_LIST_PATH, HOME_PATH, LOGIN_PATH, MENU_DETAIL_PREFIX, MENU_LIST_PATH, MENU_NEW_PATH, USER_MENU_DETAIL_PREFIX, USER_MENU_LIST_PATH, USER_MENU_NEW_PATH } from './constants/routes'
 import { AdminLayout } from './components/AdminLayout'
 import { LoginPage } from './pages/LoginPage'
 import { AlimTempDetailPage } from './pages/alim/AlimTempDetailPage'
@@ -16,11 +16,11 @@ import { CodeListPage } from './pages/code/CodeListPage'
 import { CodeMasterModal } from './pages/code/CodeMasterModal'
 import { MenuDetailPage } from './pages/menu/MenuDetailPage'
 import { MenuListPage } from './pages/menu/MenuListPage'
+import { UserMenuManagePage } from './pages/userMenu/UserMenuManagePage'
+import { AuthGroupManagePage } from './pages/authGroup/AuthGroupManagePage'
 import type { AdminSession } from './types/admin'
 import type { AlimTemp, AlimTempForm } from './types/alim'
 import type { Code, CodeMaster, DetailCodeForm, DetailCodePayload } from './types/code'
-import { emptyPermission } from './types/common'
-import type { Permission } from './types/common'
 import type { Menu, MenuForm } from './types/menu'
 import { emptyDetailForm, emptyMenuForm, toDetailCodeForm, toMenuForm } from './utils/forms'
 
@@ -35,12 +35,8 @@ function App() {
   const [menuRows, setMenuRows] = useState<Menu[]>([])
   const [menuDetail, setMenuDetail] = useState<Menu | null>(null)
   const [subMenus, setSubMenus] = useState<Menu[]>([])
-  const [authCodes, setAuthCodes] = useState<Code[]>([])
   const [alimSituCodes, setAlimSituCodes] = useState<Code[]>([])
   const [useeYsnoCodes, setUseeYsnoCodes] = useState<Code[]>([])
-  const [menuPermission, setMenuPermission] = useState<Permission>(emptyPermission)
-  const [codePermission, setCodePermission] = useState<Permission>(emptyPermission)
-  const [alimTempPermission, setAlimTempPermission] = useState<Permission>(emptyPermission)
   const [menuForm, setMenuForm] = useState<MenuForm>(emptyMenuForm())
   const [childForms, setChildForms] = useState<MenuForm[]>([])
   const [codeMasters, setCodeMasters] = useState<CodeMaster[]>([])
@@ -96,11 +92,15 @@ function App() {
   const isAlimTempListPage = currentPath === ALIM_TEMP_LIST_PATH
   const isAlimTempNewPage = currentPath === ALIM_TEMP_NEW_PATH
   const isAlimTempDetailPage = alimTempDetailKey !== null
+  const isUserMenuPage = currentPath === USER_MENU_LIST_PATH || currentPath === USER_MENU_NEW_PATH || currentPath.startsWith(USER_MENU_DETAIL_PREFIX)
+  const isAuthGroupPage = currentPath === AUTH_GROUP_LIST_PATH || currentPath === AUTH_GROUP_NEW_PATH || currentPath.startsWith(AUTH_GROUP_DETAIL_PREFIX)
 
   const activeMenuPath = useMemo(() => {
     if (currentPath === MENU_NEW_PATH || currentPath.startsWith(`${MENU_NEW_PATH}/`) || currentPath.startsWith(MENU_DETAIL_PREFIX)) return MENU_LIST_PATH
+    if (currentPath === USER_MENU_NEW_PATH || currentPath.startsWith(USER_MENU_DETAIL_PREFIX)) return USER_MENU_LIST_PATH
     if (currentPath.startsWith(CODE_DETAIL_PREFIX)) return CODE_LIST_PATH
     if (currentPath === ALIM_TEMP_NEW_PATH || currentPath.startsWith(ALIM_TEMP_DETAIL_PREFIX)) return ALIM_TEMP_LIST_PATH
+    if (currentPath === AUTH_GROUP_NEW_PATH || currentPath.startsWith(AUTH_GROUP_DETAIL_PREFIX)) return AUTH_GROUP_LIST_PATH
     return currentPath
   }, [currentPath])
 
@@ -131,12 +131,6 @@ function App() {
    * @Author SeungHyeon.Kang
    * @return
    */
-  const loadAuthCodeList = async () => {
-    const codes = await getCodeList(AUTH_CODE)
-    setAuthCodes(codes)
-    return codes
-  }
-
   /**
    * 알림상황 코드 목록 로드
    * @Author SeungHyeon.Kang
@@ -220,8 +214,7 @@ function App() {
     setError(null)
     setChildForms([])
     setMenuDetail(null)
-    const [permission, rows] = await Promise.all([getPermission(MENU_LIST_PATH), getMenuMngList(), loadUseeYsnoCodeList()])
-    setMenuPermission(permission)
+    const [rows] = await Promise.all([getMenuMngList(), loadUseeYsnoCodeList()])
     setMenuRows(rows)
   }
 
@@ -233,12 +226,11 @@ function App() {
    */
   const openMenuNewPage = async (parentNumb: string) => {
     setError(null)
-    const [codes, permission] = await Promise.all([loadAuthCodeList(), getPermission(MENU_LIST_PATH), loadUseeYsnoCodeList()])
-    setMenuPermission(permission)
+    await loadUseeYsnoCodeList()
     setMenuDetail(null)
     setSubMenus([])
     setChildForms([])
-    setMenuForm(emptyMenuForm(codes[0]?.comdCode ?? DEFAULT_AUTH_CODE, parentNumb))
+    setMenuForm(emptyMenuForm(parentNumb))
   }
 
   /**
@@ -250,8 +242,7 @@ function App() {
    */
   const openMenuDetailPage = async (menuNumb: string, subxNumb: string) => {
     setError(null)
-    const [, permission, detail, children] = await Promise.all([loadAuthCodeList(), getPermission(MENU_LIST_PATH), getMenuDetail(menuNumb, subxNumb), getSubMenus(menuNumb), loadUseeYsnoCodeList()])
-    setMenuPermission(permission)
+    const [detail, children] = await Promise.all([getMenuDetail(menuNumb, subxNumb), getSubMenus(menuNumb), loadUseeYsnoCodeList()])
     setMenuDetail(detail)
     setMenuForm(toMenuForm(detail))
     setSubMenus(children)
@@ -265,8 +256,7 @@ function App() {
    */
   const openCodeListPage = async () => {
     setError(null)
-    const [permission, masters] = await Promise.all([getPermission(CODE_LIST_PATH), getCodeMasters(), loadUseeYsnoCodeList()])
-    setCodePermission(permission)
+    const [masters] = await Promise.all([getCodeMasters(), loadUseeYsnoCodeList()])
     setCodeMasters(masters)
     setSelectedMaster(null)
     setMasterEditForm(null)
@@ -283,8 +273,7 @@ function App() {
    */
   const openCodeDetailPage = async (commCode: string) => {
     setError(null)
-    const [permission, master, details] = await Promise.all([getPermission(CODE_LIST_PATH), getCodeMaster(commCode), getDetailCodes(commCode), loadUseeYsnoCodeList()])
-    setCodePermission(permission)
+    const [master, details] = await Promise.all([getCodeMaster(commCode), getDetailCodes(commCode), loadUseeYsnoCodeList()])
     setSelectedMaster(master)
     setMasterEditForm(master)
     setDetailCodes(details)
@@ -299,8 +288,7 @@ function App() {
    */
   const openAlimTempListPage = async () => {
     setError(null)
-    const [permission, rows] = await Promise.all([getPermission(ALIM_TEMP_LIST_PATH), getAlimTempList(), loadUseeYsnoCodeList()])
-    setAlimTempPermission(permission)
+    const [rows] = await Promise.all([getAlimTempList(), loadUseeYsnoCodeList()])
     setAlimTemps(rows)
     setAlimTempDetail(null)
   }
@@ -312,8 +300,7 @@ function App() {
    */
   const openAlimTempNewPage = async () => {
     setError(null)
-    const [permission, situCodes] = await Promise.all([getPermission(ALIM_TEMP_LIST_PATH), loadAlimSituCodeList(), loadUseeYsnoCodeList()])
-    setAlimTempPermission(permission)
+    const [situCodes] = await Promise.all([loadAlimSituCodeList(), loadUseeYsnoCodeList()])
     setAlimTempDetail(null)
     setAlimTempForm({ alimSitu: situCodes[0]?.comdCode ?? '', tempCode: '', tempTitl: '', alimTitl: '', tempCont: '', linkUrlx: '', useeYsno: DEFAULT_USEE_YSNO })
   }
@@ -327,8 +314,7 @@ function App() {
    */
   const openAlimTempDetailPage = async (alimSitu: string, tempCode: string) => {
     setError(null)
-    const [permission, detail] = await Promise.all([getPermission(ALIM_TEMP_LIST_PATH), getAlimTempDetail(alimSitu, tempCode), loadAlimSituCodeList(), loadUseeYsnoCodeList()])
-    setAlimTempPermission(permission)
+    const [detail] = await Promise.all([getAlimTempDetail(alimSitu, tempCode), loadAlimSituCodeList(), loadUseeYsnoCodeList()])
     setAlimTempDetail(detail)
     setAlimTempForm({ alimSitu: detail.alimSitu, tempCode: detail.tempCode, tempTitl: detail.tempTitl, alimTitl: detail.alimTitl ?? '', tempCont: detail.tempCont, linkUrlx: detail.linkUrlx, useeYsno: detail.useeYsno ?? DEFAULT_USEE_YSNO })
   }
@@ -410,7 +396,7 @@ function App() {
    * @return
    */
   const addChildForm = () => {
-    setChildForms([...childForms, emptyMenuForm(authCodes[0]?.comdCode ?? DEFAULT_AUTH_CODE, menuForm.menuNumb)])
+    setChildForms([...childForms, emptyMenuForm(menuForm.menuNumb)])
   }
 
   /**
@@ -541,6 +527,16 @@ function App() {
    * @return
    */
   const addDetailInput = () => setDetailForms([...detailForms, emptyDetailForm()])
+
+  /**
+   * 저장 전 세부코드 입력 폼 삭제
+   * @Author SeungHyeon.Kang
+   * @param index
+   * @return
+   */
+  const removeDetailInput = (index: number) => {
+    setDetailForms(detailForms.filter((_, formIndex) => formIndex !== index))
+  }
 
   /**
    * 신규 세부코드 입력값 변경
@@ -757,7 +753,7 @@ function App() {
 
   return (
     <AdminLayout admin={admin} menus={menus} currentPath={currentPath} activePath={activeMenuPath} error={error} onMovePath={movePath} onLogout={handleLogout}>
-      {isMenuListPage && <MenuListPage menuRows={menuRows} permission={menuPermission} useeYsnoCodes={useeYsnoCodes} onMovePath={movePath} onDelete={(menu) => void deleteMenu(menu)} />}
+      {isMenuListPage && <MenuListPage menuRows={menuRows} useeYsnoCodes={useeYsnoCodes} onMovePath={movePath} onDelete={(menu) => void deleteMenu(menu)} />}
       {(isMenuDetailPage || isMenuNewPage) && (
         <MenuDetailPage
           isNewPage={isMenuNewPage}
@@ -767,9 +763,7 @@ function App() {
           menuDetail={menuDetail}
           childForms={childForms}
           subMenus={subMenus}
-          authCodes={authCodes}
           useeYsnoCodes={useeYsnoCodes}
-          permission={menuPermission}
           onMovePath={movePath}
           onChangeMenuForm={(field, value) => setMenuForm({ ...menuForm, [field]: value })}
           onChangeChildForm={changeChildForm}
@@ -779,7 +773,9 @@ function App() {
           onDelete={(menu) => void deleteMenu(menu)}
         />
       )}
-      {isCodeListPage && <CodeListPage codeMasters={codeMasters} permission={codePermission} useeYsnoCodes={useeYsnoCodes} onSelect={selectCodeMaster} onOpenRegister={() => setShowMasterForm(true)} />}
+      {isUserMenuPage && <UserMenuManagePage currentPath={currentPath} onMovePath={movePath} onError={setError} />}
+      {isAuthGroupPage && <AuthGroupManagePage currentPath={currentPath} onMovePath={movePath} onError={setError} />}
+      {isCodeListPage && <CodeListPage codeMasters={codeMasters} useeYsnoCodes={useeYsnoCodes} onSelect={selectCodeMaster} onOpenRegister={() => setShowMasterForm(true)} />}
       {isCodeDetailPage && (
         <CodeDetailPage
           selectedMaster={selectedMaster}
@@ -788,20 +784,20 @@ function App() {
           detailCodes={detailCodes}
           detailEditForms={detailEditForms}
           detailForms={detailForms}
-          permission={codePermission}
           useeYsnoCodes={useeYsnoCodes}
           saving={saving}
           onMovePath={movePath}
           onChangeMasterForm={setMasterEditForm}
           onSaveMasterForm={() => void saveMasterEditForm()}
           onAddDetailInput={addDetailInput}
+          onRemoveDetailInput={removeDetailInput}
           onChangeDetailEditForm={changeDetailEditForm}
           onChangeDetailForm={changeDetailForm}
           onSaveAllDetailEditCodes={() => void saveAllDetailEditCodes()}
           onSaveAllDetailCodes={() => void saveAllDetailCodes()}
         />
       )}
-      {isAlimTempListPage && <AlimTempListPage alimTemps={alimTemps} permission={alimTempPermission} useeYsnoCodes={useeYsnoCodes} onMovePath={movePath} />}
+      {isAlimTempListPage && <AlimTempListPage alimTemps={alimTemps} useeYsnoCodes={useeYsnoCodes} onMovePath={movePath} />}
       {(isAlimTempDetailPage || isAlimTempNewPage) && (
         <AlimTempDetailPage
           isNewPage={isAlimTempNewPage}
@@ -811,7 +807,6 @@ function App() {
           alimTempDetail={alimTempDetail}
           alimSituCodes={alimSituCodes}
           useeYsnoCodes={useeYsnoCodes}
-          permission={alimTempPermission}
           onMovePath={movePath}
           onChange={(field, value) => setAlimTempForm({ ...alimTempForm, [field]: value })}
           onSubmit={saveAlimTemp}

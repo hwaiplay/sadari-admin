@@ -1,23 +1,19 @@
-import { DEFAULT_AUTH_CODE, DEFAULT_USEE_YSNO } from '../constants/codes'
+import { DEFAULT_USEE_YSNO } from '../constants/codes'
 import type { DetailCodeForm } from '../types/code'
 import type { Menu, MenuForm } from '../types/menu'
 
 /**
  * 빈 메뉴 입력 폼 생성
  * @Author SeungHyeon.Kang
- * @param authCode
  * @param parentMenuNumb
  * @return
  */
-export const emptyMenuForm = (authCode = DEFAULT_AUTH_CODE, parentMenuNumb = ''): MenuForm => ({
+export const emptyMenuForm = (parentMenuNumb = ''): MenuForm => ({
   menuNumb: parentMenuNumb,
   subxNumb: '',
   menuName: '',
   menuUrlx: '/sadari/adm/',
-  readAuth: authCode,
-  writAuth: authCode,
-  deltAuth: authCode,
-  sortOrdr: '10',
+  sortOrdr: '1',
   useeYsno: DEFAULT_USEE_YSNO,
 })
 
@@ -38,7 +34,7 @@ export const emptyDetailForm = (): DetailCodeForm => ({
   opt3Name: '',
   opt4Code: '',
   opt4Name: '',
-  sortOrdr: '10',
+  sortOrdr: '1',
   useeYsno: DEFAULT_USEE_YSNO,
 })
 
@@ -74,7 +70,7 @@ export const toDetailCodeForm = (code: {
   opt3Name: code.opt3Name ?? '',
   opt4Code: code.opt4Code ?? '',
   opt4Name: code.opt4Name ?? '',
-  sortOrdr: String(code.sortOrdr ?? 10),
+  sortOrdr: String(code.sortOrdr ?? 1),
   useeYsno: code.useeYsno ?? DEFAULT_USEE_YSNO,
 })
 
@@ -89,9 +85,6 @@ export const toMenuForm = (menu: Menu): MenuForm => ({
   subxNumb: menu.subxNumb,
   menuName: menu.menuName,
   menuUrlx: menu.menuUrlx,
-  readAuth: menu.readAuth ?? DEFAULT_AUTH_CODE,
-  writAuth: menu.writAuth ?? menu.readAuth ?? DEFAULT_AUTH_CODE,
-  deltAuth: menu.deltAuth ?? menu.readAuth ?? DEFAULT_AUTH_CODE,
-  sortOrdr: String(menu.sortOrdr ?? 10),
+  sortOrdr: String(menu.sortOrdr ?? 1),
   useeYsno: menu.useeYsno ?? DEFAULT_USEE_YSNO,
 })

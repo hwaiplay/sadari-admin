@@ -2,8 +2,8 @@ package org.sadari.admin.sadariadmin.menu.mapper;
 
 import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Param;
-import org.sadari.admin.sadariadmin.menu.vo.MenuPermissionVO;
 import org.sadari.admin.sadariadmin.menu.vo.MenuVO;
+import org.sadari.admin.sadariadmin.menu.vo.MenuPermissionVO;
 
 import java.util.List;
 
@@ -16,15 +16,16 @@ public interface MenuMapper {
      * @param authLevel
      * @return
      */
-    List<MenuVO> getMenuList(@Param("authLevel") Integer authLevel);
+    List<MenuVO> getMenuList(@Param("authCode") String authCode);
 
     /**
-     * 메뉴 URL 기준 권한 레벨 조회
+     * 관리자 메뉴 권한 조회
      * @Author SeungHyeon.Kang
+     * @param authCode
      * @param menuUrlx
      * @return
      */
-    MenuPermissionVO getMenuPermission(@Param("menuUrlx") String menuUrlx);
+    MenuPermissionVO getMenuPermission(@Param("authCode") String authCode, @Param("menuUrlx") String menuUrlx);
 
     /**
      * 메뉴관리 전체 목록 조회

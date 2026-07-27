@@ -2,8 +2,8 @@ import type { FormEvent } from 'react'
 import { ALIM_TEMP_LIST_PATH } from '../../constants/routes'
 import type { AlimTemp, AlimTempForm } from '../../types/alim'
 import type { Code } from '../../types/code'
-import type { Permission } from '../../types/common'
-import { formatDate } from '../../utils/code'
+import { AuditInfoTable } from '../../components/AuditInfoTable'
+import { useMenuPermission } from '../../contexts/MenuPermissionContext'
 
 type AlimTempDetailPageProps = {
   isNewPage: boolean
@@ -13,7 +13,6 @@ type AlimTempDetailPageProps = {
   alimTempDetail: AlimTemp | null
   alimSituCodes: Code[]
   useeYsnoCodes: Code[]
-  permission: Permission
   onMovePath: (path: string) => void
   onChange: (field: keyof AlimTempForm, value: string) => void
   onSubmit: (event: FormEvent<HTMLFormElement>) => void
@@ -29,13 +28,13 @@ type AlimTempDetailPageProps = {
  * @param alimTempDetail
  * @param alimSituCodes
  * @param useeYsnoCodes
- * @param permission
  * @param onMovePath
  * @param onChange
  * @param onSubmit
  * @return
  */
-export function AlimTempDetailPage({ isNewPage, pageTitle, saving, alimTempForm, alimTempDetail, alimSituCodes, useeYsnoCodes, permission, onMovePath, onChange, onSubmit }: AlimTempDetailPageProps) {
+export function AlimTempDetailPage({ isNewPage, pageTitle, saving, alimTempForm, alimTempDetail, alimSituCodes, useeYsnoCodes, onMovePath, onChange, onSubmit }: AlimTempDetailPageProps) {
+  const permission = useMenuPermission()
   /**
    * 템플릿 코드 입력값 변경
    * @Author SeungHyeon.Kang
@@ -92,20 +91,8 @@ export function AlimTempDetailPage({ isNewPage, pageTitle, saving, alimTempForm,
                     {useeYsnoCodes.map((code) => <option key={code.comdCode} value={code.comdCode}>{code.opt1Name ?? code.comdName}</option>)}
                   </select>
                 </td>
-                {!isNewPage && (
-                  <>
-                    <th>수정자</th>
-                    <td className="readonly-cell">{alimTempDetail?.updtAdmnName ?? alimTempDetail?.updtAdmn ?? ''}</td>
-                  </>
-                )}
-                {isNewPage && <td colSpan={2} />}
+                <td colSpan={2} />
               </tr>
-              {!isNewPage && (
-                <tr>
-                  <th>수정일</th>
-                  <td className="readonly-cell" colSpan={3}>{formatDate(alimTempDetail?.updtDate ?? null)}</td>
-                </tr>
-              )}
               <tr>
                 <th>템플릿 내용</th>
                 <td colSpan={3}>
@@ -115,7 +102,19 @@ export function AlimTempDetailPage({ isNewPage, pageTitle, saving, alimTempForm,
             </tbody>
           </table>
         </section>
-        {permission.writYn && <div className="section-actions"><button type="submit" disabled={saving}>{saving ? '저장 중' : isNewPage ? '저장' : '수정'}</button></div>}
+        {!isNewPage && alimTempDetail ? (
+          <div className="detail-audit-actions">
+            <AuditInfoTable
+              regiAdmn={alimTempDetail.regiAdmn}
+              regiAdmnName={alimTempDetail.regiAdmnName}
+              regiDate={alimTempDetail.regiDate}
+              updtAdmn={alimTempDetail.updtAdmn}
+              updtAdmnName={alimTempDetail.updtAdmnName}
+              updtDate={alimTempDetail.updtDate}
+            />
+            {permission.writYsno === 'Y' && <div className="section-actions"><button type="submit" disabled={saving}>{saving ? '저장 중' : '수정'}</button></div>}
+          </div>
+        ) : permission.writYsno === 'Y' ? <div className="section-actions"><button type="submit" disabled={saving}>{saving ? '저장 중' : '저장'}</button></div> : null}
       </form>
     </section>
   )

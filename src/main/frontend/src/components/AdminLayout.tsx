@@ -2,6 +2,7 @@ import type { AdminSession } from '../types/admin'
 import type { Menu } from '../types/menu'
 import type { ReactNode } from 'react'
 import { useState } from 'react'
+import { MenuPermissionProvider } from '../contexts/MenuPermissionContext'
 
 type AdminLayoutProps = {
   admin: AdminSession
@@ -89,7 +90,7 @@ export function AdminLayout({ admin, menus, activePath, error, onMovePath, onLog
         </header>
         <main className="content">
           {error && <div className="error">{error}</div>}
-          {children}
+          <MenuPermissionProvider menuUrlx={activePath}>{children}</MenuPermissionProvider>
         </main>
       </div>
     </div>

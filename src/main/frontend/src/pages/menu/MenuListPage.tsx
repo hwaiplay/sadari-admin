@@ -1,12 +1,11 @@
 import { MENU_DETAIL_PREFIX, MENU_NEW_PATH } from '../../constants/routes'
-import type { Permission } from '../../types/common'
 import type { Code } from '../../types/code'
 import type { Menu } from '../../types/menu'
 import { formatDate, getUseeYsnoCodeName } from '../../utils/code'
+import { useMenuPermission } from '../../contexts/MenuPermissionContext'
 
 type MenuListPageProps = {
   menuRows: Menu[]
-  permission: Permission
   useeYsnoCodes: Code[]
   onMovePath: (path: string) => void
   onDelete: (menu: Menu) => void
@@ -16,13 +15,13 @@ type MenuListPageProps = {
  * 메뉴관리 목록 화면
  * @Author SeungHyeon.Kang
  * @param menuRows
- * @param permission
  * @param useeYsnoCodes
  * @param onMovePath
  * @param onDelete
  * @return
  */
-export function MenuListPage({ menuRows, permission, useeYsnoCodes, onMovePath, onDelete }: MenuListPageProps) {
+export function MenuListPage({ menuRows, useeYsnoCodes, onMovePath, onDelete }: MenuListPageProps) {
+  const permission = useMenuPermission()
   return (
     <section className="menu-manage">
       <section className="content-header">
@@ -39,7 +38,7 @@ export function MenuListPage({ menuRows, permission, useeYsnoCodes, onMovePath, 
               <th className="col-sort">정렬</th>
               <th>수정자</th>
               <th>수정일</th>
-              {permission.deltYn && <th className="col-action">삭제</th>}
+              <th className="col-action">삭제</th>
             </tr>
           </thead>
           <tbody>
@@ -51,17 +50,15 @@ export function MenuListPage({ menuRows, permission, useeYsnoCodes, onMovePath, 
                 <td className="col-sort">{menu.sortOrdr}</td>
                 <td>{menu.updtAdmnName ?? menu.updtAdmn}</td>
                 <td>{formatDate(menu.updtDate)}</td>
-                {permission.deltYn && (
-                  <td className="col-action">
-                    <button type="button" className="delete-button" onClick={(event) => { event.stopPropagation(); onDelete(menu) }}>삭제</button>
-                  </td>
-                )}
+                <td className="col-action">
+                  {permission.deltYsno === 'Y' && <button type="button" className="delete-button" onClick={(event) => { event.stopPropagation(); onDelete(menu) }}>삭제</button>}
+                </td>
               </tr>
             ))}
           </tbody>
         </table>
       </section>
-      {permission.writYn && <button type="button" className="floating-button" onClick={() => onMovePath(MENU_NEW_PATH)}>등록</button>}
+      {permission.writYsno === 'Y' && <button type="button" className="floating-button" onClick={() => onMovePath(MENU_NEW_PATH)}>등록</button>}
     </section>
   )
 }

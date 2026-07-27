@@ -1,10 +1,9 @@
-import type { Permission } from '../../types/common'
 import type { Code, CodeMaster } from '../../types/code'
 import { formatDate, getUseeYsnoCodeName } from '../../utils/code'
+import { useMenuPermission } from '../../contexts/MenuPermissionContext'
 
 type CodeListPageProps = {
   codeMasters: CodeMaster[]
-  permission: Permission
   useeYsnoCodes: Code[]
   onSelect: (master: CodeMaster) => void
   onOpenRegister: () => void
@@ -14,13 +13,13 @@ type CodeListPageProps = {
  * 코드관리 목록 화면
  * @Author SeungHyeon.Kang
  * @param codeMasters
- * @param permission
  * @param useeYsnoCodes
  * @param onSelect
  * @param onOpenRegister
  * @return
  */
-export function CodeListPage({ codeMasters, permission, useeYsnoCodes, onSelect, onOpenRegister }: CodeListPageProps) {
+export function CodeListPage({ codeMasters, useeYsnoCodes, onSelect, onOpenRegister }: CodeListPageProps) {
+  const permission = useMenuPermission()
   return (
     <section className="code-manage">
       <section className="content-header">
@@ -55,7 +54,7 @@ export function CodeListPage({ codeMasters, permission, useeYsnoCodes, onSelect,
           </tbody>
         </table>
       </section>
-      {permission.writYn && <button type="button" className="floating-button" onClick={onOpenRegister}>등록</button>}
+      {permission.writYsno === 'Y' && <button type="button" className="floating-button" onClick={onOpenRegister}>등록</button>}
     </section>
   )
 }
