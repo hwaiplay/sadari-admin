@@ -71,6 +71,9 @@ public final class Constant {
     /** 권한그룹 관리 API URL 패턴 */
     public static final String API_AUTH_GROUP_PATTERN = "/api/auth-groups/**";
 
+    /** 관리자 권한 부여 API URL 패턴 */
+    public static final String API_ADMIN_AUTHS_PATTERN = "/api/admin-auths/**";
+
     /** 메뉴 권한 조회 API URL */
     public static final String API_MENU_PERMISSION = "/api/menu-permissions";
 
@@ -94,6 +97,9 @@ public final class Constant {
 
     /** 권한그룹 관리 API URL 접두어 */
     public static final String API_AUTH_GROUP_PREFIX = "/api/auth-groups";
+
+    /** 관리자 권한 부여 API URL 접두어 */
+    public static final String API_ADMIN_AUTHS_PREFIX = "/api/admin-auths";
 
     /**
      * 공통 상수 생성 방지

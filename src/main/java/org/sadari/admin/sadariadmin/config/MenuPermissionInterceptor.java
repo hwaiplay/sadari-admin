@@ -27,6 +27,7 @@ public class MenuPermissionInterceptor implements HandlerInterceptor {
     private static final Map<String, String> MENU_URL_BY_API = new LinkedHashMap<>();
 
     static {
+        MENU_URL_BY_API.put(Constant.API_ADMIN_AUTHS_PREFIX, "/sadari/adm/admin/authAdmin");
         MENU_URL_BY_API.put(Constant.API_AUTH_GROUP_PREFIX, "/sadari/adm/admin/auth");
         MENU_URL_BY_API.put(Constant.API_USER_MENUS_PREFIX, "/sadari/adm/userMenu/list");
         MENU_URL_BY_API.put(Constant.API_CODE_MANAGE_PREFIX, "/sadari/adm/code/list");

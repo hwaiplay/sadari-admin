@@ -6,7 +6,7 @@ import { checkMasterDuplicate, createCodeMaster, createDetailCode, getCodeList, 
 import { deleteMenuApi, getMenuDetail, getMenuMngList, getSidebarMenus, getSubMenus, saveMenuApi } from './api/menuApi'
 import './App.css'
 import { DEFAULT_USEE_YSNO, ALIM_SITU, COMM_YSNO } from './constants/codes'
-import { ALIM_TEMP_DETAIL_PREFIX, ALIM_TEMP_LIST_PATH, ALIM_TEMP_NEW_PATH, AUTH_GROUP_DETAIL_PREFIX, AUTH_GROUP_LIST_PATH, AUTH_GROUP_NEW_PATH, CODE_DETAIL_PREFIX, CODE_LIST_PATH, HOME_PATH, LOGIN_PATH, MENU_DETAIL_PREFIX, MENU_LIST_PATH, MENU_NEW_PATH, USER_MENU_DETAIL_PREFIX, USER_MENU_LIST_PATH, USER_MENU_NEW_PATH } from './constants/routes'
+import { ADMIN_AUTH_MANAGE_PATH, ALIM_TEMP_DETAIL_PREFIX, ALIM_TEMP_LIST_PATH, ALIM_TEMP_NEW_PATH, AUTH_GROUP_DETAIL_PREFIX, AUTH_GROUP_LIST_PATH, AUTH_GROUP_NEW_PATH, CODE_DETAIL_PREFIX, CODE_LIST_PATH, HOME_PATH, LOGIN_PATH, MENU_DETAIL_PREFIX, MENU_LIST_PATH, MENU_NEW_PATH, USER_MENU_DETAIL_PREFIX, USER_MENU_LIST_PATH, USER_MENU_NEW_PATH } from './constants/routes'
 import { AdminLayout } from './components/AdminLayout'
 import { LoginPage } from './pages/LoginPage'
 import { AlimTempDetailPage } from './pages/alim/AlimTempDetailPage'
@@ -18,6 +18,7 @@ import { MenuDetailPage } from './pages/menu/MenuDetailPage'
 import { MenuListPage } from './pages/menu/MenuListPage'
 import { UserMenuManagePage } from './pages/userMenu/UserMenuManagePage'
 import { AuthGroupManagePage } from './pages/authGroup/AuthGroupManagePage'
+import { AdminAuthManagePage } from './pages/adminAuth/AdminAuthManagePage'
 import type { AdminSession } from './types/admin'
 import type { AlimTemp, AlimTempForm } from './types/alim'
 import type { Code, CodeMaster, DetailCodeForm, DetailCodePayload } from './types/code'
@@ -94,6 +95,7 @@ function App() {
   const isAlimTempDetailPage = alimTempDetailKey !== null
   const isUserMenuPage = currentPath === USER_MENU_LIST_PATH || currentPath === USER_MENU_NEW_PATH || currentPath.startsWith(USER_MENU_DETAIL_PREFIX)
   const isAuthGroupPage = currentPath === AUTH_GROUP_LIST_PATH || currentPath === AUTH_GROUP_NEW_PATH || currentPath.startsWith(AUTH_GROUP_DETAIL_PREFIX)
+  const isAdminAuthManagePage = currentPath === ADMIN_AUTH_MANAGE_PATH
 
   const activeMenuPath = useMemo(() => {
     if (currentPath === MENU_NEW_PATH || currentPath.startsWith(`${MENU_NEW_PATH}/`) || currentPath.startsWith(MENU_DETAIL_PREFIX)) return MENU_LIST_PATH
@@ -860,6 +862,7 @@ function App() {
       )}
       {isUserMenuPage && <UserMenuManagePage currentPath={currentPath} onMovePath={movePath} onError={setError} />}
       {isAuthGroupPage && <AuthGroupManagePage currentPath={currentPath} onMovePath={movePath} onError={setError} />}
+      {isAdminAuthManagePage && <AdminAuthManagePage onError={setError} />}
       {isCodeListPage && <CodeListPage codeMasters={codeMasters} useeYsnoCodes={useeYsnoCodes} onSelect={selectCodeMaster} onOpenRegister={() => setShowMasterForm(true)} />}
       {isCodeDetailPage && (
         <CodeDetailPage

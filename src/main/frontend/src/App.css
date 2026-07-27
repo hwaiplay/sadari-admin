@@ -984,6 +984,16 @@ tbody tr:last-child > td {
   text-align: center;
 }
 
+.admin-auth-table .col-number {
+  width: 120px;
+  min-width: 120px;
+  text-align: center;
+}
+
+.admin-auth-table select {
+  min-width: 220px;
+}
+
 .auth-menu-table input[type='checkbox'] {
   width: 18px;
   height: 18px;

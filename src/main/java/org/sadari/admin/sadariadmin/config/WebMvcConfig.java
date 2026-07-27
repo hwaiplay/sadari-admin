@@ -25,7 +25,8 @@ public class WebMvcConfig implements WebMvcConfigurer {
                         "/api/user-menus/**",
                         "/api/code-manage/**",
                         "/api/alim-temps/**",
-                        "/api/auth-groups/**"
+                        "/api/auth-groups/**",
+                        "/api/admin-auths/**"
                 );
     }
 }

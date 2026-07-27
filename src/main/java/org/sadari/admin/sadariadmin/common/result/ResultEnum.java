@@ -73,7 +73,10 @@ public enum ResultEnum {
     AUTH_GROUP_DUPLICATE(2009, "auth-group.duplicate"),
 
     /** 권한그룹 없음 */
-    AUTH_GROUP_NOT_FOUND(2004, "auth-group.not-found");
+    AUTH_GROUP_NOT_FOUND(2004, "auth-group.not-found"),
+
+    /** 관리자 없음 */
+    ADMIN_NOT_FOUND(2004, "admin.not-found");
 
     /** 응답 코드 */
     private final int code;
