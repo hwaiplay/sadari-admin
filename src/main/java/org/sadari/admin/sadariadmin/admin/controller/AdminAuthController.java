@@ -19,7 +19,14 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 /**
- * 관리자 인증 API 컨트롤러
+ * fileName       : AdminAuthController
+ * author         : SeungHyeon.Kang
+ * date           : 2026-07-08
+ * description    : 관리자 인증 API 컨트롤러 /
+ * ===========================================================
+ * DATE              AUTHOR             NOTE
+ * -----------------------------------------------------------
+ * 2026-07-08        SeungHyeon.Kang    최초 생성
  */
 @RestController
 @RequestMapping(Constant.API_AUTH_PREFIX)
@@ -36,7 +43,7 @@ public class AdminAuthController {
 
     /**
      * 관리자 인증 API 컨트롤러 생성
-     * @Author SeungHyeon.Kang
+     * @author SeungHyeon.Kang
      * @param adminAuthService
      * @param adminRedisAuthService
      * @param authRedisProperties
@@ -54,7 +61,7 @@ public class AdminAuthController {
 
     /**
      * 관리자 로그인
-     * @Author SeungHyeon.Kang
+     * @author SeungHyeon.Kang
      * @param request
      * @param response
      * @return
@@ -69,7 +76,7 @@ public class AdminAuthController {
 
     /**
      * 관리자 로그아웃
-     * @Author SeungHyeon.Kang
+     * @author SeungHyeon.Kang
      * @param request
      * @param response
      * @return
@@ -83,7 +90,7 @@ public class AdminAuthController {
 
     /**
      * 관리자 세션 조회
-     * @Author SeungHyeon.Kang
+     * @author SeungHyeon.Kang
      * @param request
      * @return
      */
@@ -99,7 +106,7 @@ public class AdminAuthController {
 
     /**
      * 관리자 인증 쿠키 설정
-     * @Author SeungHyeon.Kang
+     * @author SeungHyeon.Kang
      * @param response
      * @param token
      * @param maxAge

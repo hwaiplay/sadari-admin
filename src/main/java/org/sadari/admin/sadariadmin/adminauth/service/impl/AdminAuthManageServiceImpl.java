@@ -15,8 +15,18 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 
-/** 관리자 권한 부여 서비스 구현체 */
+/**
+ * fileName       : AdminAuthManageServiceImpl
+ * author         : SeungHyeon.Kang
+ * date           : 2026-07-27
+ * description    : 관리자 권한 부여 서비스 구현체
+ * ===========================================================
+ * DATE              AUTHOR             NOTE
+ * -----------------------------------------------------------
+ * 2026-07-27        SeungHyeon.Kang    최초 생성
+ */
 @Service
+@Transactional(readOnly = true)
 public class AdminAuthManageServiceImpl implements AdminAuthManageService {
 
     /** 관리자 권한 Mapper */

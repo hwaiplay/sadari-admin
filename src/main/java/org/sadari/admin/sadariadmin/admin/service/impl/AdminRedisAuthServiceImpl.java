@@ -16,7 +16,14 @@ import java.util.Map;
 import java.util.UUID;
 
 /**
- * Redis 관리자 인증 정보 서비스 구현체
+ * fileName       : AdminRedisAuthServiceImpl
+ * author         : SeungHyeon.Kang
+ * date           : 2026-07-08
+ * description    : Redis 관리자 인증 정보 서비스 구현체 /
+ * ===========================================================
+ * DATE              AUTHOR             NOTE
+ * -----------------------------------------------------------
+ * 2026-07-08        SeungHyeon.Kang    최초 생성
  */
 @Service
 public class AdminRedisAuthServiceImpl implements AdminRedisAuthService {
@@ -29,7 +36,7 @@ public class AdminRedisAuthServiceImpl implements AdminRedisAuthService {
 
     /**
      * Redis 관리자 인증 정보 서비스 생성
-     * @Author SeungHyeon.Kang
+     * @author SeungHyeon.Kang
      * @param redisTemplate
      * @param properties
      * @return
@@ -41,7 +48,7 @@ public class AdminRedisAuthServiceImpl implements AdminRedisAuthService {
 
     /**
      * 관리자 인증 토큰 저장
-     * @Author SeungHyeon.Kang
+     * @author SeungHyeon.Kang
      * @param admin
      * @return
      */
@@ -65,7 +72,7 @@ public class AdminRedisAuthServiceImpl implements AdminRedisAuthService {
 
     /**
      * 관리자 세션 조회
-     * @Author SeungHyeon.Kang
+     * @author SeungHyeon.Kang
      * @param request
      * @return
      */
@@ -104,7 +111,7 @@ public class AdminRedisAuthServiceImpl implements AdminRedisAuthService {
 
     /**
      * 관리자 인증 토큰 삭제
-     * @Author SeungHyeon.Kang
+     * @author SeungHyeon.Kang
      * @param request
      * @return
      */
@@ -119,7 +126,7 @@ public class AdminRedisAuthServiceImpl implements AdminRedisAuthService {
 
     /**
      * Redis 로그인 키 생성
-     * @Author SeungHyeon.Kang
+     * @author SeungHyeon.Kang
      * @param token
      * @return
      */
@@ -129,7 +136,7 @@ public class AdminRedisAuthServiceImpl implements AdminRedisAuthService {
 
     /**
      * Redis Hash 값 조회
-     * @Author SeungHyeon.Kang
+     * @author SeungHyeon.Kang
      * @param key
      * @param field
      * @return
@@ -142,7 +149,7 @@ public class AdminRedisAuthServiceImpl implements AdminRedisAuthService {
 
     /**
      * Redis 저장 값 변환
-     * @Author SeungHyeon.Kang
+     * @author SeungHyeon.Kang
      * @param value
      * @return
      */
@@ -153,7 +160,7 @@ public class AdminRedisAuthServiceImpl implements AdminRedisAuthService {
 
     /**
      * 요청 쿠키 인증 토큰 조회
-     * @Author SeungHyeon.Kang
+     * @author SeungHyeon.Kang
      * @param request
      * @return
      */

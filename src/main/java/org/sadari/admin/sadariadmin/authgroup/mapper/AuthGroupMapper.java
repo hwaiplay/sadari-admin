@@ -7,7 +7,16 @@ import org.sadari.admin.sadariadmin.authgroup.vo.AuthMenuVO;
 
 import java.util.List;
 
-@Mapper
+/**
+ * fileName       : AuthGroupMapper
+ * author         : SeungHyeon.Kang
+ * date           : 2026-07-27
+ * description    : AuthGroupMapper role
+ * ===========================================================
+ * DATE              AUTHOR             NOTE
+ * -----------------------------------------------------------
+ * 2026-07-27        SeungHyeon.Kang    최초 생성
+ */@Mapper
 public interface AuthGroupMapper {
 
     /** 권한그룹 목록 조회 */

@@ -5,7 +5,14 @@ import org.sadari.admin.sadariadmin.common.result.ResultEnum;
 import org.springframework.http.HttpStatus;
 
 /**
- * 업무 예외
+ * fileName       : BusinessException
+ * author         : SeungHyeon.Kang
+ * date           : 2026-07-09
+ * description    : 업무 예외 /
+ * ===========================================================
+ * DATE              AUTHOR             NOTE
+ * -----------------------------------------------------------
+ * 2026-07-09        SeungHyeon.Kang    최초 생성
  */
 @Getter
 public class BusinessException extends RuntimeException {
@@ -18,7 +25,7 @@ public class BusinessException extends RuntimeException {
 
     /**
      * 업무 예외 생성
-     * @Author SeungHyeon.Kang
+     * @author SeungHyeon.Kang
      * @param status
      * @param resultEnum
      * @return

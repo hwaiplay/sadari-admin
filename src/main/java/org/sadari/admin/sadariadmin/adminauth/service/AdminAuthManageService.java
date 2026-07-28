@@ -6,7 +6,16 @@ import org.sadari.admin.sadariadmin.adminauth.vo.AdminAuthVO;
 
 import java.util.List;
 
-public interface AdminAuthManageService {
+/**
+ * fileName       : AdminAuthManageService
+ * author         : SeungHyeon.Kang
+ * date           : 2026-07-27
+ * description    : AdminAuthManageService role
+ * ===========================================================
+ * DATE              AUTHOR             NOTE
+ * -----------------------------------------------------------
+ * 2026-07-27        SeungHyeon.Kang    최초 생성
+ */public interface AdminAuthManageService {
 
     /** 관리자 권한 부여 화면 데이터 조회 */
     AdminAuthManageVO getAdminAuthManage(AdminSessionVO admin);

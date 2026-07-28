@@ -1,6 +1,14 @@
 <?xml version="1.0" encoding="UTF-8" ?>
-<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "https://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "https://mybatis.org/dtd/mybatis-3-mapper.dtd">
 <mapper namespace="org.sadari.admin.sadariadmin.menu.mapper.MenuMapper">
+    <!-- 메뉴 사용 여부 코드명 조회에 사용하는 공통코드를 바인딩한다 -->
+    <sql id="codeNameBindings">
+        <bind name="commYsno" value="@org.sadari.admin.sadariadmin.common.constant.Constant@COMM_YSNO"/>
+        <bind name="useeYsnoCode" value="@org.sadari.admin.sadariadmin.common.constant.Constant@USEE_YSNO_CODE"/>
+    </sql>
+
     <!-- 메뉴 공통 조회 컬럼 목록 -->
     <sql id="menuColumns">
           MENU_NUMB
@@ -22,10 +30,9 @@
     <select id="getMenuList" resultType="org.sadari.admin.sadariadmin.menu.vo.MenuVO">
         <bind name="yes" value="@org.sadari.admin.sadariadmin.common.constant.Constant@YES"/>
         <bind name="topMenuSubxNumb" value="@org.sadari.admin.sadariadmin.common.constant.Constant@TOP_MENU_SUBX_NUMB"/>
-        <bind name="commYsno" value="@org.sadari.admin.sadariadmin.common.constant.Constant@COMM_YSNO"/>
-        <bind name="useeYsnoCode" value="@org.sadari.admin.sadariadmin.common.constant.Constant@USEE_YSNO_CODE"/>
-        /*getMenuList*/
-        SELECT M.MENU_NUMB
+        <include refid="codeNameBindings"/>
+        SELECT /* getMenuList */
+               M.MENU_NUMB
              , M.SUBX_NUMB
              , M.MENU_NAME
              , M.MENU_URLX
@@ -62,8 +69,8 @@
     <select id="getMenuPermission" resultType="org.sadari.admin.sadariadmin.menu.vo.MenuPermissionVO">
         <bind name="no" value="@org.sadari.admin.sadariadmin.common.constant.Constant@NO"/>
         <bind name="yes" value="@org.sadari.admin.sadariadmin.common.constant.Constant@YES"/>
-        /*getMenuPermission*/
-        SELECT NVL(MAX(A.READ_YSNO), #{no}) AS READ_YSNO
+        SELECT /* getMenuPermission */
+               NVL(MAX(A.READ_YSNO), #{no}) AS READ_YSNO
              , NVL(MAX(A.WRIT_YSNO), #{no}) AS WRIT_YSNO
              , NVL(MAX(A.DELT_YSNO), #{no}) AS DELT_YSNO
           FROM TM_ADMENU M
@@ -80,30 +87,20 @@
     <!-- 메뉴관리 화면에 표시할 전체 메뉴 목록을 조회한다 -->
     <select id="getMenuMngList" resultType="org.sadari.admin.sadariadmin.menu.vo.MenuVO">
         <bind name="topMenuSubxNumb" value="@org.sadari.admin.sadariadmin.common.constant.Constant@TOP_MENU_SUBX_NUMB"/>
-        <bind name="commYsno" value="@org.sadari.admin.sadariadmin.common.constant.Constant@COMM_YSNO"/>
-        <bind name="useeYsnoCode" value="@org.sadari.admin.sadariadmin.common.constant.Constant@USEE_YSNO_CODE"/>
-        /*getMenuMngList*/
-        SELECT <include refid="menuColumns"/>
+        <include refid="codeNameBindings"/>
+        SELECT /* getMenuMngList */
+               <include refid="menuColumns"/>
           FROM TM_ADMENU M
          WHERE M.SUBX_NUMB = #{topMenuSubxNumb}
-      ORDER BY NVL((
-                    SELECT P.SORT_ORDR
-                      FROM TM_ADMENU P
-                     WHERE P.MENU_NUMB = M.MENU_NUMB
-                       AND P.SUBX_NUMB = #{topMenuSubxNumb}
-                   ), M.SORT_ORDR)
+      ORDER BY NVL(M.SORT_ORDR, 9999)
              , TO_NUMBER(M.MENU_NUMB)
-             , CASE WHEN M.SUBX_NUMB = #{topMenuSubxNumb} THEN 0 ELSE 1 END
-             , NVL(M.SORT_ORDR, 9999)
-             , TO_NUMBER(M.SUBX_NUMB)
     </select>
 
     <!-- 메뉴 번호와 하위 메뉴 번호로 메뉴 상세를 조회한다 -->
     <select id="getMenuDtl" resultType="org.sadari.admin.sadariadmin.menu.vo.MenuVO">
-        <bind name="commYsno" value="@org.sadari.admin.sadariadmin.common.constant.Constant@COMM_YSNO"/>
-        <bind name="useeYsnoCode" value="@org.sadari.admin.sadariadmin.common.constant.Constant@USEE_YSNO_CODE"/>
-        /*getMenuDtl*/
-        SELECT <include refid="menuColumns"/>
+        <include refid="codeNameBindings"/>
+        SELECT /* getMenuDtl */
+               <include refid="menuColumns"/>
           FROM TM_ADMENU
          WHERE MENU_NUMB = #{menuNumb}
            AND SUBX_NUMB = #{subxNumb}
@@ -111,11 +108,10 @@
 
     <!-- 특정 상위 메뉴의 하위 메뉴 목록을 조회한다 -->
     <select id="getSubMenuList" resultType="org.sadari.admin.sadariadmin.menu.vo.MenuVO">
-        /*getSubMenuList*/
         <bind name="topMenuSubxNumb" value="@org.sadari.admin.sadariadmin.common.constant.Constant@TOP_MENU_SUBX_NUMB"/>
-        <bind name="commYsno" value="@org.sadari.admin.sadariadmin.common.constant.Constant@COMM_YSNO"/>
-        <bind name="useeYsnoCode" value="@org.sadari.admin.sadariadmin.common.constant.Constant@USEE_YSNO_CODE"/>
-        SELECT <include refid="menuColumns"/>
+        <include refid="codeNameBindings"/>
+        SELECT /* getSubMenuList */
+               <include refid="menuColumns"/>
           FROM TM_ADMENU
          WHERE MENU_NUMB = #{menuNumb}
            AND SUBX_NUMB != #{topMenuSubxNumb}
@@ -124,64 +120,64 @@
 
     <!-- 신규 상위 메뉴 번호를 조회한다 -->
     <select id="getMenuNumb" resultType="string">
-        /*getMenuNumb*/
         <bind name="topMenuSubxNumb" value="@org.sadari.admin.sadariadmin.common.constant.Constant@TOP_MENU_SUBX_NUMB"/>
-        SELECT TO_CHAR(NVL(MAX(TO_NUMBER(MENU_NUMB)), 0) + 1)
+        SELECT /* getMenuNumb */
+               TO_CHAR(NVL(MAX(TO_NUMBER(MENU_NUMB)), 0) + 1)
           FROM TM_ADMENU
          WHERE SUBX_NUMB = #{topMenuSubxNumb}
     </select>
 
     <!-- 특정 상위 메뉴 아래의 신규 하위 메뉴 번호를 조회한다 -->
     <select id="getSubxNumb" resultType="string">
-        /*getSubxNumb*/
-        SELECT TO_CHAR(NVL(MAX(TO_NUMBER(SUBX_NUMB)), -1) + 1)
+        SELECT /* getSubxNumb */
+               TO_CHAR(NVL(MAX(TO_NUMBER(SUBX_NUMB)), -1) + 1)
           FROM TM_ADMENU
          WHERE MENU_NUMB = #{menuNumb}
     </select>
 
     <!-- 메뉴 정보를 등록한다 -->
     <insert id="setMenu">
-        /*setMenu*/
+        /* setMenu */
         INSERT INTO TM_ADMENU (
-                                 MENU_NUMB
-                                ,SUBX_NUMB
-                                ,MENU_NAME
-                                ,MENU_URLX
-                                ,SORT_ORDR
-                                ,USEE_YSNO
-                                ,REGI_ADMN
-                                ,REGI_DATE
-                                ,UPDT_ADMN
-                                ,UPDT_DATE
-                    ) VALUES (  #{menuNumb}
-                               ,#{subxNumb}
-                               ,#{menuName}
-                               ,#{menuUrlx}
-                               ,#{sortOrdr}
-                               ,#{useeYsno}
-                               ,#{regiAdmn}
-                               ,SYSTIMESTAMP
-                               ,#{updtAdmn}
-                               ,SYSTIMESTAMP
-                             )
+                    MENU_NUMB
+                  , SUBX_NUMB
+                  , MENU_NAME
+                  , MENU_URLX
+                  , SORT_ORDR
+                  , USEE_YSNO
+                  , REGI_ADMN
+                  , REGI_DATE
+                  , UPDT_ADMN
+                  , UPDT_DATE
+        ) VALUES (  #{menuNumb}
+                  , #{subxNumb}
+                  , #{menuName}
+                  , #{menuUrlx}
+                  , #{sortOrdr,jdbcType=NUMERIC}
+                  , #{useeYsno}
+                  , #{regiAdmn}
+                  , SYSTIMESTAMP
+                  , #{updtAdmn}
+                  , SYSTIMESTAMP
+        )
     </insert>
 
     <!-- 신규 메뉴를 모든 권한그룹에서 조회, 쓰기, 삭제할 수 있도록 등록한다 -->
     <insert id="setMenuAuth">
         <bind name="yes" value="@org.sadari.admin.sadariadmin.common.constant.Constant@YES"/>
-        /*setMenuAuth*/
+        /* setMenuAuth */
         INSERT INTO TB_AUTHMN (
-                                 AUTH_CODE
-                               , MENU_NUMB
-                               , SUBX_NUMB
-                               , READ_YSNO
-                               , WRIT_YSNO
-                               , DELT_YSNO
-                               , REGI_ADMN
-                               , REGI_DATE
-                               , UPDT_ADMN
-                               , UPDT_DATE
-                    )
+                    AUTH_CODE
+                  , MENU_NUMB
+                  , SUBX_NUMB
+                  , READ_YSNO
+                  , WRIT_YSNO
+                  , DELT_YSNO
+                  , REGI_ADMN
+                  , REGI_DATE
+                  , UPDT_ADMN
+                  , UPDT_DATE
+        )
         SELECT A.AUTH_CODE
              , #{menuNumb}
              , #{subxNumb}
@@ -197,11 +193,11 @@
 
     <!-- 메뉴 상세 정보를 수정한다 -->
     <update id="uptMenu">
-        /*uptMenu*/
-        UPDATE TM_ADMENU
+        UPDATE /* uptMenu */
+               TM_ADMENU
            SET MENU_NAME = #{menuName}
              , MENU_URLX = #{menuUrlx}
-             , SORT_ORDR = #{sortOrdr}
+             , SORT_ORDR = #{sortOrdr,jdbcType=NUMERIC}
              , USEE_YSNO = #{useeYsno}
              , UPDT_ADMN = #{updtAdmn}
              , UPDT_DATE = SYSTIMESTAMP
@@ -211,16 +207,16 @@
 
     <!-- 메뉴 번호와 하위 메뉴 번호로 메뉴를 삭제한다 -->
     <delete id="delMenu">
-        /*delMenu*/
-        DELETE FROM TM_ADMENU
+        DELETE /* delMenu */
+          FROM TM_ADMENU
          WHERE MENU_NUMB = #{menuNumb}
            AND SUBX_NUMB = #{subxNumb}
     </delete>
 
     <!-- 메뉴에 연결된 전체 권한그룹 권한을 삭제한다 -->
     <delete id="delMenuAuth">
-        /*delMenuAuth*/
-        DELETE FROM TB_AUTHMN
+        DELETE /* delMenuAuth */
+          FROM TB_AUTHMN
          WHERE MENU_NUMB = #{menuNumb}
            AND SUBX_NUMB = #{subxNumb}
     </delete>

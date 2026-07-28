@@ -5,7 +5,16 @@ import org.sadari.admin.sadariadmin.usermenu.vo.UserMenuVO;
 
 import java.util.List;
 
-/** 사용자 메뉴 관리 서비스 */
+/**
+ * fileName       : UserMenuService
+ * author         : SeungHyeon.Kang
+ * date           : 2026-07-27
+ * description    : 사용자 메뉴 관리 서비스
+ * ===========================================================
+ * DATE              AUTHOR             NOTE
+ * -----------------------------------------------------------
+ * 2026-07-27        SeungHyeon.Kang    최초 생성
+ */
 public interface UserMenuService {
 
     /** 사용자 상위 메뉴 목록 조회 */

@@ -5,7 +5,16 @@ import lombok.Data;
 import java.time.LocalDateTime;
 import java.util.List;
 
-/** 권한그룹 VO */
+/**
+ * fileName       : AuthGroupVO
+ * author         : SeungHyeon.Kang
+ * date           : 2026-07-27
+ * description    : 권한그룹 VO
+ * ===========================================================
+ * DATE              AUTHOR             NOTE
+ * -----------------------------------------------------------
+ * 2026-07-27        SeungHyeon.Kang    최초 생성
+ */
 @Data
 public class AuthGroupVO {
 

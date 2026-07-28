@@ -16,7 +16,16 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
-/** 사용자 메뉴 관리 API 컨트롤러 */
+/**
+ * fileName       : UserMenuController
+ * author         : SeungHyeon.Kang
+ * date           : 2026-07-27
+ * description    : 사용자 메뉴 관리 API 컨트롤러
+ * ===========================================================
+ * DATE              AUTHOR             NOTE
+ * -----------------------------------------------------------
+ * 2026-07-27        SeungHyeon.Kang    최초 생성
+ */
 @RestController
 @RequestMapping(Constant.API_USER_MENUS_PREFIX)
 public class UserMenuController {

@@ -4,7 +4,16 @@ import lombok.Data;
 
 import java.time.LocalDateTime;
 
-/** 메뉴별 권한 VO */
+/**
+ * fileName       : AuthMenuVO
+ * author         : SeungHyeon.Kang
+ * date           : 2026-07-27
+ * description    : 메뉴별 권한 VO
+ * ===========================================================
+ * DATE              AUTHOR             NOTE
+ * -----------------------------------------------------------
+ * 2026-07-27        SeungHyeon.Kang    최초 생성
+ */
 @Data
 public class AuthMenuVO {
 

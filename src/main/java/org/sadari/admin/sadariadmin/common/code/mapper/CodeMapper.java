@@ -7,19 +7,28 @@ import org.sadari.admin.sadariadmin.common.code.vo.CodeVO;
 
 import java.util.List;
 
-@Mapper
+/**
+ * fileName       : CodeMapper
+ * author         : SeungHyeon.Kang
+ * date           : 2026-07-08
+ * description    : CodeMapper role
+ * ===========================================================
+ * DATE              AUTHOR             NOTE
+ * -----------------------------------------------------------
+ * 2026-07-08        SeungHyeon.Kang    최초 생성
+ */@Mapper
 public interface CodeMapper {
 
     /**
      * 공통코드 목록 조회
-     * @Author SeungHyeon.Kang
+     * @author SeungHyeon.Kang
      * @return
      */
     List<CodeMasterVO> getCommCodeList();
 
     /**
      * 공통코드 상세 조회
-     * @Author SeungHyeon.Kang
+     * @author SeungHyeon.Kang
      * @param commCode
      * @return
      */
@@ -27,7 +36,7 @@ public interface CodeMapper {
 
     /**
      * 공통코드 개수 조회
-     * @Author SeungHyeon.Kang
+     * @author SeungHyeon.Kang
      * @param commCode
      * @return
      */
@@ -35,7 +44,7 @@ public interface CodeMapper {
 
     /**
      * 공통코드 등록
-     * @Author SeungHyeon.Kang
+     * @author SeungHyeon.Kang
      * @param codeMaster
      * @return
      */
@@ -43,7 +52,7 @@ public interface CodeMapper {
 
     /**
      * 공통코드 수정
-     * @Author SeungHyeon.Kang
+     * @author SeungHyeon.Kang
      * @param codeMaster
      * @return
      */
@@ -51,7 +60,7 @@ public interface CodeMapper {
 
     /**
      * 세부코드 목록 조회
-     * @Author SeungHyeon.Kang
+     * @author SeungHyeon.Kang
      * @param commCode
      * @return
      */
@@ -59,7 +68,7 @@ public interface CodeMapper {
 
     /**
      * 세부코드 상세 조회
-     * @Author SeungHyeon.Kang
+     * @author SeungHyeon.Kang
      * @param commCode
      * @param comdCode
      * @return
@@ -68,7 +77,7 @@ public interface CodeMapper {
 
     /**
      * 세부코드 개수 조회
-     * @Author SeungHyeon.Kang
+     * @author SeungHyeon.Kang
      * @param commCode
      * @param comdCode
      * @return
@@ -77,7 +86,7 @@ public interface CodeMapper {
 
     /**
      * 세부코드 등록
-     * @Author SeungHyeon.Kang
+     * @author SeungHyeon.Kang
      * @param code
      * @return
      */
@@ -85,7 +94,7 @@ public interface CodeMapper {
 
     /**
      * 세부코드 수정
-     * @Author SeungHyeon.Kang
+     * @author SeungHyeon.Kang
      * @param code
      * @return
      */
@@ -93,7 +102,7 @@ public interface CodeMapper {
 
     /**
      * 세부코드 삭제
-     * @Author SeungHyeon.Kang
+     * @author SeungHyeon.Kang
      * @param commCode
      * @param comdCode
      * @return
@@ -102,7 +111,7 @@ public interface CodeMapper {
 
     /**
      * 세부코드명 조회
-     * @Author SeungHyeon.Kang
+     * @author SeungHyeon.Kang
      * @param commCode
      * @param comdCode
      * @return
@@ -111,7 +120,7 @@ public interface CodeMapper {
 
     /**
      * 세부코드명 단건 조회
-     * @Author SeungHyeon.Kang
+     * @author SeungHyeon.Kang
      * @param comdCode
      * @return
      */

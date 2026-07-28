@@ -4,7 +4,14 @@ import lombok.AllArgsConstructor;
 import lombok.Getter;
 
 /**
- * 데이터 없는 공통 응답 객체
+ * fileName       : ResultResponse
+ * author         : SeungHyeon.Kang
+ * date           : 2026-07-08
+ * description    : 데이터 없는 공통 응답 객체 /
+ * ===========================================================
+ * DATE              AUTHOR             NOTE
+ * -----------------------------------------------------------
+ * 2026-07-08        SeungHyeon.Kang    최초 생성
  */
 @Getter
 @AllArgsConstructor

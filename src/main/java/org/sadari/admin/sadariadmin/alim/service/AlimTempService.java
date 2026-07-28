@@ -5,11 +5,20 @@ import org.sadari.admin.sadariadmin.alim.vo.AlimTempVO;
 
 import java.util.List;
 
-public interface AlimTempService {
+/**
+ * fileName       : AlimTempService
+ * author         : SeungHyeon.Kang
+ * date           : 2026-07-24
+ * description    : AlimTempService role
+ * ===========================================================
+ * DATE              AUTHOR             NOTE
+ * -----------------------------------------------------------
+ * 2026-07-24        SeungHyeon.Kang    최초 생성
+ */public interface AlimTempService {
 
     /**
      * 알림 템플릿 목록 조회
-     * @Author SeungHyeon.Kang
+     * @author SeungHyeon.Kang
      * @param admin
      * @return
      */
@@ -17,7 +26,7 @@ public interface AlimTempService {
 
     /**
      * 알림 템플릿 상세 조회
-     * @Author SeungHyeon.Kang
+     * @author SeungHyeon.Kang
      * @param alimSitu
      * @param tempCode
      * @param admin
@@ -27,7 +36,7 @@ public interface AlimTempService {
 
     /**
      * 알림 템플릿 중복 여부 조회
-     * @Author SeungHyeon.Kang
+     * @author SeungHyeon.Kang
      * @param alimSitu
      * @param tempCode
      * @param admin
@@ -37,7 +46,7 @@ public interface AlimTempService {
 
     /**
      * 알림 템플릿 등록
-     * @Author SeungHyeon.Kang
+     * @author SeungHyeon.Kang
      * @param alimTemp
      * @param admin
      * @return
@@ -46,7 +55,7 @@ public interface AlimTempService {
 
     /**
      * 알림 템플릿 수정
-     * @Author SeungHyeon.Kang
+     * @author SeungHyeon.Kang
      * @param oldAlimSitu
      * @param oldTempCode
      * @param alimTemp

@@ -15,8 +15,18 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 
-/** 권한그룹 관리 서비스 구현체 */
+/**
+ * fileName       : AuthGroupServiceImpl
+ * author         : SeungHyeon.Kang
+ * date           : 2026-07-27
+ * description    : 권한그룹 관리 서비스 구현체
+ * ===========================================================
+ * DATE              AUTHOR             NOTE
+ * -----------------------------------------------------------
+ * 2026-07-27        SeungHyeon.Kang    최초 생성
+ */
 @Service
+@Transactional(readOnly = true)
 public class AuthGroupServiceImpl implements AuthGroupService {
 
     /** 권한그룹 Mapper */
@@ -24,7 +34,7 @@ public class AuthGroupServiceImpl implements AuthGroupService {
 
     /**
      * 권한그룹 관리 서비스 생성
-     * @Author SeungHyeon.Kang
+     * @author SeungHyeon.Kang
      * @param authGroupMapper
      * @return
      */
@@ -139,7 +149,7 @@ public class AuthGroupServiceImpl implements AuthGroupService {
 
     /**
      * 권한그룹 사용 여부 기본값 설정
-     * @Author SeungHyeon.Kang
+     * @author SeungHyeon.Kang
      * @param value
      * @return
      */

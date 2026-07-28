@@ -19,7 +19,16 @@ import org.springframework.web.servlet.HandlerInterceptor;
 import java.util.LinkedHashMap;
 import java.util.Map;
 
-/** 관리자 메뉴 API 권한 인터셉터 */
+/**
+ * fileName       : MenuPermissionInterceptor
+ * author         : SeungHyeon.Kang
+ * date           : 2026-07-27
+ * description    : 관리자 메뉴 API 권한 인터셉터
+ * ===========================================================
+ * DATE              AUTHOR             NOTE
+ * -----------------------------------------------------------
+ * 2026-07-27        SeungHyeon.Kang    최초 생성
+ */
 @Component
 public class MenuPermissionInterceptor implements HandlerInterceptor {
 

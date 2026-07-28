@@ -4,7 +4,14 @@ import lombok.Getter;
 import org.sadari.admin.sadariadmin.common.util.MessageUtil;
 
 /**
- * 공통 응답 코드
+ * fileName       : ResultEnum
+ * author         : SeungHyeon.Kang
+ * date           : 2026-07-08
+ * description    : 공통 응답 코드 /
+ * ===========================================================
+ * DATE              AUTHOR             NOTE
+ * -----------------------------------------------------------
+ * 2026-07-08        SeungHyeon.Kang    최초 생성
  */
 @Getter
 public enum ResultEnum {
@@ -86,7 +93,7 @@ public enum ResultEnum {
 
     /**
      * 공통 응답 코드 생성
-     * @Author SeungHyeon.Kang
+     * @author SeungHyeon.Kang
      * @param code
      * @param messageKey
      * @return
@@ -98,7 +105,7 @@ public enum ResultEnum {
 
     /**
      * 응답 메시지 조회
-     * @Author SeungHyeon.Kang
+     * @author SeungHyeon.Kang
      * @return
      */
     public String getMessage() {

@@ -5,7 +5,16 @@ import org.sadari.admin.sadariadmin.authgroup.vo.AuthGroupVO;
 
 import java.util.List;
 
-public interface AuthGroupService {
+/**
+ * fileName       : AuthGroupService
+ * author         : SeungHyeon.Kang
+ * date           : 2026-07-27
+ * description    : AuthGroupService role
+ * ===========================================================
+ * DATE              AUTHOR             NOTE
+ * -----------------------------------------------------------
+ * 2026-07-27        SeungHyeon.Kang    최초 생성
+ */public interface AuthGroupService {
 
     /** 권한그룹 목록 조회 */
     List<AuthGroupVO> getAuthGroupList(AdminSessionVO admin);

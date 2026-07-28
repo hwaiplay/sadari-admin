@@ -8,7 +8,16 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
-/** 관리자 메뉴 권한 조회 API */
+/**
+ * fileName       : MenuPermissionController
+ * author         : SeungHyeon.Kang
+ * date           : 2026-07-08
+ * description    : 관리자 메뉴 권한 조회 API
+ * ===========================================================
+ * DATE              AUTHOR             NOTE
+ * -----------------------------------------------------------
+ * 2026-07-08        SeungHyeon.Kang    최초 생성
+ */
 @RestController
 public class MenuPermissionController {
 

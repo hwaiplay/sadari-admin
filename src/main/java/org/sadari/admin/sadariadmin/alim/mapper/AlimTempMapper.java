@@ -6,19 +6,28 @@ import org.sadari.admin.sadariadmin.alim.vo.AlimTempVO;
 
 import java.util.List;
 
-@Mapper
+/**
+ * fileName       : AlimTempMapper
+ * author         : SeungHyeon.Kang
+ * date           : 2026-07-24
+ * description    : AlimTempMapper role
+ * ===========================================================
+ * DATE              AUTHOR             NOTE
+ * -----------------------------------------------------------
+ * 2026-07-24        SeungHyeon.Kang    최초 생성
+ */@Mapper
 public interface AlimTempMapper {
 
     /**
      * 알림 템플릿 목록 조회
-     * @Author SeungHyeon.Kang
+     * @author SeungHyeon.Kang
      * @return
      */
     List<AlimTempVO> getAlimTempList();
 
     /**
      * 알림 템플릿 상세 조회
-     * @Author SeungHyeon.Kang
+     * @author SeungHyeon.Kang
      * @param alimSitu
      * @param tempCode
      * @return
@@ -27,7 +36,7 @@ public interface AlimTempMapper {
 
     /**
      * 알림 템플릿 중복 개수 조회
-     * @Author SeungHyeon.Kang
+     * @author SeungHyeon.Kang
      * @param alimSitu
      * @param tempCode
      * @return
@@ -36,7 +45,7 @@ public interface AlimTempMapper {
 
     /**
      * 알림 템플릿 등록
-     * @Author SeungHyeon.Kang
+     * @author SeungHyeon.Kang
      * @param alimTemp
      * @return
      */
@@ -44,7 +53,7 @@ public interface AlimTempMapper {
 
     /**
      * 알림 템플릿 수정
-     * @Author SeungHyeon.Kang
+     * @author SeungHyeon.Kang
      * @param oldAlimSitu
      * @param oldTempCode
      * @param alimTemp

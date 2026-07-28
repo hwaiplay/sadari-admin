@@ -2,7 +2,16 @@ package org.sadari.admin.sadariadmin.adminauth.vo;
 
 import lombok.Data;
 
-/** 관리자 권한 부여 VO */
+/**
+ * fileName       : AdminAuthVO
+ * author         : SeungHyeon.Kang
+ * date           : 2026-07-27
+ * description    : 관리자 권한 부여 VO
+ * ===========================================================
+ * DATE              AUTHOR             NOTE
+ * -----------------------------------------------------------
+ * 2026-07-27        SeungHyeon.Kang    최초 생성
+ */
 @Data
 public class AdminAuthVO {
 

@@ -5,7 +5,14 @@ import lombok.Data;
 import java.time.LocalDateTime;
 
 /**
- * TM_ADMINX 관리자 마스터 VO
+ * fileName       : AdminVO
+ * author         : SeungHyeon.Kang
+ * date           : 2026-07-08
+ * description    : TM_ADMINX 관리자 마스터 VO /
+ * ===========================================================
+ * DATE              AUTHOR             NOTE
+ * -----------------------------------------------------------
+ * 2026-07-08        SeungHyeon.Kang    최초 생성
  */
 @Data
 public class AdminVO {

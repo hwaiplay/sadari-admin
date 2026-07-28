@@ -5,13 +5,20 @@ import java.util.Map;
 import java.util.Objects;
 
 /**
- * 문자열과 객체 비어있음 확인 유틸
+ * fileName       : StringUtil
+ * author         : SeungHyeon.Kang
+ * date           : 2026-07-09
+ * description    : 문자열과 객체 비어있음 확인 유틸 /
+ * ===========================================================
+ * DATE              AUTHOR             NOTE
+ * -----------------------------------------------------------
+ * 2026-07-09        SeungHyeon.Kang    최초 생성
  */
 public class StringUtil {
 
     /**
      * 비어있음 여부 확인
-     * @Author SeungHyeon.Kang
+     * @author SeungHyeon.Kang
      * @param obj
      * @return
      */

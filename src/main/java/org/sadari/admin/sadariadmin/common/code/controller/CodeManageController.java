@@ -18,7 +18,14 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 /**
- * 코드관리 API 컨트롤러
+ * fileName       : CodeManageController
+ * author         : SeungHyeon.Kang
+ * date           : 2026-07-08
+ * description    : 코드관리 API 컨트롤러 /
+ * ===========================================================
+ * DATE              AUTHOR             NOTE
+ * -----------------------------------------------------------
+ * 2026-07-08        SeungHyeon.Kang    최초 생성
  */
 @RestController
 @RequestMapping(Constant.API_CODE_MANAGE_PREFIX)
@@ -29,7 +36,7 @@ public class CodeManageController {
 
     /**
      * 코드관리 API 컨트롤러 생성
-     * @Author SeungHyeon.Kang
+     * @author SeungHyeon.Kang
      * @param codeManageService
      * @return
      */
@@ -39,7 +46,7 @@ public class CodeManageController {
 
     /**
      * 공통코드 목록 조회
-     * @Author SeungHyeon.Kang
+     * @author SeungHyeon.Kang
      * @return
      */
     @GetMapping("/masters")
@@ -49,7 +56,7 @@ public class CodeManageController {
 
     /**
      * 공통코드 상세 조회
-     * @Author SeungHyeon.Kang
+     * @author SeungHyeon.Kang
      * @param commCode
      * @return
      */
@@ -60,7 +67,7 @@ public class CodeManageController {
 
     /**
      * 공통코드 중복 여부 조회
-     * @Author SeungHyeon.Kang
+     * @author SeungHyeon.Kang
      * @param commCode
      * @return
      */
@@ -71,7 +78,7 @@ public class CodeManageController {
 
     /**
      * 공통코드 등록
-     * @Author SeungHyeon.Kang
+     * @author SeungHyeon.Kang
      * @param codeMaster
      * @param admin
      * @return
@@ -86,7 +93,7 @@ public class CodeManageController {
 
     /**
      * 공통코드 수정
-     * @Author SeungHyeon.Kang
+     * @author SeungHyeon.Kang
      * @param commCode
      * @param codeMaster
      * @return
@@ -102,7 +109,7 @@ public class CodeManageController {
 
     /**
      * 세부코드 목록 조회
-     * @Author SeungHyeon.Kang
+     * @author SeungHyeon.Kang
      * @param commCode
      * @return
      */
@@ -113,7 +120,7 @@ public class CodeManageController {
 
     /**
      * 세부코드 등록
-     * @Author SeungHyeon.Kang
+     * @author SeungHyeon.Kang
      * @param commCode
      * @param code
      * @param admin
@@ -130,7 +137,7 @@ public class CodeManageController {
 
     /**
      * 세부코드 수정
-     * @Author SeungHyeon.Kang
+     * @author SeungHyeon.Kang
      * @param commCode
      * @param comdCode
      * @param code
@@ -148,7 +155,7 @@ public class CodeManageController {
 
     /**
      * 세부코드 삭제
-     * @Author SeungHyeon.Kang
+     * @author SeungHyeon.Kang
      * @param commCode
      * @param comdCode
      * @return

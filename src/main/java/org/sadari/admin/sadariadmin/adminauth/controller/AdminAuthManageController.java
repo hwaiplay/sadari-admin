@@ -15,7 +15,16 @@ import org.springframework.web.bind.annotation.RestController;
 
 import java.util.List;
 
-/** 관리자 권한 부여 API */
+/**
+ * fileName       : AdminAuthManageController
+ * author         : SeungHyeon.Kang
+ * date           : 2026-07-27
+ * description    : 관리자 권한 부여 API
+ * ===========================================================
+ * DATE              AUTHOR             NOTE
+ * -----------------------------------------------------------
+ * 2026-07-27        SeungHyeon.Kang    최초 생성
+ */
 @RestController
 @RequestMapping(Constant.API_ADMIN_AUTHS_PREFIX)
 public class AdminAuthManageController {

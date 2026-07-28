@@ -16,7 +16,16 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
-/** 메뉴 관리 API 컨트롤러 */
+/**
+ * fileName       : MenuController
+ * author         : SeungHyeon.Kang
+ * date           : 2026-07-08
+ * description    : 메뉴 관리 API 컨트롤러
+ * ===========================================================
+ * DATE              AUTHOR             NOTE
+ * -----------------------------------------------------------
+ * 2026-07-08        SeungHyeon.Kang    최초 생성
+ */
 @RestController
 @RequestMapping(Constant.API_MENUS_PREFIX)
 public class MenuController {
@@ -26,7 +35,7 @@ public class MenuController {
 
     /**
      * 메뉴 관리 API 컨트롤러 생성
-     * @Author SeungHyeon.Kang
+     * @author SeungHyeon.Kang
      * @param menuService
      * @return
      */
@@ -36,7 +45,7 @@ public class MenuController {
 
     /**
      * 사이드바 메뉴 목록 조회
-     * @Author SeungHyeon.Kang
+     * @author SeungHyeon.Kang
      * @param admin
      * @return
      */
@@ -47,7 +56,7 @@ public class MenuController {
 
     /**
      * 메뉴관리 목록 조회
-     * @Author SeungHyeon.Kang
+     * @author SeungHyeon.Kang
      * @param admin
      * @return
      */
@@ -58,7 +67,7 @@ public class MenuController {
 
     /**
      * 메뉴 상세 조회
-     * @Author SeungHyeon.Kang
+     * @author SeungHyeon.Kang
      * @param menuNumb
      * @param subxNumb
      * @param admin
@@ -75,7 +84,7 @@ public class MenuController {
 
     /**
      * 하위 메뉴 목록 조회
-     * @Author SeungHyeon.Kang
+     * @author SeungHyeon.Kang
      * @param menuNumb
      * @param admin
      * @return
@@ -90,7 +99,7 @@ public class MenuController {
 
     /**
      * 메뉴 등록
-     * @Author SeungHyeon.Kang
+     * @author SeungHyeon.Kang
      * @param menu
      * @param admin
      * @return
@@ -102,7 +111,7 @@ public class MenuController {
 
     /**
      * 메뉴 수정
-     * @Author SeungHyeon.Kang
+     * @author SeungHyeon.Kang
      * @param menuNumb
      * @param subxNumb
      * @param menu
@@ -123,7 +132,7 @@ public class MenuController {
 
     /**
      * 메뉴 삭제
-     * @Author SeungHyeon.Kang
+     * @author SeungHyeon.Kang
      * @param menuNumb
      * @param subxNumb
      * @param admin

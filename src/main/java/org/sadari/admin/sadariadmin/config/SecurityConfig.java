@@ -17,7 +17,14 @@ import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 
 /**
- * 관리자 API 보안 설정
+ * fileName       : SecurityConfig
+ * author         : SeungHyeon.Kang
+ * date           : 2026-07-08
+ * description    : 관리자 API 보안 설정 /
+ * ===========================================================
+ * DATE              AUTHOR             NOTE
+ * -----------------------------------------------------------
+ * 2026-07-08        SeungHyeon.Kang    최초 생성
  */
 @Configuration
 public class SecurityConfig {
@@ -27,7 +34,7 @@ public class SecurityConfig {
 
     /**
      * 관리자 API 보안 설정 생성
-     * @Author SeungHyeon.Kang
+     * @author SeungHyeon.Kang
      * @param redisAuthenticationFilter
      * @return
      */
@@ -39,7 +46,7 @@ public class SecurityConfig {
 
     /**
      * Spring Security 필터 체인 생성
-     * @Author SeungHyeon.Kang
+     * @author SeungHyeon.Kang
      * @param http
      * @return
      */
@@ -72,7 +79,7 @@ public class SecurityConfig {
 
     /**
      * Spring Security 예외 응답 작성
-     * @Author SeungHyeon.Kang
+     * @author SeungHyeon.Kang
      * @param response
      * @param status
      * @param resultData

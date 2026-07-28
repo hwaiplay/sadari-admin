@@ -4,12 +4,21 @@ import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Param;
 import org.sadari.admin.sadariadmin.admin.vo.AdminVO;
 
-@Mapper
+/**
+ * fileName       : AdminMapper
+ * author         : SeungHyeon.Kang
+ * date           : 2026-07-08
+ * description    : AdminMapper role
+ * ===========================================================
+ * DATE              AUTHOR             NOTE
+ * -----------------------------------------------------------
+ * 2026-07-08        SeungHyeon.Kang    최초 생성
+ */@Mapper
 public interface AdminMapper {
 
     /**
      * 관리자 상세 조회
-     * @Author SeungHyeon.Kang
+     * @author SeungHyeon.Kang
      * @param admnIdxx
      * @return
      */
@@ -17,7 +26,7 @@ public interface AdminMapper {
 
     /**
      * 관리자 로그인 성공 처리
-     * @Author SeungHyeon.Kang
+     * @author SeungHyeon.Kang
      * @param admnNumb
      * @return
      */
@@ -25,7 +34,7 @@ public interface AdminMapper {
 
     /**
      * 관리자 로그인 실패 처리
-     * @Author SeungHyeon.Kang
+     * @author SeungHyeon.Kang
      * @param admnNumb
      * @return
      */

@@ -6,7 +6,16 @@ import org.sadari.admin.sadariadmin.usermenu.vo.UserMenuVO;
 
 import java.util.List;
 
-@Mapper
+/**
+ * fileName       : UserMenuMapper
+ * author         : SeungHyeon.Kang
+ * date           : 2026-07-27
+ * description    : UserMenuMapper role
+ * ===========================================================
+ * DATE              AUTHOR             NOTE
+ * -----------------------------------------------------------
+ * 2026-07-27        SeungHyeon.Kang    최초 생성
+ */@Mapper
 public interface UserMenuMapper {
 
     /** 사용자 메뉴관리 상위 메뉴 목록 조회 */

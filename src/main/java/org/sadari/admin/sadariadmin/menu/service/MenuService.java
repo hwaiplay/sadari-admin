@@ -6,12 +6,21 @@ import org.sadari.admin.sadariadmin.menu.vo.MenuPermissionVO;
 
 import java.util.List;
 
-/** 메뉴 관리 서비스 */
+/**
+ * fileName       : MenuService
+ * author         : SeungHyeon.Kang
+ * date           : 2026-07-08
+ * description    : 메뉴 관리 서비스
+ * ===========================================================
+ * DATE              AUTHOR             NOTE
+ * -----------------------------------------------------------
+ * 2026-07-08        SeungHyeon.Kang    최초 생성
+ */
 public interface MenuService {
 
     /**
      * 권한 레벨별 사이드바 메뉴 목록 조회
-     * @Author SeungHyeon.Kang
+     * @author SeungHyeon.Kang
      * @param authLevel
      * @return
      */
@@ -22,7 +31,7 @@ public interface MenuService {
 
     /**
      * 메뉴관리 목록 조회
-     * @Author SeungHyeon.Kang
+     * @author SeungHyeon.Kang
      * @param admin
      * @return
      */
@@ -30,7 +39,7 @@ public interface MenuService {
 
     /**
      * 메뉴 상세 조회
-     * @Author SeungHyeon.Kang
+     * @author SeungHyeon.Kang
      * @param menuNumb
      * @param subxNumb
      * @param admin
@@ -40,7 +49,7 @@ public interface MenuService {
 
     /**
      * 하위 메뉴 목록 조회
-     * @Author SeungHyeon.Kang
+     * @author SeungHyeon.Kang
      * @param menuNumb
      * @param admin
      * @return
@@ -49,7 +58,7 @@ public interface MenuService {
 
     /**
      * 메뉴 등록
-     * @Author SeungHyeon.Kang
+     * @author SeungHyeon.Kang
      * @param menu
      * @param admin
      * @return
@@ -58,7 +67,7 @@ public interface MenuService {
 
     /**
      * 메뉴 수정
-     * @Author SeungHyeon.Kang
+     * @author SeungHyeon.Kang
      * @param menu
      * @param admin
      * @return
@@ -67,7 +76,7 @@ public interface MenuService {
 
     /**
      * 메뉴 삭제
-     * @Author SeungHyeon.Kang
+     * @author SeungHyeon.Kang
      * @param menuNumb
      * @param subxNumb
      * @param admin

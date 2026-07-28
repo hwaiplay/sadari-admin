@@ -3,7 +3,14 @@ package org.sadari.admin.sadariadmin.common.result;
 import lombok.Getter;
 
 /**
- * 공통 응답 객체
+ * fileName       : ResultData
+ * author         : SeungHyeon.Kang
+ * date           : 2026-07-08
+ * description    : 공통 응답 객체 /
+ * ===========================================================
+ * DATE              AUTHOR             NOTE
+ * -----------------------------------------------------------
+ * 2026-07-08        SeungHyeon.Kang    최초 생성
  */
 @Getter
 public class ResultData {
@@ -19,7 +26,7 @@ public class ResultData {
 
     /**
      * 공통 응답 객체 생성
-     * @Author SeungHyeon.Kang
+     * @author SeungHyeon.Kang
      * @param code
      * @param message
      * @param data
@@ -33,7 +40,7 @@ public class ResultData {
 
     /**
      * 성공 응답 생성
-     * @Author SeungHyeon.Kang
+     * @author SeungHyeon.Kang
      * @return
      */
     public static ResultData success() {
@@ -42,7 +49,7 @@ public class ResultData {
 
     /**
      * 데이터 포함 성공 응답 생성
-     * @Author SeungHyeon.Kang
+     * @author SeungHyeon.Kang
      * @param data
      * @return
      */
@@ -52,7 +59,7 @@ public class ResultData {
 
     /**
      * 성공 메시지 응답 생성
-     * @Author SeungHyeon.Kang
+     * @author SeungHyeon.Kang
      * @param resultEnum
      * @return
      */
@@ -62,7 +69,7 @@ public class ResultData {
 
     /**
      * 성공 메시지와 데이터 응답 생성
-     * @Author SeungHyeon.Kang
+     * @author SeungHyeon.Kang
      * @param resultEnum
      * @param data
      * @return
@@ -73,7 +80,7 @@ public class ResultData {
 
     /**
      * 실패 응답 생성
-     * @Author SeungHyeon.Kang
+     * @author SeungHyeon.Kang
      * @param resultEnum
      * @return
      */

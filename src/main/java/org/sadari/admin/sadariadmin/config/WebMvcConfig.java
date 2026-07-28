@@ -4,7 +4,16 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.web.servlet.config.annotation.InterceptorRegistry;
 import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
 
-/** 관리자 웹 MVC 설정 */
+/**
+ * fileName       : WebMvcConfig
+ * author         : SeungHyeon.Kang
+ * date           : 2026-07-27
+ * description    : 관리자 웹 MVC 설정
+ * ===========================================================
+ * DATE              AUTHOR             NOTE
+ * -----------------------------------------------------------
+ * 2026-07-27        SeungHyeon.Kang    최초 생성
+ */
 @Configuration
 public class WebMvcConfig implements WebMvcConfigurer {
 

@@ -5,13 +5,20 @@ import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 
 /**
- * 비밀번호 해시 유틸
+ * fileName       : PasswordHash
+ * author         : SeungHyeon.Kang
+ * date           : 2026-07-08
+ * description    : 비밀번호 해시 유틸 /
+ * ===========================================================
+ * DATE              AUTHOR             NOTE
+ * -----------------------------------------------------------
+ * 2026-07-08        SeungHyeon.Kang    최초 생성
  */
 public final class PasswordHash {
 
     /**
      * 비밀번호 해시 유틸 생성 방지
-     * @Author SeungHyeon.Kang
+     * @author SeungHyeon.Kang
      * @return
      */
     private PasswordHash() {
@@ -19,7 +26,7 @@ public final class PasswordHash {
 
     /**
      * SHA256 해시 생성
-     * @Author SeungHyeon.Kang
+     * @author SeungHyeon.Kang
      * @param value
      * @return
      */

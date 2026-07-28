@@ -1,7 +1,14 @@
 package org.sadari.admin.sadariadmin.common.constant;
 
 /**
- * 프로젝트 전역 공통 상수
+ * fileName       : Constant
+ * author         : SeungHyeon.Kang
+ * date           : 2026-07-09
+ * description    : 프로젝트 전역 공통 상수 /
+ * ===========================================================
+ * DATE              AUTHOR             NOTE
+ * -----------------------------------------------------------
+ * 2026-07-09        SeungHyeon.Kang    최초 생성
  */
 public final class Constant {
 
@@ -103,7 +110,7 @@ public final class Constant {
 
     /**
      * 공통 상수 생성 방지
-     * @Author SeungHyeon.Kang
+     * @author SeungHyeon.Kang
      * @return
      */
     private Constant() {

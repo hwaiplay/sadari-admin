@@ -14,9 +14,17 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 /**
- * 관리자 인증 서비스 구현체
+ * fileName       : AdminAuthServiceImpl
+ * author         : SeungHyeon.Kang
+ * date           : 2026-07-08
+ * description    : 관리자 인증 서비스 구현체 /
+ * ===========================================================
+ * DATE              AUTHOR             NOTE
+ * -----------------------------------------------------------
+ * 2026-07-08        SeungHyeon.Kang    최초 생성
  */
 @Service
+@Transactional(readOnly = true)
 public class AdminAuthServiceImpl implements AdminAuthService {
 
     /** 관리자 데이터 접근 Mapper */
@@ -24,7 +32,7 @@ public class AdminAuthServiceImpl implements AdminAuthService {
 
     /**
      * 관리자 인증 서비스 생성
-     * @Author SeungHyeon.Kang
+     * @author SeungHyeon.Kang
      * @param adminMapper
      * @return
      */
@@ -34,7 +42,7 @@ public class AdminAuthServiceImpl implements AdminAuthService {
 
     /**
      * 관리자 로그인 처리
-     * @Author SeungHyeon.Kang
+     * @author SeungHyeon.Kang
      * @param request
      * @return
      */
@@ -71,4 +79,3 @@ public class AdminAuthServiceImpl implements AdminAuthService {
         return session;
     }
 }
-

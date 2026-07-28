@@ -9,7 +9,14 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 /**
- * 공통코드 읽기 API 컨트롤러
+ * fileName       : CodeController
+ * author         : SeungHyeon.Kang
+ * date           : 2026-07-08
+ * description    : 공통코드 읽기 API 컨트롤러 /
+ * ===========================================================
+ * DATE              AUTHOR             NOTE
+ * -----------------------------------------------------------
+ * 2026-07-08        SeungHyeon.Kang    최초 생성
  */
 @RestController
 @RequestMapping(Constant.API_CODES_PREFIX)
@@ -20,7 +27,7 @@ public class CodeController {
 
     /**
      * 공통코드 읽기 API 컨트롤러 생성
-     * @Author SeungHyeon.Kang
+     * @author SeungHyeon.Kang
      * @param codeUtil
      * @return
      */
@@ -30,7 +37,7 @@ public class CodeController {
 
     /**
      * 세부코드 목록 조회
-     * @Author SeungHyeon.Kang
+     * @author SeungHyeon.Kang
      * @param commCode
      * @return
      */
@@ -41,7 +48,7 @@ public class CodeController {
 
     /**
      * 세부코드명 조회
-     * @Author SeungHyeon.Kang
+     * @author SeungHyeon.Kang
      * @param commCode
      * @param comdCode
      * @return
@@ -53,7 +60,7 @@ public class CodeController {
 
     /**
      * 세부코드명 단건 조회
-     * @Author SeungHyeon.Kang
+     * @author SeungHyeon.Kang
      * @param comdCode
      * @return
      */

@@ -3,7 +3,14 @@ package org.sadari.admin.sadariadmin.admin.vo;
 import lombok.Data;
 
 /**
- * 로그인 성공 후 Redis에 저장하는 관리자 세션 VO
+ * fileName       : AdminSessionVO
+ * author         : SeungHyeon.Kang
+ * date           : 2026-07-08
+ * description    : 로그인 성공 후 Redis에 저장하는 관리자 세션 VO /
+ * ===========================================================
+ * DATE              AUTHOR             NOTE
+ * -----------------------------------------------------------
+ * 2026-07-08        SeungHyeon.Kang    최초 생성
  */
 @Data
 public class AdminSessionVO {

@@ -7,7 +7,14 @@ import org.springframework.stereotype.Component;
 import java.util.List;
 
 /**
- * 공통코드 조회 유틸
+ * fileName       : CodeUtil
+ * author         : SeungHyeon.Kang
+ * date           : 2026-07-09
+ * description    : 공통코드 조회 유틸 /
+ * ===========================================================
+ * DATE              AUTHOR             NOTE
+ * -----------------------------------------------------------
+ * 2026-07-09        SeungHyeon.Kang    최초 생성
  */
 @Component
 public class CodeUtil {
@@ -17,7 +24,7 @@ public class CodeUtil {
 
     /**
      * 공통코드 조회 유틸 생성
-     * @Author SeungHyeon.Kang
+     * @author SeungHyeon.Kang
      * @param codeMapper
      * @return
      */
@@ -27,7 +34,7 @@ public class CodeUtil {
 
     /**
      * 세부코드 목록 조회
-     * @Author SeungHyeon.Kang
+     * @author SeungHyeon.Kang
      * @param commCode
      * @return
      */
@@ -37,7 +44,7 @@ public class CodeUtil {
 
     /**
      * 세부코드명 조회
-     * @Author SeungHyeon.Kang
+     * @author SeungHyeon.Kang
      * @param commCode
      * @param comdCode
      * @return
@@ -48,7 +55,7 @@ public class CodeUtil {
 
     /**
      * 세부코드명 단건 조회
-     * @Author SeungHyeon.Kang
+     * @author SeungHyeon.Kang
      * @param comdCode
      * @return
      */

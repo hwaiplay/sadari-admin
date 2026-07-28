@@ -7,12 +7,21 @@ import org.sadari.admin.sadariadmin.menu.vo.MenuPermissionVO;
 
 import java.util.List;
 
-@Mapper
+/**
+ * fileName       : MenuMapper
+ * author         : SeungHyeon.Kang
+ * date           : 2026-07-08
+ * description    : MenuMapper role
+ * ===========================================================
+ * DATE              AUTHOR             NOTE
+ * -----------------------------------------------------------
+ * 2026-07-08        SeungHyeon.Kang    최초 생성
+ */@Mapper
 public interface MenuMapper {
 
     /**
      * 권한 레벨별 사이드바 메뉴 목록 조회
-     * @Author SeungHyeon.Kang
+     * @author SeungHyeon.Kang
      * @param authLevel
      * @return
      */
@@ -20,7 +29,7 @@ public interface MenuMapper {
 
     /**
      * 관리자 메뉴 권한 조회
-     * @Author SeungHyeon.Kang
+     * @author SeungHyeon.Kang
      * @param authCode
      * @param menuUrlx
      * @return
@@ -29,14 +38,14 @@ public interface MenuMapper {
 
     /**
      * 메뉴관리 전체 목록 조회
-     * @Author SeungHyeon.Kang
+     * @author SeungHyeon.Kang
      * @return
      */
     List<MenuVO> getMenuMngList();
 
     /**
      * 메뉴 상세 조회
-     * @Author SeungHyeon.Kang
+     * @author SeungHyeon.Kang
      * @param menuNumb
      * @param subxNumb
      * @return
@@ -45,7 +54,7 @@ public interface MenuMapper {
 
     /**
      * 하위 메뉴 목록 조회
-     * @Author SeungHyeon.Kang
+     * @author SeungHyeon.Kang
      * @param menuNumb
      * @return
      */
@@ -53,14 +62,14 @@ public interface MenuMapper {
 
     /**
      * 신규 상위 메뉴 번호 조회
-     * @Author SeungHyeon.Kang
+     * @author SeungHyeon.Kang
      * @return
      */
     String getMenuNumb();
 
     /**
      * 신규 하위 메뉴 번호 조회
-     * @Author SeungHyeon.Kang
+     * @author SeungHyeon.Kang
      * @param menuNumb
      * @return
      */
@@ -68,7 +77,7 @@ public interface MenuMapper {
 
     /**
      * 메뉴 등록
-     * @Author SeungHyeon.Kang
+     * @author SeungHyeon.Kang
      * @param menu
      * @return
      */
@@ -76,7 +85,7 @@ public interface MenuMapper {
 
     /**
      * 신규 메뉴 전체 권한그룹 권한 등록
-     * @Author SeungHyeon.Kang
+     * @author SeungHyeon.Kang
      * @param menu
      * @return
      */
@@ -84,7 +93,7 @@ public interface MenuMapper {
 
     /**
      * 메뉴 수정
-     * @Author SeungHyeon.Kang
+     * @author SeungHyeon.Kang
      * @param menu
      * @return
      */
@@ -92,7 +101,7 @@ public interface MenuMapper {
 
     /**
      * 메뉴 삭제
-     * @Author SeungHyeon.Kang
+     * @author SeungHyeon.Kang
      * @param menuNumb
      * @param subxNumb
      * @return
@@ -101,7 +110,7 @@ public interface MenuMapper {
 
     /**
      * 메뉴별 권한 삭제
-     * @Author SeungHyeon.Kang
+     * @author SeungHyeon.Kang
      * @param menuNumb
      * @param subxNumb
      * @return

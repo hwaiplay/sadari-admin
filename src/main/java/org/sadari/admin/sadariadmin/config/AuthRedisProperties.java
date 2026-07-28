@@ -4,7 +4,14 @@ import org.sadari.admin.sadariadmin.common.constant.AuthConstant;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 
 /**
- * Redis 관리자 인증 설정
+ * fileName       : AuthRedisProperties
+ * author         : SeungHyeon.Kang
+ * date           : 2026-07-08
+ * description    : Redis 관리자 인증 설정 /
+ * ===========================================================
+ * DATE              AUTHOR             NOTE
+ * -----------------------------------------------------------
+ * 2026-07-08        SeungHyeon.Kang    최초 생성
  */
 @ConfigurationProperties(prefix = "sadari.auth")
 public class AuthRedisProperties {
@@ -20,7 +27,7 @@ public class AuthRedisProperties {
 
     /**
      * Redis 로그인 키 접두어 조회
-     * @Author SeungHyeon.Kang
+     * @author SeungHyeon.Kang
      * @return
      */
     public String getRedisKeyPrefix() {
@@ -29,7 +36,7 @@ public class AuthRedisProperties {
 
     /**
      * Redis 로그인 키 접두어 설정
-     * @Author SeungHyeon.Kang
+     * @author SeungHyeon.Kang
      * @param redisKeyPrefix
      * @return
      */
@@ -39,7 +46,7 @@ public class AuthRedisProperties {
 
     /**
      * 인증 쿠키명 조회
-     * @Author SeungHyeon.Kang
+     * @author SeungHyeon.Kang
      * @return
      */
     public String getCookieName() {
@@ -48,7 +55,7 @@ public class AuthRedisProperties {
 
     /**
      * 인증 쿠키명 설정
-     * @Author SeungHyeon.Kang
+     * @author SeungHyeon.Kang
      * @param cookieName
      * @return
      */
@@ -58,7 +65,7 @@ public class AuthRedisProperties {
 
     /**
      * 토큰 만료 시간 조회
-     * @Author SeungHyeon.Kang
+     * @author SeungHyeon.Kang
      * @return
      */
     public long getTokenTtlSeconds() {
@@ -67,7 +74,7 @@ public class AuthRedisProperties {
 
     /**
      * 토큰 만료 시간 설정
-     * @Author SeungHyeon.Kang
+     * @author SeungHyeon.Kang
      * @param tokenTtlSeconds
      * @return
      */

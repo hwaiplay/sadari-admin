@@ -4,13 +4,20 @@ import jakarta.servlet.http.HttpServletRequest;
 import org.sadari.admin.sadariadmin.admin.vo.AdminSessionVO;
 
 /**
- * Redis 기반 관리자 인증 토큰 서비스
+ * fileName       : AdminRedisAuthService
+ * author         : SeungHyeon.Kang
+ * date           : 2026-07-08
+ * description    : Redis 기반 관리자 인증 토큰 서비스 /
+ * ===========================================================
+ * DATE              AUTHOR             NOTE
+ * -----------------------------------------------------------
+ * 2026-07-08        SeungHyeon.Kang    최초 생성
  */
 public interface AdminRedisAuthService {
 
     /**
      * 관리자 인증 토큰 저장
-     * @Author SeungHyeon.Kang
+     * @author SeungHyeon.Kang
      * @param admin
      * @return
      */
@@ -18,7 +25,7 @@ public interface AdminRedisAuthService {
 
     /**
      * 관리자 세션 조회
-     * @Author SeungHyeon.Kang
+     * @author SeungHyeon.Kang
      * @param request
      * @return
      */
@@ -26,7 +33,7 @@ public interface AdminRedisAuthService {
 
     /**
      * 관리자 인증 토큰 삭제
-     * @Author SeungHyeon.Kang
+     * @author SeungHyeon.Kang
      * @param request
      * @return
      */

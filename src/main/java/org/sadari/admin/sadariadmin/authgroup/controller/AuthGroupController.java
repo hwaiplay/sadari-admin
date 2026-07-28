@@ -16,7 +16,16 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
-/** 권한그룹 관리 API */
+/**
+ * fileName       : AuthGroupController
+ * author         : SeungHyeon.Kang
+ * date           : 2026-07-27
+ * description    : 권한그룹 관리 API
+ * ===========================================================
+ * DATE              AUTHOR             NOTE
+ * -----------------------------------------------------------
+ * 2026-07-27        SeungHyeon.Kang    최초 생성
+ */
 @RestController
 @RequestMapping(Constant.API_AUTH_GROUP_PREFIX)
 public class AuthGroupController {

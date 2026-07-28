@@ -5,7 +5,14 @@ import lombok.Data;
 import java.time.LocalDateTime;
 
 /**
- * TM_ADMENU 관리자 메뉴 관리 VO
+ * fileName       : MenuVO
+ * author         : SeungHyeon.Kang
+ * date           : 2026-07-08
+ * description    : TM_ADMENU 관리자 메뉴 관리 VO /
+ * ===========================================================
+ * DATE              AUTHOR             NOTE
+ * -----------------------------------------------------------
+ * 2026-07-08        SeungHyeon.Kang    최초 생성
  */
 @Data
 public class MenuVO {

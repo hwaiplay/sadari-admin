@@ -16,7 +16,14 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 /**
- * 알림 템플릿 관리 API 컨트롤러
+ * fileName       : AlimTempController
+ * author         : SeungHyeon.Kang
+ * date           : 2026-07-24
+ * description    : 알림 템플릿 관리 API 컨트롤러 /
+ * ===========================================================
+ * DATE              AUTHOR             NOTE
+ * -----------------------------------------------------------
+ * 2026-07-24        SeungHyeon.Kang    최초 생성
  */
 @RestController
 @RequestMapping(Constant.API_ALIM_TEMP_PREFIX)
@@ -27,7 +34,7 @@ public class AlimTempController {
 
     /**
      * 알림 템플릿 관리 API 컨트롤러 생성
-     * @Author SeungHyeon.Kang
+     * @author SeungHyeon.Kang
      * @param alimTempService
      * @return
      */
@@ -37,7 +44,7 @@ public class AlimTempController {
 
     /**
      * 알림 템플릿 목록 조회
-     * @Author SeungHyeon.Kang
+     * @author SeungHyeon.Kang
      * @param admin
      * @return
      */
@@ -48,7 +55,7 @@ public class AlimTempController {
 
     /**
      * 알림 템플릿 상세 조회
-     * @Author SeungHyeon.Kang
+     * @author SeungHyeon.Kang
      * @param alimSitu
      * @param tempCode
      * @param admin
@@ -65,7 +72,7 @@ public class AlimTempController {
 
     /**
      * 알림 템플릿 중복 여부 조회
-     * @Author SeungHyeon.Kang
+     * @author SeungHyeon.Kang
      * @param alimSitu
      * @param tempCode
      * @param admin
@@ -82,7 +89,7 @@ public class AlimTempController {
 
     /**
      * 알림 템플릿 등록
-     * @Author SeungHyeon.Kang
+     * @author SeungHyeon.Kang
      * @param alimTemp
      * @param admin
      * @return
@@ -94,7 +101,7 @@ public class AlimTempController {
 
     /**
      * 알림 템플릿 수정
-     * @Author SeungHyeon.Kang
+     * @author SeungHyeon.Kang
      * @param alimSitu
      * @param tempCode
      * @param alimTemp

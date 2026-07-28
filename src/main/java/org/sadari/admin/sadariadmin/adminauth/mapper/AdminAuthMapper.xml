@@ -1,10 +1,12 @@
 <?xml version="1.0" encoding="UTF-8" ?>
-<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "https://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "https://mybatis.org/dtd/mybatis-3-mapper.dtd">
 <mapper namespace="org.sadari.admin.sadariadmin.adminauth.mapper.AdminAuthMapper">
     <!-- 관리자와 현재 권한그룹을 조회한다 -->
     <select id="getAdminAuthList" resultType="org.sadari.admin.sadariadmin.adminauth.vo.AdminAuthVO">
-        /*getAdminAuthList*/
-        SELECT A.ADMN_NUMB
+        SELECT /* getAdminAuthList */
+               A.ADMN_NUMB
              , A.ADMN_IDXX
              , A.ADMN_NAME
              , A.AUTH_CODE
@@ -18,8 +20,8 @@
 
     <!-- 관리자 존재 건수를 조회한다 -->
     <select id="getAdminCount" resultType="int">
-        /*getAdminCount*/
-        SELECT COUNT(*)
+        SELECT /* getAdminCount */
+               COUNT(*)
           FROM TM_ADMINX
          WHERE ADMN_NUMB = #{admnNumb}
     </select>
@@ -27,8 +29,8 @@
     <!-- 사용 가능한 권한그룹 존재 건수를 조회한다 -->
     <select id="getAuthGroupCount" resultType="int">
         <bind name="yes" value="@org.sadari.admin.sadariadmin.common.constant.Constant@YES"/>
-        /*getAuthGroupCount*/
-        SELECT COUNT(*)
+        SELECT /* getAuthGroupCount */
+               COUNT(*)
           FROM TM_AUTHXM
          WHERE AUTH_CODE = #{authCode}
            AND NVL(USEE_YSNO, #{yes}) = #{yes}
@@ -36,8 +38,8 @@
 
     <!-- 관리자의 권한 코드를 수정한다 -->
     <update id="uptAdminAuth">
-        /*uptAdminAuth*/
-        UPDATE TM_ADMINX
+        UPDATE /* uptAdminAuth */
+               TM_ADMINX
            SET AUTH_CODE = #{authCode}
          WHERE ADMN_NUMB = #{admnNumb}
     </update>

@@ -1,6 +1,15 @@
 <?xml version="1.0" encoding="UTF-8" ?>
-<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "https://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "https://mybatis.org/dtd/mybatis-3-mapper.dtd">
 <mapper namespace="org.sadari.admin.sadariadmin.alim.mapper.AlimTempMapper">
+    <!-- 알림 템플릿 코드명 조회에 사용하는 공통코드를 바인딩한다 -->
+    <sql id="codeNameBindings">
+        <bind name="alimSituCode" value="@org.sadari.admin.sadariadmin.common.constant.Constant@ALIM_SITU"/>
+        <bind name="commYsno" value="@org.sadari.admin.sadariadmin.common.constant.Constant@COMM_YSNO"/>
+        <bind name="useeYsnoCode" value="@org.sadari.admin.sadariadmin.common.constant.Constant@USEE_YSNO_CODE"/>
+    </sql>
+
     <!-- 알림 템플릿 공통 조회 컬럼 목록 -->
     <sql id="alimTempColumns">
           ALIM_SITU
@@ -22,11 +31,9 @@
 
     <!-- 알림 템플릿 목록을 조회한다 -->
     <select id="getAlimTempList" resultType="org.sadari.admin.sadariadmin.alim.vo.AlimTempVO">
-        <bind name="alimSituCode" value="@org.sadari.admin.sadariadmin.common.constant.Constant@ALIM_SITU"/>
-        <bind name="commYsno" value="@org.sadari.admin.sadariadmin.common.constant.Constant@COMM_YSNO"/>
-        <bind name="useeYsnoCode" value="@org.sadari.admin.sadariadmin.common.constant.Constant@USEE_YSNO_CODE"/>
-        /*getAlimTempList*/
-        SELECT <include refid="alimTempColumns"/>
+        <include refid="codeNameBindings"/>
+        SELECT /* getAlimTempList */
+               <include refid="alimTempColumns"/>
           FROM TB_ALTEMP
       ORDER BY ALIM_SITU
              , TEMP_CODE
@@ -34,11 +41,9 @@
 
     <!-- 알림 상황과 템플릿 코드로 알림 템플릿 상세를 조회한다 -->
     <select id="getAlimTempDtl" resultType="org.sadari.admin.sadariadmin.alim.vo.AlimTempVO">
-        <bind name="alimSituCode" value="@org.sadari.admin.sadariadmin.common.constant.Constant@ALIM_SITU"/>
-        <bind name="commYsno" value="@org.sadari.admin.sadariadmin.common.constant.Constant@COMM_YSNO"/>
-        <bind name="useeYsnoCode" value="@org.sadari.admin.sadariadmin.common.constant.Constant@USEE_YSNO_CODE"/>
-        /*getAlimTempDtl*/
-        SELECT <include refid="alimTempColumns"/>
+        <include refid="codeNameBindings"/>
+        SELECT /* getAlimTempDtl */
+               <include refid="alimTempColumns"/>
           FROM TB_ALTEMP
          WHERE ALIM_SITU = #{alimSitu}
            AND TEMP_CODE = #{tempCode}
@@ -46,8 +51,8 @@
 
     <!-- 같은 알림 상황 안의 템플릿 코드 중복 개수를 조회한다 -->
     <select id="getAlimTempCnt" resultType="int">
-        /*getAlimTempCnt*/
-        SELECT COUNT(1)
+        SELECT /* getAlimTempCnt */
+               COUNT(1)
           FROM TB_ALTEMP
          WHERE ALIM_SITU = #{alimSitu}
            AND TEMP_CODE = #{tempCode}
@@ -55,37 +60,37 @@
 
     <!-- 알림 템플릿 정보를 등록한다 -->
     <insert id="setAlimTemp">
-        /*setAlimTemp*/
+        /* setAlimTemp */
         INSERT INTO TB_ALTEMP (
-                                 ALIM_SITU
-                                ,TEMP_CODE
-                                ,TEMP_TITL
-                                ,ALIM_TITL
-                                ,TEMP_CONT
-                                ,LINK_URLX
-                                ,USEE_YSNO
-                                ,REGI_ADMN
-                                ,REGI_DATE
-                                ,UPDT_ADMN
-                                ,UPDT_DATE
-                    ) VALUES (  #{alimSitu}
-                               ,#{tempCode}
-                               ,#{tempTitl}
-                               ,#{alimTitl}
-                               ,#{tempCont}
-                               ,#{linkUrlx}
-                               ,#{useeYsno}
-                               ,#{regiAdmn}
-                               ,SYSDATE
-                               ,#{updtAdmn}
-                               ,SYSDATE
-                             )
+                    ALIM_SITU
+                  , TEMP_CODE
+                  , TEMP_TITL
+                  , ALIM_TITL
+                  , TEMP_CONT
+                  , LINK_URLX
+                  , USEE_YSNO
+                  , REGI_ADMN
+                  , REGI_DATE
+                  , UPDT_ADMN
+                  , UPDT_DATE
+        ) VALUES (  #{alimSitu}
+                  , #{tempCode}
+                  , #{tempTitl}
+                  , #{alimTitl}
+                  , #{tempCont}
+                  , #{linkUrlx}
+                  , #{useeYsno}
+                  , #{regiAdmn}
+                  , SYSDATE
+                  , #{updtAdmn}
+                  , SYSDATE
+        )
     </insert>
 
     <!-- 알림 템플릿 상세 정보를 수정한다 -->
     <update id="uptAlimTemp">
-        /*uptAlimTemp*/
-        UPDATE TB_ALTEMP
+        UPDATE /* uptAlimTemp */
+               TB_ALTEMP
            SET ALIM_SITU = #{alimTemp.alimSitu}
              , TEMP_CODE = #{alimTemp.tempCode}
              , TEMP_TITL = #{alimTemp.tempTitl}

@@ -15,9 +15,17 @@ import org.springframework.transaction.annotation.Transactional;
 import java.util.List;
 
 /**
- * 코드관리 서비스
+ * fileName       : CodeManageService
+ * author         : SeungHyeon.Kang
+ * date           : 2026-07-08
+ * description    : 코드관리 서비스 /
+ * ===========================================================
+ * DATE              AUTHOR             NOTE
+ * -----------------------------------------------------------
+ * 2026-07-08        SeungHyeon.Kang    최초 생성
  */
 @Service
+@Transactional(readOnly = true)
 public class CodeManageService {
 
     /** 코드 Mapper */
@@ -25,7 +33,7 @@ public class CodeManageService {
 
     /**
      * 코드관리 서비스 생성
-     * @Author SeungHyeon.Kang
+     * @author SeungHyeon.Kang
      * @param codeMapper
      * @return
      */
@@ -35,7 +43,7 @@ public class CodeManageService {
 
     /**
      * 공통코드 목록 조회
-     * @Author SeungHyeon.Kang
+     * @author SeungHyeon.Kang
      * @return
      */
     public List<CodeMasterVO> getCommCodeList() {
@@ -44,7 +52,7 @@ public class CodeManageService {
 
     /**
      * 공통코드 상세 조회
-     * @Author SeungHyeon.Kang
+     * @author SeungHyeon.Kang
      * @param commCode
      * @return
      */
@@ -54,7 +62,7 @@ public class CodeManageService {
 
     /**
      * 공통코드 중복 여부 조회
-     * @Author SeungHyeon.Kang
+     * @author SeungHyeon.Kang
      * @param commCode
      * @return
      */
@@ -64,14 +72,18 @@ public class CodeManageService {
 
     /**
      * 공통코드 등록
-     * @Author SeungHyeon.Kang
+     * @author SeungHyeon.Kang
      * @param codeMaster
      * @param admin
      * @return
      */
     @Transactional
     public CodeMasterVO setCommCode(CodeMasterVO codeMaster, AdminSessionVO admin) {
-        if (StringUtil.isEmpty(codeMaster.getCommCode()) || StringUtil.isEmpty(codeMaster.getCodeName())) {
+        // 공통코드와 로그인 관리자 정보가 없으면 등록 데이터를 구성할 수 없으므로 요청을 중단한다
+        if (StringUtil.isEmpty(codeMaster)
+                || StringUtil.isEmpty(codeMaster.getCommCode())
+                || StringUtil.isEmpty(codeMaster.getCodeName())
+                || StringUtil.isEmpty(admin)) {
             throw new BusinessException(HttpStatus.BAD_REQUEST, ResultEnum.COMMON_REQUIRED_VALUE);
         }
 
@@ -91,14 +103,18 @@ public class CodeManageService {
 
     /**
      * 공통코드 수정
-     * @Author SeungHyeon.Kang
+     * @author SeungHyeon.Kang
      * @param commCode
      * @param codeMaster
      * @return
      */
     @Transactional
     public CodeMasterVO uptCommCode(String commCode, CodeMasterVO codeMaster, AdminSessionVO admin) {
-        if (StringUtil.isEmpty(commCode) || StringUtil.isEmpty(codeMaster.getCodeName())) {
+        // 수정 대상과 로그인 관리자 정보가 없으면 수정 이력을 기록할 수 없으므로 요청을 중단한다
+        if (StringUtil.isEmpty(commCode)
+                || StringUtil.isEmpty(codeMaster)
+                || StringUtil.isEmpty(codeMaster.getCodeName())
+                || StringUtil.isEmpty(admin)) {
             throw new BusinessException(HttpStatus.BAD_REQUEST, ResultEnum.COMMON_REQUIRED_VALUE);
         }
 
@@ -117,7 +133,7 @@ public class CodeManageService {
 
     /**
      * 세부코드 목록 조회
-     * @Author SeungHyeon.Kang
+     * @author SeungHyeon.Kang
      * @param commCode
      * @return
      */
@@ -127,7 +143,7 @@ public class CodeManageService {
 
     /**
      * 세부코드 등록
-     * @Author SeungHyeon.Kang
+     * @author SeungHyeon.Kang
      * @param commCode
      * @param code
      * @param admin
@@ -135,7 +151,12 @@ public class CodeManageService {
      */
     @Transactional
     public CodeVO setComdCode(String commCode, CodeVO code, AdminSessionVO admin) {
-        if (StringUtil.isEmpty(commCode) || StringUtil.isEmpty(code.getComdCode()) || StringUtil.isEmpty(code.getComdName())) {
+        // 세부코드와 로그인 관리자 정보가 없으면 등록 데이터를 구성할 수 없으므로 요청을 중단한다
+        if (StringUtil.isEmpty(commCode)
+                || StringUtil.isEmpty(code)
+                || StringUtil.isEmpty(code.getComdCode())
+                || StringUtil.isEmpty(code.getComdName())
+                || StringUtil.isEmpty(admin)) {
             throw new BusinessException(HttpStatus.BAD_REQUEST, ResultEnum.COMMON_REQUIRED_VALUE);
         }
 
@@ -160,7 +181,7 @@ public class CodeManageService {
 
     /**
      * 세부코드 수정
-     * @Author SeungHyeon.Kang
+     * @author SeungHyeon.Kang
      * @param commCode
      * @param comdCode
      * @param code
@@ -168,7 +189,12 @@ public class CodeManageService {
      */
     @Transactional
     public CodeVO uptComdCode(String commCode, String comdCode, CodeVO code, AdminSessionVO admin) {
-        if (StringUtil.isEmpty(commCode) || StringUtil.isEmpty(comdCode) || StringUtil.isEmpty(code.getComdName())) {
+        // 수정 대상과 로그인 관리자 정보가 없으면 수정 이력을 기록할 수 없으므로 요청을 중단한다
+        if (StringUtil.isEmpty(commCode)
+                || StringUtil.isEmpty(comdCode)
+                || StringUtil.isEmpty(code)
+                || StringUtil.isEmpty(code.getComdName())
+                || StringUtil.isEmpty(admin)) {
             throw new BusinessException(HttpStatus.BAD_REQUEST, ResultEnum.COMMON_REQUIRED_VALUE);
         }
 
@@ -193,7 +219,7 @@ public class CodeManageService {
 
     /**
      * 세부코드 삭제
-     * @Author SeungHyeon.Kang
+     * @author SeungHyeon.Kang
      * @param commCode
      * @param comdCode
      * @return

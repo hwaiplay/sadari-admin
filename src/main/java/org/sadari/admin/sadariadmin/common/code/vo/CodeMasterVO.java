@@ -5,7 +5,14 @@ import lombok.Data;
 import java.time.LocalDateTime;
 
 /**
- * TM_CODEXM 공통코드 VO
+ * fileName       : CodeMasterVO
+ * author         : SeungHyeon.Kang
+ * date           : 2026-07-08
+ * description    : TM_CODEXM 공통코드 VO /
+ * ===========================================================
+ * DATE              AUTHOR             NOTE
+ * -----------------------------------------------------------
+ * 2026-07-08        SeungHyeon.Kang    최초 생성
  */
 @Data
 public class CodeMasterVO {

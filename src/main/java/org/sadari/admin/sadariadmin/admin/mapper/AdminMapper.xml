@@ -7,8 +7,8 @@
     <select id="getAdminDtl" resultType="org.sadari.admin.sadariadmin.admin.vo.AdminVO">
         <bind name="authCode" value="@org.sadari.admin.sadariadmin.common.constant.AuthConstant@AUTH_CODE"/>
         <bind name="yes" value="@org.sadari.admin.sadariadmin.common.constant.Constant@YES"/>
-        /*getAdminDtl*/
-        SELECT A.ADMN_NUMB
+        SELECT /* getAdminDtl */
+               A.ADMN_NUMB
              , A.ADMN_IDXX
              , A.PASS_WORD
              , A.ADMN_NAME
@@ -28,8 +28,8 @@
 
     <!-- 로그인 성공 시 실패 횟수를 초기화하고 마지막 로그인 일자를 갱신한다 -->
     <update id="uptAdminLoginSuccess">
-        /*uptAdminLoginSuccess*/
-        UPDATE TM_ADMINX
+        UPDATE /* uptAdminLoginSuccess */
+               TM_ADMINX
            SET FAIL_CNTX = 0
              , LGIN_DATE = SYSDATE
          WHERE ADMN_NUMB = #{admnNumb}
@@ -37,8 +37,8 @@
 
     <!-- 로그인 실패 시 실패 횟수를 증가시킨다 -->
     <update id="uptAdminLoginFail">
-        /*uptAdminLoginFail*/
-        UPDATE TM_ADMINX
+        UPDATE /* uptAdminLoginFail */
+               TM_ADMINX
            SET FAIL_CNTX = FAIL_CNTX + 1
          WHERE ADMN_NUMB = #{admnNumb}
     </update>

@@ -5,7 +5,14 @@ import lombok.Data;
 import java.time.LocalDateTime;
 
 /**
- * TB_ALTEMP 알림 템플릿 VO
+ * fileName       : AlimTempVO
+ * author         : SeungHyeon.Kang
+ * date           : 2026-07-24
+ * description    : TB_ALTEMP 알림 템플릿 VO /
+ * ===========================================================
+ * DATE              AUTHOR             NOTE
+ * -----------------------------------------------------------
+ * 2026-07-24        SeungHyeon.Kang    최초 생성
  */
 @Data
 public class AlimTempVO {

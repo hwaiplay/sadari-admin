@@ -6,7 +6,16 @@ import org.sadari.admin.sadariadmin.adminauth.vo.AdminAuthVO;
 
 import java.util.List;
 
-@Mapper
+/**
+ * fileName       : AdminAuthMapper
+ * author         : SeungHyeon.Kang
+ * date           : 2026-07-27
+ * description    : AdminAuthMapper role
+ * ===========================================================
+ * DATE              AUTHOR             NOTE
+ * -----------------------------------------------------------
+ * 2026-07-27        SeungHyeon.Kang    최초 생성
+ */@Mapper
 public interface AdminAuthMapper {
 
     /** 관리자 권한 목록 조회 */

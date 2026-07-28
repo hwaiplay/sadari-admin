@@ -19,7 +19,14 @@ import java.io.IOException;
 import java.util.List;
 
 /**
- * Redis 토큰 기반 Spring Security 인증 필터
+ * fileName       : RedisAuthenticationFilter
+ * author         : SeungHyeon.Kang
+ * date           : 2026-07-08
+ * description    : Redis 토큰 기반 Spring Security 인증 필터 /
+ * ===========================================================
+ * DATE              AUTHOR             NOTE
+ * -----------------------------------------------------------
+ * 2026-07-08        SeungHyeon.Kang    최초 생성
  */
 @Component
 public class RedisAuthenticationFilter extends OncePerRequestFilter {
@@ -29,7 +36,7 @@ public class RedisAuthenticationFilter extends OncePerRequestFilter {
 
     /**
      * Redis 인증 필터 생성
-     * @Author SeungHyeon.Kang
+     * @author SeungHyeon.Kang
      * @param adminRedisAuthService
      * @return
      */
@@ -39,7 +46,7 @@ public class RedisAuthenticationFilter extends OncePerRequestFilter {
 
     /**
      * Redis 인증 필터 제외 여부 확인
-     * @Author SeungHyeon.Kang
+     * @author SeungHyeon.Kang
      * @param request
      * @return
      */
@@ -52,7 +59,7 @@ public class RedisAuthenticationFilter extends OncePerRequestFilter {
 
     /**
      * Redis 인증 처리
-     * @Author SeungHyeon.Kang
+     * @author SeungHyeon.Kang
      * @param request
      * @param response
      * @param filterChain

@@ -15,8 +15,18 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 
-/** 메뉴 관리 서비스 구현체 */
+/**
+ * fileName       : MenuServiceImpl
+ * author         : SeungHyeon.Kang
+ * date           : 2026-07-08
+ * description    : 메뉴 관리 서비스 구현체
+ * ===========================================================
+ * DATE              AUTHOR             NOTE
+ * -----------------------------------------------------------
+ * 2026-07-08        SeungHyeon.Kang    최초 생성
+ */
 @Service
+@Transactional(readOnly = true)
 public class MenuServiceImpl implements MenuService {
 
     /** 관리자 메뉴 Mapper */
@@ -24,7 +34,7 @@ public class MenuServiceImpl implements MenuService {
 
     /**
      * 메뉴 관리 서비스 생성
-     * @Author SeungHyeon.Kang
+     * @author SeungHyeon.Kang
      * @param menuMapper
      * @return
      */
@@ -34,7 +44,7 @@ public class MenuServiceImpl implements MenuService {
 
     /**
      * 권한 레벨별 사이드바 메뉴 목록 조회
-     * @Author SeungHyeon.Kang
+     * @author SeungHyeon.Kang
      * @param authLevel
      * @return
      */
@@ -56,7 +66,7 @@ public class MenuServiceImpl implements MenuService {
 
     /**
      * 메뉴관리 목록 조회
-     * @Author SeungHyeon.Kang
+     * @author SeungHyeon.Kang
      * @param admin
      * @return
      */
@@ -68,7 +78,7 @@ public class MenuServiceImpl implements MenuService {
 
     /**
      * 메뉴 상세 조회
-     * @Author SeungHyeon.Kang
+     * @author SeungHyeon.Kang
      * @param menuNumb
      * @param subxNumb
      * @param admin
@@ -87,7 +97,7 @@ public class MenuServiceImpl implements MenuService {
 
     /**
      * 하위 메뉴 목록 조회
-     * @Author SeungHyeon.Kang
+     * @author SeungHyeon.Kang
      * @param menuNumb
      * @param admin
      * @return
@@ -100,7 +110,7 @@ public class MenuServiceImpl implements MenuService {
 
     /**
      * 메뉴 등록
-     * @Author SeungHyeon.Kang
+     * @author SeungHyeon.Kang
      * @param menu
      * @param admin
      * @return
@@ -118,7 +128,7 @@ public class MenuServiceImpl implements MenuService {
 
     /**
      * 메뉴 수정
-     * @Author SeungHyeon.Kang
+     * @author SeungHyeon.Kang
      * @param menu
      * @param admin
      * @return
@@ -135,7 +145,7 @@ public class MenuServiceImpl implements MenuService {
 
     /**
      * 메뉴 삭제
-     * @Author SeungHyeon.Kang
+     * @author SeungHyeon.Kang
      * @param menuNumb
      * @param subxNumb
      * @param admin
@@ -151,7 +161,7 @@ public class MenuServiceImpl implements MenuService {
 
     /**
      * 메뉴 복합키 생성
-     * @Author SeungHyeon.Kang
+     * @author SeungHyeon.Kang
      * @param menu
      * @return
      */
@@ -171,7 +181,7 @@ public class MenuServiceImpl implements MenuService {
 
     /**
      * 메뉴 기본값 설정
-     * @Author SeungHyeon.Kang
+     * @author SeungHyeon.Kang
      * @param menu
      * @param admin
      * @return
@@ -191,7 +201,7 @@ public class MenuServiceImpl implements MenuService {
 
     /**
      * 로그인 상태 확인
-     * @Author SeungHyeon.Kang
+     * @author SeungHyeon.Kang
      * @param admin
      * @return
      */

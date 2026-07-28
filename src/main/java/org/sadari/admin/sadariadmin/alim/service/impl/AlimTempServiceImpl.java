@@ -15,9 +15,17 @@ import org.springframework.transaction.annotation.Transactional;
 import java.util.List;
 
 /**
- * 알림 템플릿 관리 서비스 구현체
+ * fileName       : AlimTempServiceImpl
+ * author         : SeungHyeon.Kang
+ * date           : 2026-07-24
+ * description    : 알림 템플릿 관리 서비스 구현체 /
+ * ===========================================================
+ * DATE              AUTHOR             NOTE
+ * -----------------------------------------------------------
+ * 2026-07-24        SeungHyeon.Kang    최초 생성
  */
 @Service
+@Transactional(readOnly = true)
 public class AlimTempServiceImpl implements AlimTempService {
 
     /** 템플릿 코드 입력 형식 */
@@ -28,7 +36,7 @@ public class AlimTempServiceImpl implements AlimTempService {
 
     /**
      * 알림 템플릿 관리 서비스 생성
-     * @Author SeungHyeon.Kang
+     * @author SeungHyeon.Kang
      * @param alimTempMapper
      * @return
      */
@@ -38,7 +46,7 @@ public class AlimTempServiceImpl implements AlimTempService {
 
     /**
      * 알림 템플릿 목록 조회
-     * @Author SeungHyeon.Kang
+     * @author SeungHyeon.Kang
      * @param admin
      * @return
      */
@@ -50,7 +58,7 @@ public class AlimTempServiceImpl implements AlimTempService {
 
     /**
      * 알림 템플릿 상세 조회
-     * @Author SeungHyeon.Kang
+     * @author SeungHyeon.Kang
      * @param alimSitu
      * @param tempCode
      * @param admin
@@ -69,7 +77,7 @@ public class AlimTempServiceImpl implements AlimTempService {
 
     /**
      * 알림 템플릿 중복 여부 조회
-     * @Author SeungHyeon.Kang
+     * @author SeungHyeon.Kang
      * @param alimSitu
      * @param tempCode
      * @param admin
@@ -84,7 +92,7 @@ public class AlimTempServiceImpl implements AlimTempService {
 
     /**
      * 알림 템플릿 등록
-     * @Author SeungHyeon.Kang
+     * @author SeungHyeon.Kang
      * @param alimTemp
      * @param admin
      * @return
@@ -105,7 +113,7 @@ public class AlimTempServiceImpl implements AlimTempService {
 
     /**
      * 알림 템플릿 수정
-     * @Author SeungHyeon.Kang
+     * @author SeungHyeon.Kang
      * @param oldAlimSitu
      * @param oldTempCode
      * @param alimTemp
@@ -133,7 +141,7 @@ public class AlimTempServiceImpl implements AlimTempService {
 
     /**
      * 알림 템플릿 필수값 검증
-     * @Author SeungHyeon.Kang
+     * @author SeungHyeon.Kang
      * @param alimTemp
      * @return
      */
@@ -155,7 +163,7 @@ public class AlimTempServiceImpl implements AlimTempService {
 
     /**
      * 알림 템플릿 복합키 검증
-     * @Author SeungHyeon.Kang
+     * @author SeungHyeon.Kang
      * @param alimSitu
      * @param tempCode
      * @return
@@ -169,7 +177,7 @@ public class AlimTempServiceImpl implements AlimTempService {
 
     /**
      * 알림 템플릿 기본값 설정
-     * @Author SeungHyeon.Kang
+     * @author SeungHyeon.Kang
      * @param alimTemp
      * @param admin
      * @return
@@ -185,7 +193,7 @@ public class AlimTempServiceImpl implements AlimTempService {
 
     /**
      * 로그인 상태 확인
-     * @Author SeungHyeon.Kang
+     * @author SeungHyeon.Kang
      * @param admin
      * @return
      */

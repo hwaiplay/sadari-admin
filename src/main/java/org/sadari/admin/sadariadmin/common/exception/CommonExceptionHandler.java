@@ -11,7 +11,14 @@ import org.springframework.web.bind.annotation.RestControllerAdvice;
 import org.springframework.web.server.ResponseStatusException;
 
 /**
- * 공통 예외 응답 처리기
+ * fileName       : CommonExceptionHandler
+ * author         : SeungHyeon.Kang
+ * date           : 2026-07-08
+ * description    : 공통 예외 응답 처리기 /
+ * ===========================================================
+ * DATE              AUTHOR             NOTE
+ * -----------------------------------------------------------
+ * 2026-07-08        SeungHyeon.Kang    최초 생성
  */
 @RestControllerAdvice
 public class CommonExceptionHandler {
@@ -21,7 +28,7 @@ public class CommonExceptionHandler {
 
     /**
      * 상태 코드 기반 예외 응답 처리
-     * @Author SeungHyeon.Kang
+     * @author SeungHyeon.Kang
      * @param e
      * @return
      */
@@ -45,7 +52,7 @@ public class CommonExceptionHandler {
 
     /**
      * 업무 예외 응답 처리
-     * @Author SeungHyeon.Kang
+     * @author SeungHyeon.Kang
      * @param e
      * @return
      */
@@ -56,7 +63,7 @@ public class CommonExceptionHandler {
 
     /**
      * 미처리 예외 응답 처리
-     * @Author SeungHyeon.Kang
+     * @author SeungHyeon.Kang
      * @param e
      * @return
      */
