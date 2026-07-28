@@ -16,6 +16,7 @@ import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.RequestParam;
 
 /**
  * fileName       : CodeManageController
@@ -50,8 +51,8 @@ public class CodeManageController {
      * @return
      */
     @GetMapping("/masters")
-    public ResultData getCommCodeList() {
-        return ResultData.success(codeManageService.getCommCodeList());
+    public ResultData getCommCodeList(@RequestParam(defaultValue = "1") int page) {
+        return ResultData.success(codeManageService.getCommCodeList(page));
     }
 
     /**

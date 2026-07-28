@@ -1,12 +1,13 @@
 import { fetchJson, fetchResult } from './client'
 import type { AlimTemp, AlimTempForm } from '../types/alim'
+import type { PageData } from '../types/common'
 
 /**
  * 알림 템플릿 목록 조회
  * @Author SeungHyeon.Kang
  * @return
  */
-export const getAlimTempList = () => fetchJson<AlimTemp[]>('/api/alim-temps', undefined, '알림 템플릿 목록 조회에 실패했습니다.')
+export const getAlimTempList = (pageNumber = 1) => fetchJson<PageData<AlimTemp>>(`/api/alim-temps?page=${pageNumber}`, undefined, '알림 템플릿 목록 조회에 실패했습니다.')
 
 /**
  * 알림 템플릿 상세 조회

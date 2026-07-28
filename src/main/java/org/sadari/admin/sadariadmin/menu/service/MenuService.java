@@ -1,6 +1,7 @@
 package org.sadari.admin.sadariadmin.menu.service;
 
 import org.sadari.admin.sadariadmin.admin.vo.AdminSessionVO;
+import org.sadari.admin.sadariadmin.common.pagination.PageData;
 import org.sadari.admin.sadariadmin.menu.vo.MenuVO;
 import org.sadari.admin.sadariadmin.menu.vo.MenuPermissionVO;
 
@@ -35,7 +36,7 @@ public interface MenuService {
      * @param admin
      * @return
      */
-    List<MenuVO> getMenuMngList(AdminSessionVO admin);
+    PageData<MenuVO> getMenuMngList(int pageNumber, AdminSessionVO admin);
 
     /**
      * 메뉴 상세 조회

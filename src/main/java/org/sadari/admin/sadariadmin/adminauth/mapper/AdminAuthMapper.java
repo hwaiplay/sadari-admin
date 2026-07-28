@@ -19,7 +19,9 @@ import java.util.List;
 public interface AdminAuthMapper {
 
     /** 관리자 권한 목록 조회 */
-    List<AdminAuthVO> getAdminAuthList();
+    List<AdminAuthVO> getAdminAuthList(@Param("startRow") int startRow, @Param("endRow") int endRow);
+
+    int getAdminAuthListCount();
 
     /** 관리자 존재 건수 조회 */
     int getAdminCount(@Param("admnNumb") Long admnNumb);

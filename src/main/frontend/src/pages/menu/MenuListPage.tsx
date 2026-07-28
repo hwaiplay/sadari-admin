@@ -3,10 +3,14 @@ import type { Code } from '../../types/code'
 import type { Menu } from '../../types/menu'
 import { formatDate, getUseeYsnoCodeName } from '../../utils/code'
 import { useMenuPermission } from '../../contexts/MenuPermissionContext'
+import { Pagination } from '../../components/Pagination'
+import type { PageData } from '../../types/common'
 
 type MenuListPageProps = {
   menuRows: Menu[]
+  pageData: PageData<Menu>
   useeYsnoCodes: Code[]
+  onPageChange: (pageNumber: number) => void
   onMovePath: (path: string) => void
   onDelete: (menu: Menu) => void
 }
@@ -20,13 +24,13 @@ type MenuListPageProps = {
  * @param onDelete
  * @return
  */
-export function MenuListPage({ menuRows, useeYsnoCodes, onMovePath, onDelete }: MenuListPageProps) {
+export function MenuListPage({ menuRows, pageData, useeYsnoCodes, onPageChange, onMovePath, onDelete }: MenuListPageProps) {
   const permission = useMenuPermission()
   return (
     <section className="menu-manage">
       <section className="content-header">
         <h1>메뉴관리</h1>
-        <div className="status">총 {menuRows.length}건</div>
+        <div className="status">총 {pageData.totalCount}건</div>
       </section>
       <section className="table-wrap menu-list-table">
         <table>
@@ -58,6 +62,7 @@ export function MenuListPage({ menuRows, useeYsnoCodes, onMovePath, onDelete }: 
           </tbody>
         </table>
       </section>
+      <Pagination pageNumber={pageData.pageNumber} totalPages={pageData.totalPages} onPageChange={onPageChange} />
       {permission.writYsno === 'Y' && <button type="button" className="floating-button" onClick={() => onMovePath(MENU_NEW_PATH)}>등록</button>}
     </section>
   )

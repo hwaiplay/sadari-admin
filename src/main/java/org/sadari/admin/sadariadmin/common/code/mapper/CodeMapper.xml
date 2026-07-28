@@ -13,19 +13,53 @@
     <select id="getCommCodeList" resultType="org.sadari.admin.sadariadmin.common.code.vo.CodeMasterVO">
         <include refid="codeNameBindings"/>
         SELECT /* getCommCodeList */
-               COMM_CODE
-             , CODE_NAME
-             , CODE_EXPL
-             , USEE_YSNO
-             , FN_GET_CODE_NAME(#{commYsno}, USEE_YSNO, #{useeYsnoCode}) AS USEE_YSNO_NAME
-             , REGI_ADMN
-             , FN_GET_ADMIN_NAME(REGI_ADMN) AS REGI_ADMN_NAME
-             , REGI_DATE
-             , UPDT_ADMN
-             , FN_GET_ADMIN_NAME(UPDT_ADMN) AS UPDT_ADMN_NAME
-             , UPDT_DATE
+               P.COMM_CODE
+             , P.CODE_NAME
+             , P.CODE_EXPL
+             , P.USEE_YSNO
+             , P.USEE_YSNO_NAME
+             , P.REGI_ADMN
+             , P.REGI_ADMN_NAME
+             , P.REGI_DATE
+             , P.UPDT_ADMN
+             , P.UPDT_ADMN_NAME
+             , P.UPDT_DATE
+          FROM (  SELECT R.COMM_CODE
+                       , R.CODE_NAME
+                       , R.CODE_EXPL
+                       , R.USEE_YSNO
+                       , R.USEE_YSNO_NAME
+                       , R.REGI_ADMN
+                       , R.REGI_ADMN_NAME
+                       , R.REGI_DATE
+                       , R.UPDT_ADMN
+                       , R.UPDT_ADMN_NAME
+                       , R.UPDT_DATE
+                       , ROWNUM AS ROW_NUMB
+                    FROM (  SELECT C.COMM_CODE
+                                 , C.CODE_NAME
+                                 , C.CODE_EXPL
+                                 , C.USEE_YSNO
+                                 , FN_GET_CODE_NAME(#{commYsno}, C.USEE_YSNO, #{useeYsnoCode}) AS USEE_YSNO_NAME
+                                 , C.REGI_ADMN
+                                 , FN_GET_ADMIN_NAME(C.REGI_ADMN) AS REGI_ADMN_NAME
+                                 , C.REGI_DATE
+                                 , C.UPDT_ADMN
+                                 , FN_GET_ADMIN_NAME(C.UPDT_ADMN) AS UPDT_ADMN_NAME
+                                 , C.UPDT_DATE
+                              FROM TM_CODEXM C
+                          ORDER BY C.COMM_CODE
+                         ) R
+                   WHERE ROWNUM <![CDATA[<=]]> #{endRow}
+               ) P
+         WHERE P.ROW_NUMB <![CDATA[>=]]> #{startRow}
+    </select>
+
+    <!-- 공통코드 전체 건수를 조회한다 -->
+    <select id="getCommCodeListCount" resultType="int">
+        SELECT /* getCommCodeListCount */
+               COUNT(1)
           FROM TM_CODEXM
-      ORDER BY COMM_CODE
     </select>
 
     <!-- 공통코드 상세를 조회한다 -->

@@ -7,6 +7,8 @@ import org.sadari.admin.sadariadmin.adminauth.vo.AdminAuthManageVO;
 import org.sadari.admin.sadariadmin.adminauth.vo.AdminAuthVO;
 import org.sadari.admin.sadariadmin.authgroup.mapper.AuthGroupMapper;
 import org.sadari.admin.sadariadmin.common.exception.BusinessException;
+import org.sadari.admin.sadariadmin.common.pagination.PageData;
+import org.sadari.admin.sadariadmin.common.pagination.PageRequest;
 import org.sadari.admin.sadariadmin.common.result.ResultEnum;
 import org.sadari.admin.sadariadmin.common.util.StringUtil;
 import org.springframework.http.HttpStatus;
@@ -43,18 +45,20 @@ public class AdminAuthManageServiceImpl implements AdminAuthManageService {
 
     /** 관리자 권한 부여 화면 데이터 조회 */
     @Override
-    public AdminAuthManageVO getAdminAuthManage(AdminSessionVO admin) {
+    public AdminAuthManageVO getAdminAuthManage(int pageNumber, AdminSessionVO admin) {
         checkLogin(admin);
+        PageRequest pageRequest = new PageRequest(pageNumber);
         AdminAuthManageVO result = new AdminAuthManageVO();
-        result.setAdmins(adminAuthMapper.getAdminAuthList());
-        result.setAuthGroups(authGroupMapper.getAuthGroupList());
+        result.setAdmins(PageData.of(adminAuthMapper.getAdminAuthList(pageRequest.getStartRow(), pageRequest.getEndRow())
+                                   , adminAuthMapper.getAdminAuthListCount(), pageRequest));
+        result.setAuthGroups(authGroupMapper.getAuthGroupList(1, Integer.MAX_VALUE));
         return result;
     }
 
     /** 관리자 권한 일괄 수정 */
     @Override
     @Transactional
-    public AdminAuthManageVO uptAdminAuthList(List<AdminAuthVO> admins, AdminSessionVO admin) {
+    public AdminAuthManageVO uptAdminAuthList(List<AdminAuthVO> admins, int pageNumber, AdminSessionVO admin) {
         checkLogin(admin);
         if (StringUtil.isEmpty(admins)) {
             throw new BusinessException(HttpStatus.BAD_REQUEST, ResultEnum.COMMON_REQUIRED_VALUE);
@@ -71,7 +75,7 @@ public class AdminAuthManageServiceImpl implements AdminAuthManageService {
             }
             adminAuthMapper.uptAdminAuth(target);
         }
-        return getAdminAuthManage(admin);
+        return getAdminAuthManage(pageNumber, admin);
     }
 
     /** 로그인 상태 확인 */

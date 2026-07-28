@@ -11,6 +11,8 @@ import type { Menu } from '../../types/menu'
 import { AuditInfoTable } from '../../components/AuditInfoTable'
 import { formatDate, getUseeYsnoCodeName } from '../../utils/code'
 import { useMenuPermission } from '../../contexts/MenuPermissionContext'
+import { Pagination } from '../../components/Pagination'
+import type { PageData } from '../../types/common'
 
 type AuthGroupManagePageProps = {
   currentPath: string
@@ -46,6 +48,7 @@ const toAuthMenu = (menu: Menu): AuthMenu => ({
 export function AuthGroupManagePage({ currentPath, onMovePath, onError }: AuthGroupManagePageProps) {
   const permission = useMenuPermission()
   const [groups, setGroups] = useState<AuthGroup[]>([])
+  const [pageData, setPageData] = useState<PageData<AuthGroup>>({ items: [], totalCount: 0, pageNumber: 1, pageSize: 20, totalPages: 0 })
   const [form, setForm] = useState<AuthGroup>(emptyGroup())
   const [useeCodes, setUseeCodes] = useState<Code[]>([])
   const [saving, setSaving] = useState(false)
@@ -68,7 +71,9 @@ export function AuthGroupManagePage({ currentPath, onMovePath, onError }: AuthGr
         const codes = await getCodeList(COMM_YSNO)
         setUseeCodes(codes)
         if (isList) {
-          setGroups(await getAuthGroups())
+          const result = await getAuthGroups(1)
+          setPageData(result)
+          setGroups(result.items)
           return
         }
         if (isNew) {
@@ -85,6 +90,13 @@ export function AuthGroupManagePage({ currentPath, onMovePath, onError }: AuthGr
     }
     void load()
   }, [currentPath])
+
+  /** 권한그룹 목록 페이지 조회 */
+  const loadListPage = async (pageNumber: number) => {
+    const result = await getAuthGroups(pageNumber)
+    setPageData(result)
+    setGroups(result.items)
+  }
 
   /** 권한 코드 입력 */
   const changeAuthCode = (value: string) => {
@@ -163,7 +175,7 @@ export function AuthGroupManagePage({ currentPath, onMovePath, onError }: AuthGr
       <section className="menu-manage">
         <section className="content-header">
           <h1>권한그룹관리</h1>
-          <div className="status">총 {groups.length}건</div>
+          <div className="status">총 {pageData.totalCount}건</div>
         </section>
         <section className="table-wrap">
           <table>
@@ -181,6 +193,7 @@ export function AuthGroupManagePage({ currentPath, onMovePath, onError }: AuthGr
             </tbody>
           </table>
         </section>
+        <Pagination pageNumber={pageData.pageNumber} totalPages={pageData.totalPages} onPageChange={(pageNumber) => void loadListPage(pageNumber)} />
         {permission.writYsno === 'Y' && <button type="button" className="floating-button" onClick={() => onMovePath(AUTH_GROUP_NEW_PATH)}>등록</button>}
       </section>
     )

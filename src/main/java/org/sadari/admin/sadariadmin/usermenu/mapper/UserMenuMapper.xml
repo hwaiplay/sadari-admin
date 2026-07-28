@@ -28,16 +28,65 @@
         , UPDT_DATE
     </sql>
 
+    <!-- 페이징 인라인 뷰의 사용자 메뉴 컬럼 목록 -->
+    <sql id="userMenuPageColumns">
+          P.MENU_NUMB
+        , P.SUBX_NUMB
+        , P.MENU_NAME
+        , P.MENU_URLX
+        , P.SORT_ORDR
+        , P.SHOW_YSNO
+        , P.SHOW_YSNO_NAME
+        , P.USEE_YSNO
+        , P.USEE_YSNO_NAME
+        , P.REGI_ADMN
+        , P.REGI_ADMN_NAME
+        , P.REGI_DATE
+        , P.UPDT_ADMN
+        , P.UPDT_ADMN_NAME
+        , P.UPDT_DATE
+    </sql>
+
     <!-- 사용자 메뉴관리 화면에 표시할 상위 메뉴 목록을 조회한다 -->
     <select id="getUserMenuList" resultType="org.sadari.admin.sadariadmin.usermenu.vo.UserMenuVO">
         <bind name="topMenuSubxNumb" value="@org.sadari.admin.sadariadmin.common.constant.Constant@TOP_MENU_SUBX_NUMB"/>
         <include refid="codeNameBindings"/>
         SELECT /* getUserMenuList */
-               <include refid="userMenuColumns"/>
+               <include refid="userMenuPageColumns"/>
+          FROM (  SELECT R.MENU_NUMB
+                       , R.SUBX_NUMB
+                       , R.MENU_NAME
+                       , R.MENU_URLX
+                       , R.SORT_ORDR
+                       , R.SHOW_YSNO
+                       , R.SHOW_YSNO_NAME
+                       , R.USEE_YSNO
+                       , R.USEE_YSNO_NAME
+                       , R.REGI_ADMN
+                       , R.REGI_ADMN_NAME
+                       , R.REGI_DATE
+                       , R.UPDT_ADMN
+                       , R.UPDT_ADMN_NAME
+                       , R.UPDT_DATE
+                       , ROWNUM AS ROW_NUMB
+                    FROM (  SELECT <include refid="userMenuColumns"/>
+                              FROM TM_URMENU
+                             WHERE SUBX_NUMB = #{topMenuSubxNumb}
+                          ORDER BY NVL(SORT_ORDR, 9999)
+                                 , TO_NUMBER(MENU_NUMB)
+                         ) R
+                   WHERE ROWNUM <![CDATA[<=]]> #{endRow}
+               ) P
+         WHERE P.ROW_NUMB <![CDATA[>=]]> #{startRow}
+    </select>
+
+    <!-- 사용자 상위 메뉴 전체 건수를 조회한다 -->
+    <select id="getUserMenuCount" resultType="int">
+        <bind name="topMenuSubxNumb" value="@org.sadari.admin.sadariadmin.common.constant.Constant@TOP_MENU_SUBX_NUMB"/>
+        SELECT /* getUserMenuCount */
+               COUNT(1)
           FROM TM_URMENU
          WHERE SUBX_NUMB = #{topMenuSubxNumb}
-      ORDER BY NVL(SORT_ORDR, 9999)
-             , TO_NUMBER(MENU_NUMB)
     </select>
 
     <!-- 메뉴 번호와 하위 메뉴 번호로 사용자 메뉴 상세를 조회한다 -->

@@ -3,10 +3,14 @@ import type { AlimTemp } from '../../types/alim'
 import type { Code } from '../../types/code'
 import { formatDate, getUseeYsnoCodeName } from '../../utils/code'
 import { useMenuPermission } from '../../contexts/MenuPermissionContext'
+import { Pagination } from '../../components/Pagination'
+import type { PageData } from '../../types/common'
 
 type AlimTempListPageProps = {
   alimTemps: AlimTemp[]
+  pageData: PageData<AlimTemp>
   useeYsnoCodes: Code[]
+  onPageChange: (pageNumber: number) => void
   onMovePath: (path: string) => void
 }
 
@@ -18,13 +22,13 @@ type AlimTempListPageProps = {
  * @param onMovePath
  * @return
  */
-export function AlimTempListPage({ alimTemps, useeYsnoCodes, onMovePath }: AlimTempListPageProps) {
+export function AlimTempListPage({ alimTemps, pageData, useeYsnoCodes, onPageChange, onMovePath }: AlimTempListPageProps) {
   const permission = useMenuPermission()
   return (
     <section className="alim-temp-manage">
       <section className="content-header">
         <h1>알림 템플릿 관리</h1>
-        <div className="status">총 {alimTemps.length}건</div>
+        <div className="status">총 {pageData.totalCount}건</div>
       </section>
       <section className="table-wrap alim-temp-list-table">
         <table>
@@ -58,6 +62,7 @@ export function AlimTempListPage({ alimTemps, useeYsnoCodes, onMovePath }: AlimT
           </tbody>
         </table>
       </section>
+      <Pagination pageNumber={pageData.pageNumber} totalPages={pageData.totalPages} onPageChange={onPageChange} />
       {permission.writYsno === 'Y' && <button type="button" className="floating-button" onClick={() => onMovePath(ALIM_TEMP_NEW_PATH)}>등록</button>}
     </section>
   )

@@ -23,7 +23,9 @@ public interface AlimTempMapper {
      * @author SeungHyeon.Kang
      * @return
      */
-    List<AlimTempVO> getAlimTempList();
+    List<AlimTempVO> getAlimTempList(@Param("startRow") int startRow, @Param("endRow") int endRow);
+
+    int getAlimTempListCount();
 
     /**
      * 알림 템플릿 상세 조회

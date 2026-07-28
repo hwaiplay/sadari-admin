@@ -3,6 +3,8 @@ package org.sadari.admin.sadariadmin.usermenu.service.impl;
 import org.sadari.admin.sadariadmin.admin.vo.AdminSessionVO;
 import org.sadari.admin.sadariadmin.common.constant.Constant;
 import org.sadari.admin.sadariadmin.common.exception.BusinessException;
+import org.sadari.admin.sadariadmin.common.pagination.PageData;
+import org.sadari.admin.sadariadmin.common.pagination.PageRequest;
 import org.sadari.admin.sadariadmin.common.result.ResultEnum;
 import org.sadari.admin.sadariadmin.common.util.StringUtil;
 import org.sadari.admin.sadariadmin.usermenu.mapper.UserMenuMapper;
@@ -38,9 +40,11 @@ public class UserMenuServiceImpl implements UserMenuService {
 
     /** 사용자 상위 메뉴 목록 조회 */
     @Override
-    public List<UserMenuVO> getUserMenuList(AdminSessionVO admin) {
+    public PageData<UserMenuVO> getUserMenuList(int pageNumber, AdminSessionVO admin) {
         checkLogin(admin);
-        return userMenuMapper.getUserMenuList();
+        PageRequest pageRequest = new PageRequest(pageNumber);
+        return PageData.of(userMenuMapper.getUserMenuList(pageRequest.getStartRow(), pageRequest.getEndRow())
+                         , userMenuMapper.getUserMenuCount(), pageRequest);
     }
 
     /** 사용자 메뉴 상세 조회 */

@@ -2,6 +2,8 @@ package org.sadari.admin.sadariadmin.schedulelog.service.impl;
 
 import org.sadari.admin.sadariadmin.admin.vo.AdminSessionVO;
 import org.sadari.admin.sadariadmin.common.exception.BusinessException;
+import org.sadari.admin.sadariadmin.common.pagination.PageData;
+import org.sadari.admin.sadariadmin.common.pagination.PageRequest;
 import org.sadari.admin.sadariadmin.common.result.ResultEnum;
 import org.sadari.admin.sadariadmin.common.util.StringUtil;
 import org.sadari.admin.sadariadmin.schedulelog.mapper.ScheduleLogMapper;
@@ -50,11 +52,13 @@ public class ScheduleLogServiceImpl implements ScheduleLogService {
      * @return 스케줄러 실행 결과 목록
      */
     @Override
-    public List<ScheduleLogVO> getScheduleLogList(AdminSessionVO admin) {
+    public PageData<ScheduleLogVO> getScheduleLogList(int pageNumber, AdminSessionVO admin) {
         // 인증되지 않은 요청이 스케줄러 실행 정보를 조회하지 못하도록 로그인 상태를 확인한다
         checkLogin(admin);
         // 최신 스케줄러 실행 결과 목록을 조회한다
-        return scheduleLogMapper.getScheduleLogList();
+        PageRequest pageRequest = new PageRequest(pageNumber);
+        return PageData.of(scheduleLogMapper.getScheduleLogList(pageRequest.getStartRow(), pageRequest.getEndRow())
+                         , scheduleLogMapper.getScheduleLogListCount(), pageRequest);
     }
 
     /**
@@ -97,7 +101,6 @@ public class ScheduleLogServiceImpl implements ScheduleLogService {
         checkLogin(admin);
         // 부모 실행 로그를 특정할 수 있도록 실행 번호를 검증한다
         validateRunxNumb(runxNumb);
-
         // 선택한 실행 번호에 연결된 실패 상세 목록을 조회한다
         return scheduleLogMapper.getScheduleFailList(runxNumb);
     }

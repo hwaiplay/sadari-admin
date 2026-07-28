@@ -2,6 +2,7 @@ package org.sadari.admin.sadariadmin.alim.service;
 
 import org.sadari.admin.sadariadmin.admin.vo.AdminSessionVO;
 import org.sadari.admin.sadariadmin.alim.vo.AlimTempVO;
+import org.sadari.admin.sadariadmin.common.pagination.PageData;
 
 import java.util.List;
 
@@ -22,7 +23,7 @@ import java.util.List;
      * @param admin
      * @return
      */
-    List<AlimTempVO> getAlimTempList(AdminSessionVO admin);
+    PageData<AlimTempVO> getAlimTempList(int pageNumber, AdminSessionVO admin);
 
     /**
      * 알림 템플릿 상세 조회

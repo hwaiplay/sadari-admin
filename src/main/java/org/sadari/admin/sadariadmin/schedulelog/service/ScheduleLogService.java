@@ -1,6 +1,7 @@
 package org.sadari.admin.sadariadmin.schedulelog.service;
 
 import org.sadari.admin.sadariadmin.admin.vo.AdminSessionVO;
+import org.sadari.admin.sadariadmin.common.pagination.PageData;
 import org.sadari.admin.sadariadmin.schedulelog.vo.ScheduleFailVO;
 import org.sadari.admin.sadariadmin.schedulelog.vo.ScheduleLogVO;
 
@@ -26,7 +27,7 @@ public interface ScheduleLogService {
      * @param admin 로그인한 관리자 정보
      * @return 스케줄러 실행 결과 목록
      */
-    List<ScheduleLogVO> getScheduleLogList(AdminSessionVO admin);
+    PageData<ScheduleLogVO> getScheduleLogList(int pageNumber, AdminSessionVO admin);
 
     /**
      * 선택한 스케줄러 실행 결과를 조회한다

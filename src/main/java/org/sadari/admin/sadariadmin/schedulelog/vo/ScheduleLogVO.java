@@ -13,6 +13,7 @@ import java.time.LocalDateTime;
  * DATE              AUTHOR             NOTE
  * -----------------------------------------------------------
  * 2026-07-28        SeungHyeon.Kang    최초 생성
+ * 2026-07-28        SeungHyeon.Kang    스케줄러 코드명 추가
  */
 @Data
 public class ScheduleLogVO {
@@ -22,6 +23,9 @@ public class ScheduleLogVO {
 
     // 스케줄러 구분 코드
     private String schdCode;
+
+    // 스케줄러 구분 코드명
+    private String schdCodeName;
 
     // 실행된 스케줄러 메서드명
     private String methName;

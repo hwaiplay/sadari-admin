@@ -12,6 +12,7 @@ import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.RequestParam;
 
 import java.util.List;
 
@@ -39,13 +40,16 @@ public class AdminAuthManageController {
 
     /** 관리자 권한 부여 화면 데이터 조회 */
     @GetMapping
-    public ResultData getAdminAuthManage(@AuthenticationPrincipal AdminSessionVO admin) {
-        return ResultData.success(adminAuthManageService.getAdminAuthManage(admin));
+    public ResultData getAdminAuthManage(@RequestParam(defaultValue = "1") int page
+                                       , @AuthenticationPrincipal AdminSessionVO admin) {
+        return ResultData.success(adminAuthManageService.getAdminAuthManage(page, admin));
     }
 
     /** 관리자 권한 일괄 수정 */
     @PutMapping
-    public ResultData uptAdminAuthList(@RequestBody List<AdminAuthVO> admins, @AuthenticationPrincipal AdminSessionVO admin) {
-        return ResultData.success(ResultEnum.UPDATE_SUCCESS, adminAuthManageService.uptAdminAuthList(admins, admin));
+    public ResultData uptAdminAuthList(@RequestBody List<AdminAuthVO> admins
+                                    , @RequestParam(defaultValue = "1") int page
+                                    , @AuthenticationPrincipal AdminSessionVO admin) {
+        return ResultData.success(ResultEnum.UPDATE_SUCCESS, adminAuthManageService.uptAdminAuthList(admins, page, admin));
     }
 }

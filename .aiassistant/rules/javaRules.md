@@ -110,8 +110,8 @@ Java 코드를 생성하거나 수정할 때 아래 규칙을 예외 없이 적�
 
 ```java
 public ResultData setReport(@AuthenticationPrincipal Long userNumb, Long reptNumb, String sourceType
-                          , @Valid @RequestBody ReportDto reportDto
-                          , @RequestParam(required = false) String requestType, HttpServletRequest request) {
+        , @Valid @RequestBody ReportDto reportDto
+        , @RequestParam(required = false) String requestType, HttpServletRequest request) {
     // 독후감 등록에 필요한 사용자 번호와 요청 데이터를 서비스에 전달한다
     return reportService.setReport(userNumb, reptNumb, sourceType, reportDto, requestType, request);
 }
@@ -132,8 +132,8 @@ public ResultData setReport(@AuthenticationPrincipal Long userNumb, Long reptNum
 log.error("알림 발송에 실패했습니다. 사용자 번호={}, 독후감 번호={}", userNumb, reptNumb, e);
 
 log.info("스케줄러가 종료되었습니다. 조회 건수={}, 성공 건수={}, 실패 건수={}, 최대 조회 건수={}"
-       , targetCnt, successCnt, failureCnt
-       , maxSize);
+                 , targetCnt, successCnt, failureCnt
+        , maxSize);
 ```
 
 ## 6. REST API 규칙
@@ -319,12 +319,12 @@ SchedulerLogDto.SchedulerFailDto schedulerFailDto = new SchedulerLogDto.Schedule
 ```java
 // 조회 결과가 없으면 이후 로직에서 사용자 정보가 참조되지 않도록 공통 실패 응답을 즉시 반환한다
 if (StringUtil.isEmpty(userDto)) {
-        // "사용자 정보를 찾을 수 없습니다."
-        return ResultData.fail(ResultEnum.USER_NOT_FOUND);
+    // "사용자 정보를 찾을 수 없습니다."
+    return ResultData.fail(ResultEnum.USER_NOT_FOUND);
 }
 
 // 로그인 사용자 번호를 독후감 조회 조건에 설정한다
-        reportDto.setUserNumb(userNumb);
+reportDto.setUserNumb(userNumb);
 
 // 검증된 조회 조건으로 독후감 목록을 조회한다
 List<ReportDto> reportList = reportMapper.getReportList(reportDto);

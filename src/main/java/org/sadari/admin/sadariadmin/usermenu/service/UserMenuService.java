@@ -1,6 +1,7 @@
 package org.sadari.admin.sadariadmin.usermenu.service;
 
 import org.sadari.admin.sadariadmin.admin.vo.AdminSessionVO;
+import org.sadari.admin.sadariadmin.common.pagination.PageData;
 import org.sadari.admin.sadariadmin.usermenu.vo.UserMenuVO;
 
 import java.util.List;
@@ -18,7 +19,7 @@ import java.util.List;
 public interface UserMenuService {
 
     /** 사용자 상위 메뉴 목록 조회 */
-    List<UserMenuVO> getUserMenuList(AdminSessionVO admin);
+    PageData<UserMenuVO> getUserMenuList(int pageNumber, AdminSessionVO admin);
 
     /** 사용자 메뉴 상세 조회 */
     UserMenuVO getUserMenuDtl(String menuNumb, String subxNumb, AdminSessionVO admin);

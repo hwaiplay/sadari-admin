@@ -1,5 +1,6 @@
 import { fetchJson, fetchResult } from './client'
 import type { Menu, MenuForm } from '../types/menu'
+import type { PageData } from '../types/common'
 
 /**
  * 사이드바 메뉴 목록 조회
@@ -13,7 +14,7 @@ export const getSidebarMenus = () => fetchJson<Menu[]>('/api/menus/sidebar', und
  * @Author SeungHyeon.Kang
  * @return
  */
-export const getMenuMngList = () => fetchJson<Menu[]>('/api/menus', undefined, '메뉴관리 목록 조회에 실패했습니다.')
+export const getMenuMngList = (pageNumber = 1) => fetchJson<PageData<Menu>>(`/api/menus?page=${pageNumber}`, undefined, '메뉴관리 목록 조회에 실패했습니다.')
 
 /**
  * 메뉴 상세 조회

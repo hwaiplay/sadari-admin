@@ -15,6 +15,7 @@ import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.RequestParam;
 
 /**
  * fileName       : AuthGroupController
@@ -40,8 +41,9 @@ public class AuthGroupController {
 
     /** 권한그룹 목록 조회 */
     @GetMapping
-    public ResultData getAuthGroupList(@AuthenticationPrincipal AdminSessionVO admin) {
-        return ResultData.success(authGroupService.getAuthGroupList(admin));
+    public ResultData getAuthGroupList(@RequestParam(defaultValue = "1") int page
+                                     , @AuthenticationPrincipal AdminSessionVO admin) {
+        return ResultData.success(authGroupService.getAuthGroupList(page, admin));
     }
 
     /** 권한그룹 상세 조회 */

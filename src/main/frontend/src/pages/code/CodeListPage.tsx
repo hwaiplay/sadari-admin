@@ -1,10 +1,14 @@
 import type { Code, CodeMaster } from '../../types/code'
 import { formatDate, getUseeYsnoCodeName } from '../../utils/code'
 import { useMenuPermission } from '../../contexts/MenuPermissionContext'
+import { Pagination } from '../../components/Pagination'
+import type { PageData } from '../../types/common'
 
 type CodeListPageProps = {
   codeMasters: CodeMaster[]
+  pageData: PageData<CodeMaster>
   useeYsnoCodes: Code[]
+  onPageChange: (pageNumber: number) => void
   onSelect: (master: CodeMaster) => void
   onOpenRegister: () => void
 }
@@ -18,13 +22,13 @@ type CodeListPageProps = {
  * @param onOpenRegister
  * @return
  */
-export function CodeListPage({ codeMasters, useeYsnoCodes, onSelect, onOpenRegister }: CodeListPageProps) {
+export function CodeListPage({ codeMasters, pageData, useeYsnoCodes, onPageChange, onSelect, onOpenRegister }: CodeListPageProps) {
   const permission = useMenuPermission()
   return (
     <section className="code-manage">
       <section className="content-header">
         <h1>코드관리</h1>
-        <div className="status">총 {codeMasters.length}건</div>
+        <div className="status">총 {pageData.totalCount}건</div>
       </section>
       <section className="table-wrap code-list-table">
         <table>
@@ -54,6 +58,7 @@ export function CodeListPage({ codeMasters, useeYsnoCodes, onSelect, onOpenRegis
           </tbody>
         </table>
       </section>
+      <Pagination pageNumber={pageData.pageNumber} totalPages={pageData.totalPages} onPageChange={onPageChange} />
       {permission.writYsno === 'Y' && <button type="button" className="floating-button" onClick={onOpenRegister}>등록</button>}
     </section>
   )

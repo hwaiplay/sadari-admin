@@ -2,6 +2,7 @@ package org.sadari.admin.sadariadmin.adminauth.vo;
 
 import lombok.Data;
 import org.sadari.admin.sadariadmin.authgroup.vo.AuthGroupVO;
+import org.sadari.admin.sadariadmin.common.pagination.PageData;
 
 import java.util.List;
 
@@ -19,7 +20,7 @@ import java.util.List;
 public class AdminAuthManageVO {
 
     /** 관리자 목록 */
-    private List<AdminAuthVO> admins;
+    private PageData<AdminAuthVO> admins;
 
     /** 권한그룹 목록 */
     private List<AuthGroupVO> authGroups;

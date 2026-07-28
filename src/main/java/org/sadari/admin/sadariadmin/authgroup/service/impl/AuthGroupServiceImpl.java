@@ -7,6 +7,8 @@ import org.sadari.admin.sadariadmin.authgroup.vo.AuthGroupVO;
 import org.sadari.admin.sadariadmin.authgroup.vo.AuthMenuVO;
 import org.sadari.admin.sadariadmin.common.constant.Constant;
 import org.sadari.admin.sadariadmin.common.exception.BusinessException;
+import org.sadari.admin.sadariadmin.common.pagination.PageData;
+import org.sadari.admin.sadariadmin.common.pagination.PageRequest;
 import org.sadari.admin.sadariadmin.common.result.ResultEnum;
 import org.sadari.admin.sadariadmin.common.util.StringUtil;
 import org.springframework.http.HttpStatus;
@@ -44,9 +46,11 @@ public class AuthGroupServiceImpl implements AuthGroupService {
 
     /** 권한그룹 목록 조회 */
     @Override
-    public List<AuthGroupVO> getAuthGroupList(AdminSessionVO admin) {
+    public PageData<AuthGroupVO> getAuthGroupList(int pageNumber, AdminSessionVO admin) {
         checkLogin(admin);
-        return authGroupMapper.getAuthGroupList();
+        PageRequest pageRequest = new PageRequest(pageNumber);
+        return PageData.of(authGroupMapper.getAuthGroupList(pageRequest.getStartRow(), pageRequest.getEndRow())
+                         , authGroupMapper.getAuthGroupListCount(), pageRequest);
     }
 
     /** 권한그룹 상세 조회 */

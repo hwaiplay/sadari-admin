@@ -1,6 +1,7 @@
 package org.sadari.admin.sadariadmin.authgroup.service;
 
 import org.sadari.admin.sadariadmin.admin.vo.AdminSessionVO;
+import org.sadari.admin.sadariadmin.common.pagination.PageData;
 import org.sadari.admin.sadariadmin.authgroup.vo.AuthGroupVO;
 
 import java.util.List;
@@ -17,7 +18,7 @@ import java.util.List;
  */public interface AuthGroupService {
 
     /** 권한그룹 목록 조회 */
-    List<AuthGroupVO> getAuthGroupList(AdminSessionVO admin);
+    PageData<AuthGroupVO> getAuthGroupList(int pageNumber, AdminSessionVO admin);
 
     /** 권한그룹 상세 조회 */
     AuthGroupVO getAuthGroup(String authCode, AdminSessionVO admin);

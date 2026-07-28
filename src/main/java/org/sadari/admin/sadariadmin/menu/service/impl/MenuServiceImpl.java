@@ -3,6 +3,8 @@ package org.sadari.admin.sadariadmin.menu.service.impl;
 import org.sadari.admin.sadariadmin.admin.vo.AdminSessionVO;
 import org.sadari.admin.sadariadmin.common.constant.Constant;
 import org.sadari.admin.sadariadmin.common.exception.BusinessException;
+import org.sadari.admin.sadariadmin.common.pagination.PageData;
+import org.sadari.admin.sadariadmin.common.pagination.PageRequest;
 import org.sadari.admin.sadariadmin.common.result.ResultEnum;
 import org.sadari.admin.sadariadmin.common.util.StringUtil;
 import org.sadari.admin.sadariadmin.menu.mapper.MenuMapper;
@@ -71,9 +73,11 @@ public class MenuServiceImpl implements MenuService {
      * @return
      */
     @Override
-    public List<MenuVO> getMenuMngList(AdminSessionVO admin) {
+    public PageData<MenuVO> getMenuMngList(int pageNumber, AdminSessionVO admin) {
         checkLogin(admin);
-        return menuMapper.getMenuMngList();
+        PageRequest pageRequest = new PageRequest(pageNumber);
+        return PageData.of(menuMapper.getMenuMngList(pageRequest.getStartRow(), pageRequest.getEndRow())
+                         , menuMapper.getMenuMngCount(), pageRequest);
     }
 
     /**

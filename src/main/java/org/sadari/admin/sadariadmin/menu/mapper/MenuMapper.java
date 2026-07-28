@@ -41,7 +41,9 @@ public interface MenuMapper {
      * @author SeungHyeon.Kang
      * @return
      */
-    List<MenuVO> getMenuMngList();
+    List<MenuVO> getMenuMngList(@Param("startRow") int startRow, @Param("endRow") int endRow);
+
+    int getMenuMngCount();
 
     /**
      * 메뉴 상세 조회

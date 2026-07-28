@@ -1,10 +1,12 @@
 import { useEffect, useState } from 'react'
-import type { MouseEvent } from 'react'
+import type { KeyboardEvent, MouseEvent } from 'react'
 import { getScheduleLogs } from '../../api/scheduleLogApi'
 import { SCHEDULE_LOG_DETAIL_PREFIX } from '../../constants/routes'
 import type { ScheduleLog } from '../../types/scheduleLog'
 import { formatDate } from '../../utils/code'
 import { formatExecutionTime, getScheduleStatusClassName } from '../../utils/scheduleLog'
+import { Pagination } from '../../components/Pagination'
+import type { PageData } from '../../types/common'
 
 type ScheduleLogListPageProps = {
   onMovePath: (path: string) => void
@@ -21,20 +23,40 @@ type ScheduleLogListPageProps = {
  */
 export function ScheduleLogListPage({ onMovePath, onError }: ScheduleLogListPageProps) {
   const [scheduleLogs, setScheduleLogs] = useState<ScheduleLog[]>([])
+  const [pageData, setPageData] = useState<PageData<ScheduleLog>>({ items: [], totalCount: 0, pageNumber: 1, pageSize: 20, totalPages: 0 })
   const [loading, setLoading] = useState(true)
 
   /**
-   * 실행번호 조회 버튼에서 상세 화면으로 이동한다
+   * 선택한 스케줄러 로그 행의 상세 화면으로 이동한다
    *
    * @author SeungHyeon.Kang
-   * @param event 실행번호 조회 버튼 클릭 이벤트
+   * @param event 스케줄러 로그 행 클릭 이벤트
    * @return 반환값이 없다
    */
-  const handleDetailMove = (event: MouseEvent<HTMLButtonElement>): void => {
-    const runxNumb = Number(event.currentTarget.value)
+  const handleDetailMove = (event: MouseEvent<HTMLTableRowElement>): void => {
+    const runxNumb = Number(event.currentTarget.dataset.runxNumb)
     // 유효한 실행 번호인 경우에만 상세 경로를 생성한다
     if (Number.isInteger(runxNumb) && runxNumb > 0) {
       onMovePath(`${SCHEDULE_LOG_DETAIL_PREFIX}/${runxNumb}`)
+    }
+  }
+
+  /**
+   * 키보드로 스케줄러 로그 행을 선택하면 상세 화면으로 이동한다
+   *
+   * @author SeungHyeon.Kang
+   * @param event 스케줄러 로그 행 키보드 이벤트
+   * @return 반환값이 없다
+   */
+  const handleDetailKeyDown = (event: KeyboardEvent<HTMLTableRowElement>): void => {
+    // 링크 역할의 행은 Enter 또는 Space 입력에만 상세 이동을 수행한다
+    if (event.key === 'Enter' || event.key === ' ') {
+      event.preventDefault()
+      const runxNumb = Number(event.currentTarget.dataset.runxNumb)
+      // 유효한 실행 번호인 경우에만 상세 경로를 생성한다
+      if (Number.isInteger(runxNumb) && runxNumb > 0) {
+        onMovePath(`${SCHEDULE_LOG_DETAIL_PREFIX}/${runxNumb}`)
+      }
     }
   }
 
@@ -46,13 +68,12 @@ export function ScheduleLogListPage({ onMovePath, onError }: ScheduleLogListPage
    * @return 스케줄러 실행 결과 표 행
    */
   const renderScheduleLogRow = (scheduleLog: ScheduleLog) => (
-    <tr key={scheduleLog.runxNumb}>
+    <tr key={scheduleLog.runxNumb} className="schedule-detail-row" role="link" tabIndex={0}
+        data-runx-numb={scheduleLog.runxNumb} onClick={handleDetailMove} onKeyDown={handleDetailKeyDown}>
       <td className="col-run-number">
-        <button type="button" className="table-link-button" value={scheduleLog.runxNumb} onClick={handleDetailMove}>
-          {scheduleLog.runxNumb}
-        </button>
+        <span className="table-link-button">{scheduleLog.runxNumb}</span>
       </td>
-      <td>{scheduleLog.schdCode}</td>
+      <td>{scheduleLog.schdCodeName ?? scheduleLog.schdCode}</td>
       <td>{scheduleLog.methName}</td>
       <td className="col-schedule-status"><span className={getScheduleStatusClassName(scheduleLog.execStat)}>{scheduleLog.execStat}</span></td>
       <td className="col-date-time">{formatDate(scheduleLog.strtDate)}</td>
@@ -69,12 +90,13 @@ export function ScheduleLogListPage({ onMovePath, onError }: ScheduleLogListPage
     let active = true
 
     // 최신 스케줄러 실행 결과를 서버에서 조회한다
-    getScheduleLogs()
-      .then((rows) => {
+    getScheduleLogs(1)
+      .then((result) => {
         // 화면이 유지되는 동안 도착한 응답만 상태에 반영한다
         if (active) {
           onError(null)
-          setScheduleLogs(rows)
+          setPageData(result)
+          setScheduleLogs(result.items)
           setLoading(false)
         }
       })
@@ -92,6 +114,24 @@ export function ScheduleLogListPage({ onMovePath, onError }: ScheduleLogListPage
     }
   }, [onError])
 
+  /**
+   * 스케줄러 실행 결과 목록 페이지를 조회한다
+   *
+   * @author SeungHyeon.Kang
+   * @param pageNumber 조회할 페이지 번호
+   * @return 반환값이 없다
+   */
+  const loadListPage = async (pageNumber: number): Promise<void> => {
+    try {
+      const result = await getScheduleLogs(pageNumber)
+      setPageData(result)
+      setScheduleLogs(result.items)
+      onError(null)
+    } catch (error: unknown) {
+      onError(error instanceof Error ? error.message : '스케줄러 로그 목록을 불러오지 못했습니다.')
+    }
+  }
+
   return (
     <>
       {/* 스케줄러 실행 결과 목록 전체 영역 */}
@@ -99,7 +139,7 @@ export function ScheduleLogListPage({ onMovePath, onError }: ScheduleLogListPage
         {/* 스케줄러 실행 결과 제목과 전체 건수 영역 */}
         <section className="content-header">
           <h1>스케줄러 로그 확인</h1>
-          <div className="status">총 {scheduleLogs.length}건</div>
+          <div className="status">총 {pageData.totalCount}건</div>
         </section>
 
         {/* 스케줄러 실행 결과 목록 영역 */}
@@ -108,7 +148,7 @@ export function ScheduleLogListPage({ onMovePath, onError }: ScheduleLogListPage
             <thead>
               <tr>
                 <th className="col-run-number">실행번호</th>
-                <th>스케줄러 코드</th>
+                <th>스케줄러명</th>
                 <th>메서드명</th>
                 <th className="col-schedule-status">상태</th>
                 <th className="col-date-time">시작일시</th>
@@ -128,6 +168,7 @@ export function ScheduleLogListPage({ onMovePath, onError }: ScheduleLogListPage
             </tbody>
           </table>
         </section>
+        <Pagination pageNumber={pageData.pageNumber} totalPages={pageData.totalPages} onPageChange={(pageNumber) => void loadListPage(pageNumber)} />
       </section>
     </>
   )

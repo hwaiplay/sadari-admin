@@ -15,6 +15,7 @@ import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.RequestParam;
 
 /**
  * fileName       : UserMenuController
@@ -40,8 +41,9 @@ public class UserMenuController {
 
     /** 사용자 상위 메뉴 목록 조회 */
     @GetMapping
-    public ResultData getUserMenuList(@AuthenticationPrincipal AdminSessionVO admin) {
-        return ResultData.success(userMenuService.getUserMenuList(admin));
+    public ResultData getUserMenuList(@RequestParam(defaultValue = "1") int page
+                                    , @AuthenticationPrincipal AdminSessionVO admin) {
+        return ResultData.success(userMenuService.getUserMenuList(page, admin));
     }
 
     /** 사용자 메뉴 상세 조회 */

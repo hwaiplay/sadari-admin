@@ -24,7 +24,9 @@ public interface CodeMapper {
      * @author SeungHyeon.Kang
      * @return
      */
-    List<CodeMasterVO> getCommCodeList();
+    List<CodeMasterVO> getCommCodeList(@Param("startRow") int startRow, @Param("endRow") int endRow);
+
+    int getCommCodeListCount();
 
     /**
      * 공통코드 상세 조회

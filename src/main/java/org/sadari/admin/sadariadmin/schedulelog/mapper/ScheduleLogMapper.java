@@ -26,7 +26,10 @@ public interface ScheduleLogMapper {
      * @author SeungHyeon.Kang
      * @return 스케줄러 실행 결과 목록
      */
-    List<ScheduleLogVO> getScheduleLogList();
+    List<ScheduleLogVO> getScheduleLogList(@org.apache.ibatis.annotations.Param("startRow") int startRow
+                                         , @org.apache.ibatis.annotations.Param("endRow") int endRow);
+
+    int getScheduleLogListCount();
 
     /**
      * 스케줄러 실행 번호로 실행 결과 단건을 조회한다

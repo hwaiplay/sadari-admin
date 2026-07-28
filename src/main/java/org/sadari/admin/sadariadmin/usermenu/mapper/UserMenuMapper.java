@@ -19,7 +19,9 @@ import java.util.List;
 public interface UserMenuMapper {
 
     /** 사용자 메뉴관리 상위 메뉴 목록 조회 */
-    List<UserMenuVO> getUserMenuList();
+    List<UserMenuVO> getUserMenuList(@Param("startRow") int startRow, @Param("endRow") int endRow);
+
+    int getUserMenuCount();
 
     /** 사용자 메뉴 상세 조회 */
     UserMenuVO getUserMenuDtl(@Param("menuNumb") String menuNumb, @Param("subxNumb") String subxNumb);

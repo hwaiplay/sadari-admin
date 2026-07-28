@@ -9,6 +9,7 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.RequestParam;
 
 /**
  * fileName       : ScheduleLogController
@@ -46,9 +47,10 @@ public class ScheduleLogController {
      * @return 스케줄러 실행 결과 목록 응답
      */
     @GetMapping
-    public ResultData getScheduleLogList(@AuthenticationPrincipal AdminSessionVO admin) {
+    public ResultData getScheduleLogList(@RequestParam(defaultValue = "1") int page
+                                       , @AuthenticationPrincipal AdminSessionVO admin) {
         // 로그인한 관리자가 조회할 수 있는 스케줄러 실행 결과를 반환한다
-        return ResultData.success(scheduleLogService.getScheduleLogList(admin));
+        return ResultData.success(scheduleLogService.getScheduleLogList(page, admin));
     }
 
     /**

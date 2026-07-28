@@ -14,6 +14,7 @@ import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.RequestParam;
 
 /**
  * fileName       : AlimTempController
@@ -49,8 +50,9 @@ public class AlimTempController {
      * @return
      */
     @GetMapping
-    public ResultData getAlimTempList(@AuthenticationPrincipal AdminSessionVO admin) {
-        return ResultData.success(alimTempService.getAlimTempList(admin));
+    public ResultData getAlimTempList(@RequestParam(defaultValue = "1") int page
+                                    , @AuthenticationPrincipal AdminSessionVO admin) {
+        return ResultData.success(alimTempService.getAlimTempList(page, admin));
     }
 
     /**

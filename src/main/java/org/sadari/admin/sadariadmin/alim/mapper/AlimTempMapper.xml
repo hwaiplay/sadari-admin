@@ -29,14 +29,61 @@
         , UPDT_DATE
     </sql>
 
+    <!-- 페이징 인라인 뷰의 알림 템플릿 컬럼 목록 -->
+    <sql id="alimTempPageColumns">
+          P.ALIM_SITU
+        , P.ALIM_SITU_NAME
+        , P.TEMP_CODE
+        , P.TEMP_TITL
+        , P.ALIM_TITL
+        , P.TEMP_CONT
+        , P.LINK_URLX
+        , P.USEE_YSNO
+        , P.USEE_YSNO_NAME
+        , P.REGI_ADMN
+        , P.REGI_ADMN_NAME
+        , P.REGI_DATE
+        , P.UPDT_ADMN
+        , P.UPDT_ADMN_NAME
+        , P.UPDT_DATE
+    </sql>
+
     <!-- 알림 템플릿 목록을 조회한다 -->
     <select id="getAlimTempList" resultType="org.sadari.admin.sadariadmin.alim.vo.AlimTempVO">
         <include refid="codeNameBindings"/>
         SELECT /* getAlimTempList */
-               <include refid="alimTempColumns"/>
+               <include refid="alimTempPageColumns"/>
+          FROM (  SELECT R.ALIM_SITU
+                       , R.ALIM_SITU_NAME
+                       , R.TEMP_CODE
+                       , R.TEMP_TITL
+                       , R.ALIM_TITL
+                       , R.TEMP_CONT
+                       , R.LINK_URLX
+                       , R.USEE_YSNO
+                       , R.USEE_YSNO_NAME
+                       , R.REGI_ADMN
+                       , R.REGI_ADMN_NAME
+                       , R.REGI_DATE
+                       , R.UPDT_ADMN
+                       , R.UPDT_ADMN_NAME
+                       , R.UPDT_DATE
+                       , ROWNUM AS ROW_NUMB
+                    FROM (  SELECT <include refid="alimTempColumns"/>
+                              FROM TB_ALTEMP
+                          ORDER BY ALIM_SITU
+                                 , TEMP_CODE
+                         ) R
+                   WHERE ROWNUM <![CDATA[<=]]> #{endRow}
+               ) P
+         WHERE P.ROW_NUMB <![CDATA[>=]]> #{startRow}
+    </select>
+
+    <!-- 알림 템플릿 전체 건수를 조회한다 -->
+    <select id="getAlimTempListCount" resultType="int">
+        SELECT /* getAlimTempListCount */
+               COUNT(1)
           FROM TB_ALTEMP
-      ORDER BY ALIM_SITU
-             , TEMP_CODE
     </select>
 
     <!-- 알림 상황과 템플릿 코드로 알림 템플릿 상세를 조회한다 -->

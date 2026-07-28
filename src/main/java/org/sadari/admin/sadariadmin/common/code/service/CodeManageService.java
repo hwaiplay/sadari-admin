@@ -4,6 +4,8 @@ import org.sadari.admin.sadariadmin.admin.vo.AdminSessionVO;
 import org.sadari.admin.sadariadmin.common.code.mapper.CodeMapper;
 import org.sadari.admin.sadariadmin.common.code.vo.CodeMasterVO;
 import org.sadari.admin.sadariadmin.common.code.vo.CodeVO;
+import org.sadari.admin.sadariadmin.common.pagination.PageData;
+import org.sadari.admin.sadariadmin.common.pagination.PageRequest;
 import org.sadari.admin.sadariadmin.common.constant.Constant;
 import org.sadari.admin.sadariadmin.common.exception.BusinessException;
 import org.sadari.admin.sadariadmin.common.result.ResultEnum;
@@ -46,8 +48,10 @@ public class CodeManageService {
      * @author SeungHyeon.Kang
      * @return
      */
-    public List<CodeMasterVO> getCommCodeList() {
-        return codeMapper.getCommCodeList();
+    public PageData<CodeMasterVO> getCommCodeList(int pageNumber) {
+        PageRequest pageRequest = new PageRequest(pageNumber);
+        return PageData.of(codeMapper.getCommCodeList(pageRequest.getStartRow(), pageRequest.getEndRow())
+                         , codeMapper.getCommCodeListCount(), pageRequest);
     }
 
     /**

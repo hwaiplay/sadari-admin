@@ -15,6 +15,8 @@ import type {UserMenu, UserMenuForm} from '../../types/userMenu'
 import {formatDate, getUseeYsnoCodeName} from '../../utils/code'
 import {AuditInfoTable} from '../../components/AuditInfoTable'
 import {useMenuPermission} from '../../contexts/MenuPermissionContext'
+import {Pagination} from '../../components/Pagination'
+import type {PageData} from '../../types/common'
 
 type UserMenuManagePageProps = {
     currentPath: string
@@ -48,6 +50,7 @@ const toUserMenuForm = (menu: UserMenu): UserMenuForm => ({
 export function UserMenuManagePage({currentPath, onMovePath, onError}: UserMenuManagePageProps) {
     const permission = useMenuPermission()
     const [rows, setRows] = useState<UserMenu[]>([])
+    const [pageData, setPageData] = useState<PageData<UserMenu>>({items: [], totalCount: 0, pageNumber: 1, pageSize: 20, totalPages: 0})
     const [detail, setDetail] = useState<UserMenu | null>(null)
     const [subMenus, setSubMenus] = useState<UserMenu[]>([])
     const [form, setForm] = useState<UserMenuForm>(emptyUserMenuForm())
@@ -72,7 +75,9 @@ export function UserMenuManagePage({currentPath, onMovePath, onError}: UserMenuM
                 setYsnoCodes(codeResult)
                 setChildForms([])
                 if (isList) {
-                    setRows(await getUserMenus())
+                    const result = await getUserMenus(1)
+                    setPageData(result)
+                    setRows(result.items)
                     setDetail(null)
                     return
                 }
@@ -94,6 +99,13 @@ export function UserMenuManagePage({currentPath, onMovePath, onError}: UserMenuM
         }
         void load()
     }, [currentPath])
+
+    /** 사용자 메뉴 목록 페이지 조회 */
+    const loadListPage = async (pageNumber: number) => {
+        const result = await getUserMenus(pageNumber)
+        setPageData(result)
+        setRows(result.items)
+    }
 
     /** 사용자 메뉴 입력값 변경 */
     const changeForm = (field: keyof UserMenuForm, value: string) => {
@@ -153,7 +165,7 @@ export function UserMenuManagePage({currentPath, onMovePath, onError}: UserMenuM
             const result = await deleteUserMenuApi(menu)
             alert(result.message)
             if (detailKey) onMovePath(USER_MENU_LIST_PATH)
-            else setRows(await getUserMenus())
+            else await loadListPage(pageData.pageNumber)
         } catch (error: unknown) {
             onError(error instanceof Error ? error.message : '사용자 메뉴 삭제 중 오류가 발생했습니다.')
         }
@@ -163,7 +175,7 @@ export function UserMenuManagePage({currentPath, onMovePath, onError}: UserMenuM
         return (
             <section className="menu-manage">
                 <section className="content-header"><h1>사용자 메뉴관리</h1>
-                    <div className="status">총 {rows.length}건</div>
+                    <div className="status">총 {pageData.totalCount}건</div>
                 </section>
                 <section className="table-wrap menu-list-table">
                     <table>
@@ -203,6 +215,7 @@ export function UserMenuManagePage({currentPath, onMovePath, onError}: UserMenuM
                         </tbody>
                     </table>
                 </section>
+                <Pagination pageNumber={pageData.pageNumber} totalPages={pageData.totalPages} onPageChange={(pageNumber) => void loadListPage(pageNumber)}/>
                 {permission.writYsno === 'Y' && <button type="button" className="floating-button"
                         onClick={() => onMovePath(USER_MENU_NEW_PATH)}>등록</button>}
             </section>

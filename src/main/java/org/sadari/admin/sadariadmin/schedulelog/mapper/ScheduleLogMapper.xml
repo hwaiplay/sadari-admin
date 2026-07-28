@@ -5,32 +5,74 @@
 <mapper namespace="org.sadari.admin.sadariadmin.schedulelog.mapper.ScheduleLogMapper">
     <!-- 스케줄러 실행 결과 공통 조회 컬럼 목록 -->
     <sql id="scheduleLogColumns">
-          RUNX_NUMB
-        , SCHD_CODE
-        , METH_NAME
-        , EXEC_STAT
-        , STRT_DATE
-        , FNSH_DATE
-        , TRGT_CNTT
-        , SUCC_CNTT
-        , FAIL_CNTT
-        , EXEC_MSEC
+          S.RUNX_NUMB
+        , S.SCHD_CODE
+        , FN_GET_CODE_NAME(#{scheduleCode}, S.SCHD_CODE, #{scheduleCode}) AS SCHD_CODE_NAME
+        , S.METH_NAME
+        , S.EXEC_STAT
+        , S.STRT_DATE
+        , S.FNSH_DATE
+        , S.TRGT_CNTT
+        , S.SUCC_CNTT
+        , S.FAIL_CNTT
+        , S.EXEC_MSEC
+    </sql>
+
+    <!-- 페이징 인라인 뷰의 스케줄러 실행 결과 컬럼 목록 -->
+    <sql id="scheduleLogPageColumns">
+          P.RUNX_NUMB
+        , P.SCHD_CODE
+        , P.SCHD_CODE_NAME
+        , P.METH_NAME
+        , P.EXEC_STAT
+        , P.STRT_DATE
+        , P.FNSH_DATE
+        , P.TRGT_CNTT
+        , P.SUCC_CNTT
+        , P.FAIL_CNTT
+        , P.EXEC_MSEC
     </sql>
 
     <!-- 스케줄러 실행 결과 목록을 최신 실행 순서로 조회한다 -->
     <select id="getScheduleLogList" resultType="org.sadari.admin.sadariadmin.schedulelog.vo.ScheduleLogVO">
+        <bind name="scheduleCode" value="@org.sadari.admin.sadariadmin.common.constant.Constant@SCHD_CODE"/>
         SELECT /* getScheduleLogList */
-               <include refid="scheduleLogColumns"/>
+               <include refid="scheduleLogPageColumns"/>
+          FROM (  SELECT R.RUNX_NUMB
+                       , R.SCHD_CODE
+                       , R.SCHD_CODE_NAME
+                       , R.METH_NAME
+                       , R.EXEC_STAT
+                       , R.STRT_DATE
+                       , R.FNSH_DATE
+                       , R.TRGT_CNTT
+                       , R.SUCC_CNTT
+                       , R.FAIL_CNTT
+                       , R.EXEC_MSEC
+                       , ROWNUM AS ROW_NUMB
+                    FROM (  SELECT <include refid="scheduleLogColumns"/>
+                              FROM TL_SCLOGX S
+                          ORDER BY S.RUNX_NUMB DESC
+                         ) R
+                   WHERE ROWNUM <![CDATA[<=]]> #{endRow}
+               ) P
+         WHERE P.ROW_NUMB <![CDATA[>=]]> #{startRow}
+    </select>
+
+    <!-- 스케줄러 실행 로그 전체 건수를 조회한다 -->
+    <select id="getScheduleLogListCount" resultType="int">
+        SELECT /* getScheduleLogListCount */
+               COUNT(1)
           FROM TL_SCLOGX
-      ORDER BY RUNX_NUMB DESC
     </select>
 
     <!-- 스케줄러 실행 번호로 실행 결과 단건을 조회한다 -->
     <select id="getScheduleLogDtl" resultType="org.sadari.admin.sadariadmin.schedulelog.vo.ScheduleLogVO">
+        <bind name="scheduleCode" value="@org.sadari.admin.sadariadmin.common.constant.Constant@SCHD_CODE"/>
         SELECT /* getScheduleLogDtl */
                <include refid="scheduleLogColumns"/>
-          FROM TL_SCLOGX
-         WHERE RUNX_NUMB = #{runxNumb}
+          FROM TL_SCLOGX S
+         WHERE S.RUNX_NUMB = #{runxNumb}
     </select>
 
     <!-- 선택한 스케줄러 실행에 연결된 실패 상세 목록을 실패 순번으로 조회한다 -->

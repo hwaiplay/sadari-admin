@@ -13,18 +13,50 @@
     <select id="getAuthGroupList" resultType="org.sadari.admin.sadariadmin.authgroup.vo.AuthGroupVO">
         <include refid="codeNameBindings"/>
         SELECT /* getAuthGroupList */
-               A.AUTH_CODE
-             , A.AUTH_NAME
-             , A.USEE_YSNO
-             , FN_GET_CODE_NAME(#{commYsno}, A.USEE_YSNO, #{useeYsnoCode}) AS USEE_YSNO_NAME
-             , A.REGI_ADMN
-             , FN_GET_ADMIN_NAME(A.REGI_ADMN) AS REGI_ADMN_NAME
-             , A.REGI_DATE
-             , A.UPDT_ADMN
-             , FN_GET_ADMIN_NAME(A.UPDT_ADMN) AS UPDT_ADMN_NAME
-             , A.UPDT_DATE
-          FROM TM_AUTHXM A
-      ORDER BY A.AUTH_CODE
+               P.AUTH_CODE
+             , P.AUTH_NAME
+             , P.USEE_YSNO
+             , P.USEE_YSNO_NAME
+             , P.REGI_ADMN
+             , P.REGI_ADMN_NAME
+             , P.REGI_DATE
+             , P.UPDT_ADMN
+             , P.UPDT_ADMN_NAME
+             , P.UPDT_DATE
+          FROM (  SELECT R.AUTH_CODE
+                       , R.AUTH_NAME
+                       , R.USEE_YSNO
+                       , R.USEE_YSNO_NAME
+                       , R.REGI_ADMN
+                       , R.REGI_ADMN_NAME
+                       , R.REGI_DATE
+                       , R.UPDT_ADMN
+                       , R.UPDT_ADMN_NAME
+                       , R.UPDT_DATE
+                       , ROWNUM AS ROW_NUMB
+                    FROM (  SELECT A.AUTH_CODE
+                                 , A.AUTH_NAME
+                                 , A.USEE_YSNO
+                                 , FN_GET_CODE_NAME(#{commYsno}, A.USEE_YSNO, #{useeYsnoCode}) AS USEE_YSNO_NAME
+                                 , A.REGI_ADMN
+                                 , FN_GET_ADMIN_NAME(A.REGI_ADMN) AS REGI_ADMN_NAME
+                                 , A.REGI_DATE
+                                 , A.UPDT_ADMN
+                                 , FN_GET_ADMIN_NAME(A.UPDT_ADMN) AS UPDT_ADMN_NAME
+                                 , A.UPDT_DATE
+                              FROM TM_AUTHXM A
+                          ORDER BY A.AUTH_CODE
+                         ) R
+                   WHERE ROWNUM <![CDATA[<=]]> #{endRow}
+               ) P
+         WHERE P.ROW_NUMB <![CDATA[>=]]> #{startRow}
+    </select>
+
+    <!-- 권한그룹 전체 건수를 조회한다 -->
+    <select id="getAuthGroupListCount" resultType="int">
+        SELECT /* getAuthGroupListCount */
+               COUNT(1)
+          FROM TM_AUTHXM
     </select>
 
     <!-- 권한그룹 상세를 조회한다 -->

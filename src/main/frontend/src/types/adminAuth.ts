@@ -14,6 +14,7 @@ export type AdminAuthGroup = {
 }
 
 export type AdminAuthManage = {
-  admins: AdminAuth[]
+  admins: PageData<AdminAuth>
   authGroups: AdminAuthGroup[]
 }
+import type { PageData } from './common'

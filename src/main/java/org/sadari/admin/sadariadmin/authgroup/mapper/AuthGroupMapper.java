@@ -20,7 +20,9 @@ import java.util.List;
 public interface AuthGroupMapper {
 
     /** 권한그룹 목록 조회 */
-    List<AuthGroupVO> getAuthGroupList();
+    List<AuthGroupVO> getAuthGroupList(@Param("startRow") int startRow, @Param("endRow") int endRow);
+
+    int getAuthGroupListCount();
 
     /** 권한그룹 상세 조회 */
     AuthGroupVO getAuthGroup(@Param("authCode") String authCode);

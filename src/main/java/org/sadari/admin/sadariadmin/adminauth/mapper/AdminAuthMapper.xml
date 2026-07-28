@@ -6,16 +6,40 @@
     <!-- 관리자와 현재 권한그룹을 조회한다 -->
     <select id="getAdminAuthList" resultType="org.sadari.admin.sadariadmin.adminauth.vo.AdminAuthVO">
         SELECT /* getAdminAuthList */
-               A.ADMN_NUMB
-             , A.ADMN_IDXX
-             , A.ADMN_NAME
-             , A.AUTH_CODE
-             , G.AUTH_NAME
-             , A.DEPT_CODE
-          FROM TM_ADMINX A
-     LEFT JOIN TM_AUTHXM G
-            ON G.AUTH_CODE = A.AUTH_CODE
-      ORDER BY A.ADMN_NUMB
+               P.ADMN_NUMB
+             , P.ADMN_IDXX
+             , P.ADMN_NAME
+             , P.AUTH_CODE
+             , P.AUTH_NAME
+             , P.DEPT_CODE
+          FROM (  SELECT R.ADMN_NUMB
+                       , R.ADMN_IDXX
+                       , R.ADMN_NAME
+                       , R.AUTH_CODE
+                       , R.AUTH_NAME
+                       , R.DEPT_CODE
+                       , ROWNUM AS ROW_NUMB
+                    FROM (  SELECT A.ADMN_NUMB
+                                 , A.ADMN_IDXX
+                                 , A.ADMN_NAME
+                                 , A.AUTH_CODE
+                                 , G.AUTH_NAME
+                                 , A.DEPT_CODE
+                              FROM TM_ADMINX A
+                         LEFT JOIN TM_AUTHXM G
+                                ON G.AUTH_CODE = A.AUTH_CODE
+                          ORDER BY A.ADMN_NUMB
+                         ) R
+                   WHERE ROWNUM <![CDATA[<=]]> #{endRow}
+               ) P
+         WHERE P.ROW_NUMB <![CDATA[>=]]> #{startRow}
+    </select>
+
+    <!-- 관리자 전체 건수를 조회한다 -->
+    <select id="getAdminAuthListCount" resultType="int">
+        SELECT /* getAdminAuthListCount */
+               COUNT(1)
+          FROM TM_ADMINX
     </select>
 
     <!-- 관리자 존재 건수를 조회한다 -->

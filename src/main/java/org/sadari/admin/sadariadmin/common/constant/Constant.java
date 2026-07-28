@@ -9,6 +9,7 @@ package org.sadari.admin.sadariadmin.common.constant;
  * DATE              AUTHOR             NOTE
  * -----------------------------------------------------------
  * 2026-07-09        SeungHyeon.Kang    최초 생성
+ * 2026-07-28        SeungHyeon.Kang    스케줄러 코드 공통코드 상수 추가
  */
 public final class Constant {
 
@@ -32,6 +33,9 @@ public final class Constant {
 
     /** 알림 상황 공통코드 */
     public static final String ALIM_SITU = "ALIM_SITU";
+
+    /** 스케줄러 구분 공통코드 */
+    public static final String SCHD_CODE = "SCHD_CODE";
 
     /** 상위 메뉴 SUBX NUMB 값 */
     public static final String TOP_MENU_SUBX_NUMB = "0";

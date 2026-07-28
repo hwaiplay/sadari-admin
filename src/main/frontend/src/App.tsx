@@ -25,7 +25,10 @@ import type { AdminSession } from './types/admin'
 import type { AlimTemp, AlimTempForm } from './types/alim'
 import type { Code, CodeMaster, DetailCodeForm, DetailCodePayload } from './types/code'
 import type { Menu, MenuForm } from './types/menu'
+import type { PageData } from './types/common'
 import { emptyDetailForm, emptyMenuForm, toDetailCodeForm, toMenuForm } from './utils/forms'
+
+const emptyPageData = <T,>(): PageData<T> => ({ items: [], totalCount: 0, pageNumber: 1, pageSize: 20, totalPages: 0 })
 
 /**
  * 관리자 프론트 루트 컴포넌트
@@ -36,6 +39,7 @@ function App() {
   const [admin, setAdmin] = useState<AdminSession | null>(null)
   const [menus, setMenus] = useState<Menu[]>([])
   const [menuRows, setMenuRows] = useState<Menu[]>([])
+  const [menuPageData, setMenuPageData] = useState<PageData<Menu>>(emptyPageData())
   const [menuDetail, setMenuDetail] = useState<Menu | null>(null)
   const [subMenus, setSubMenus] = useState<Menu[]>([])
   const [alimSituCodes, setAlimSituCodes] = useState<Code[]>([])
@@ -43,6 +47,7 @@ function App() {
   const [menuForm, setMenuForm] = useState<MenuForm>(emptyMenuForm())
   const [childForms, setChildForms] = useState<MenuForm[]>([])
   const [codeMasters, setCodeMasters] = useState<CodeMaster[]>([])
+  const [codePageData, setCodePageData] = useState<PageData<CodeMaster>>(emptyPageData())
   const [selectedMaster, setSelectedMaster] = useState<CodeMaster | null>(null)
   const [masterEditForm, setMasterEditForm] = useState<CodeMaster | null>(null)
   const [detailCodes, setDetailCodes] = useState<Code[]>([])
@@ -53,6 +58,7 @@ function App() {
   const [duplicateAvailable, setDuplicateAvailable] = useState(false)
   const [detailForms, setDetailForms] = useState<DetailCodeForm[]>([])
   const [alimTemps, setAlimTemps] = useState<AlimTemp[]>([])
+  const [alimPageData, setAlimPageData] = useState<PageData<AlimTemp>>(emptyPageData())
   const [alimTempDetail, setAlimTempDetail] = useState<AlimTemp | null>(null)
   const [alimTempForm, setAlimTempForm] = useState<AlimTempForm>({ alimSitu: '', tempCode: '', tempTitl: '', alimTitl: '', tempCont: '', linkUrlx: '', useeYsno: DEFAULT_USEE_YSNO })
   const [admnIdxx, setAdmnIdxx] = useState('admin')
@@ -223,12 +229,13 @@ function App() {
    * @Author SeungHyeon.Kang
    * @return
    */
-  const openMenuListPage = async () => {
+  const openMenuListPage = async (pageNumber = 1) => {
     setError(null)
     setChildForms([])
     setMenuDetail(null)
-    const [rows] = await Promise.all([getMenuMngList(), loadUseeYsnoCodeList()])
-    setMenuRows(rows)
+    const [pageData] = await Promise.all([getMenuMngList(pageNumber), loadUseeYsnoCodeList()])
+    setMenuPageData(pageData)
+    setMenuRows(pageData.items)
   }
 
   /**
@@ -267,10 +274,11 @@ function App() {
    * @Author SeungHyeon.Kang
    * @return
    */
-  const openCodeListPage = async () => {
+  const openCodeListPage = async (pageNumber = 1) => {
     setError(null)
-    const [masters] = await Promise.all([getCodeMasters(), loadUseeYsnoCodeList()])
-    setCodeMasters(masters)
+    const [pageData] = await Promise.all([getCodeMasters(pageNumber), loadUseeYsnoCodeList()])
+    setCodePageData(pageData)
+    setCodeMasters(pageData.items)
     setSelectedMaster(null)
     setMasterEditForm(null)
     setDetailCodes([])
@@ -299,10 +307,11 @@ function App() {
    * @Author SeungHyeon.Kang
    * @return
    */
-  const openAlimTempListPage = async () => {
+  const openAlimTempListPage = async (pageNumber = 1) => {
     setError(null)
-    const [rows] = await Promise.all([getAlimTempList(), loadUseeYsnoCodeList()])
-    setAlimTemps(rows)
+    const [pageData] = await Promise.all([getAlimTempList(pageNumber), loadUseeYsnoCodeList()])
+    setAlimPageData(pageData)
+    setAlimTemps(pageData.items)
     setAlimTempDetail(null)
   }
 
@@ -379,7 +388,7 @@ function App() {
     await loadSidebarMenuList()
     if (isMenuDetailPage && menu.menuNumb === menuForm.menuNumb && menu.subxNumb === menuForm.subxNumb) movePath(MENU_LIST_PATH)
     else if (isMenuDetailPage) await openMenuDetailPage(menuForm.menuNumb, menuForm.subxNumb)
-    else setMenuRows(await getMenuMngList())
+    else await openMenuListPage(menuPageData.pageNumber)
   }
 
   /**
@@ -602,7 +611,9 @@ function App() {
       const result = await createCodeMaster({ ...masterForm, commCode: masterForm.commCode.trim() })
       alert(result.message)
       const saved = result.data
-      setCodeMasters(await getCodeMasters())
+      const pageData = await getCodeMasters(codePageData.pageNumber)
+      setCodePageData(pageData)
+      setCodeMasters(pageData.items)
       setSelectedMaster(saved)
       setMasterEditForm(saved)
       setDetailCodes([])
@@ -659,7 +670,9 @@ function App() {
       alert(result.message)
       setSelectedMaster(result.data)
       setMasterEditForm(result.data)
-      setCodeMasters(await getCodeMasters())
+      const pageData = await getCodeMasters(codePageData.pageNumber)
+      setCodePageData(pageData)
+      setCodeMasters(pageData.items)
     } catch (err: unknown) {
       setError(err instanceof Error ? err.message : '공통코드 수정 중 오류가 발생했습니다.')
     } finally {
@@ -848,7 +861,7 @@ function App() {
 
   return (
     <AdminLayout admin={admin} menus={menus} currentPath={currentPath} activePath={activeMenuPath} error={error} onMovePath={movePath} onLogout={handleLogout}>
-      {isMenuListPage && <MenuListPage menuRows={menuRows} useeYsnoCodes={useeYsnoCodes} onMovePath={movePath} onDelete={(menu) => void deleteMenu(menu)} />}
+      {isMenuListPage && <MenuListPage menuRows={menuRows} pageData={menuPageData} useeYsnoCodes={useeYsnoCodes} onPageChange={(pageNumber) => void openMenuListPage(pageNumber)} onMovePath={movePath} onDelete={(menu) => void deleteMenu(menu)} />}
       {(isMenuDetailPage || isMenuNewPage) && (
         <MenuDetailPage
           isNewPage={isMenuNewPage}
@@ -883,7 +896,7 @@ function App() {
           onError={setError}
         />
       )}
-      {isCodeListPage && <CodeListPage codeMasters={codeMasters} useeYsnoCodes={useeYsnoCodes} onSelect={selectCodeMaster} onOpenRegister={() => setShowMasterForm(true)} />}
+      {isCodeListPage && <CodeListPage codeMasters={codeMasters} pageData={codePageData} useeYsnoCodes={useeYsnoCodes} onPageChange={(pageNumber) => void openCodeListPage(pageNumber)} onSelect={selectCodeMaster} onOpenRegister={() => setShowMasterForm(true)} />}
       {isCodeDetailPage && (
         <CodeDetailPage
           selectedMaster={selectedMaster}
@@ -906,7 +919,7 @@ function App() {
           onSaveAll={() => void saveAllCodeDetail()}
         />
       )}
-      {isAlimTempListPage && <AlimTempListPage alimTemps={alimTemps} useeYsnoCodes={useeYsnoCodes} onMovePath={movePath} />}
+      {isAlimTempListPage && <AlimTempListPage alimTemps={alimTemps} pageData={alimPageData} useeYsnoCodes={useeYsnoCodes} onPageChange={(pageNumber) => void openAlimTempListPage(pageNumber)} onMovePath={movePath} />}
       {(isAlimTempDetailPage || isAlimTempNewPage) && (
         <AlimTempDetailPage
           isNewPage={isAlimTempNewPage}

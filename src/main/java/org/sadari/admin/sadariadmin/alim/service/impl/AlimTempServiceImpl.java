@@ -6,6 +6,8 @@ import org.sadari.admin.sadariadmin.alim.service.AlimTempService;
 import org.sadari.admin.sadariadmin.alim.vo.AlimTempVO;
 import org.sadari.admin.sadariadmin.common.constant.Constant;
 import org.sadari.admin.sadariadmin.common.exception.BusinessException;
+import org.sadari.admin.sadariadmin.common.pagination.PageData;
+import org.sadari.admin.sadariadmin.common.pagination.PageRequest;
 import org.sadari.admin.sadariadmin.common.result.ResultEnum;
 import org.sadari.admin.sadariadmin.common.util.StringUtil;
 import org.springframework.http.HttpStatus;
@@ -51,9 +53,11 @@ public class AlimTempServiceImpl implements AlimTempService {
      * @return
      */
     @Override
-    public List<AlimTempVO> getAlimTempList(AdminSessionVO admin) {
+    public PageData<AlimTempVO> getAlimTempList(int pageNumber, AdminSessionVO admin) {
         checkLogin(admin);
-        return alimTempMapper.getAlimTempList();
+        PageRequest pageRequest = new PageRequest(pageNumber);
+        return PageData.of(alimTempMapper.getAlimTempList(pageRequest.getStartRow(), pageRequest.getEndRow())
+                         , alimTempMapper.getAlimTempListCount(), pageRequest);
     }
 
     /**

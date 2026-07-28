@@ -36,7 +36,6 @@ export function ScheduleLogDetailPage({ runxNumb, pageTitle, onMovePath, onError
    */
   const renderScheduleFailureRow = (failure: ScheduleFail) => (
     <tr key={`${failure.runxNumb}-${failure.failNumb}`}>
-      <td className="col-fail-number">{failure.failNumb}</td>
       <td>{failure.failType}</td>
       <td className="col-result-code">{failure.rsltCode ?? ''}</td>
       <td>{failure.rsltMesg ?? ''}</td>
@@ -98,8 +97,8 @@ export function ScheduleLogDetailPage({ runxNumb, pageTitle, onMovePath, onError
                 <tr>
                   <th>실행번호</th>
                   <td>{scheduleLog?.runxNumb ?? ''}</td>
-                  <th>스케줄러 코드</th>
-                  <td>{scheduleLog?.schdCode ?? ''}</td>
+                  <th>스케줄러명</th>
+                  <td>{scheduleLog?.schdCodeName ?? scheduleLog?.schdCode ?? ''}</td>
                   <th>상태</th>
                   <td>{scheduleLog && <span className={getScheduleStatusClassName(scheduleLog.execStat)}>{scheduleLog.execStat}</span>}</td>
                 </tr>
@@ -141,7 +140,6 @@ export function ScheduleLogDetailPage({ runxNumb, pageTitle, onMovePath, onError
             <table>
               <thead>
                 <tr>
-                  <th className="col-fail-number">순번</th>
                   <th>실패유형</th>
                   <th className="col-result-code">결과코드</th>
                   <th>결과메시지</th>
@@ -152,9 +150,9 @@ export function ScheduleLogDetailPage({ runxNumb, pageTitle, onMovePath, onError
               </thead>
               <tbody>
                 {loading ? (
-                  <tr className="empty-row"><td colSpan={7}>스케줄러 로그 상세를 불러오고 있습니다.</td></tr>
+                  <tr className="empty-row"><td colSpan={6}>스케줄러 로그 상세를 불러오고 있습니다.</td></tr>
                 ) : scheduleFailures.length === 0 ? (
-                  <tr className="empty-row"><td colSpan={7}>실패 로그가 없습니다.</td></tr>
+                  <tr className="empty-row"><td colSpan={6}>실패 로그가 없습니다.</td></tr>
                 ) : scheduleFailures.map(renderScheduleFailureRow)}
               </tbody>
             </table>

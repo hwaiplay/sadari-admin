@@ -1,6 +1,7 @@
 export type ScheduleLog = {
   runxNumb: number
   schdCode: string
+  schdCodeName: string | null
   methName: string
   execStat: string
   strtDate: string

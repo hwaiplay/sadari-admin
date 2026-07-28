@@ -26,6 +26,23 @@
         , UPDT_DATE
     </sql>
 
+    <!-- 페이징 인라인 뷰의 메뉴 컬럼 목록 -->
+    <sql id="menuPageColumns">
+          P.MENU_NUMB
+        , P.SUBX_NUMB
+        , P.MENU_NAME
+        , P.MENU_URLX
+        , P.SORT_ORDR
+        , P.USEE_YSNO
+        , P.USEE_YSNO_NAME
+        , P.REGI_ADMN
+        , P.REGI_ADMN_NAME
+        , P.REGI_DATE
+        , P.UPDT_ADMN
+        , P.UPDT_ADMN_NAME
+        , P.UPDT_DATE
+    </sql>
+
     <!-- 사용 중인 사이드바 메뉴 목록을 조회한다 -->
     <select id="getMenuList" resultType="org.sadari.admin.sadariadmin.menu.vo.MenuVO">
         <bind name="yes" value="@org.sadari.admin.sadariadmin.common.constant.Constant@YES"/>
@@ -89,11 +106,39 @@
         <bind name="topMenuSubxNumb" value="@org.sadari.admin.sadariadmin.common.constant.Constant@TOP_MENU_SUBX_NUMB"/>
         <include refid="codeNameBindings"/>
         SELECT /* getMenuMngList */
-               <include refid="menuColumns"/>
-          FROM TM_ADMENU M
-         WHERE M.SUBX_NUMB = #{topMenuSubxNumb}
-      ORDER BY NVL(M.SORT_ORDR, 9999)
-             , TO_NUMBER(M.MENU_NUMB)
+               <include refid="menuPageColumns"/>
+          FROM (  SELECT R.MENU_NUMB
+                       , R.SUBX_NUMB
+                       , R.MENU_NAME
+                       , R.MENU_URLX
+                       , R.SORT_ORDR
+                       , R.USEE_YSNO
+                       , R.USEE_YSNO_NAME
+                       , R.REGI_ADMN
+                       , R.REGI_ADMN_NAME
+                       , R.REGI_DATE
+                       , R.UPDT_ADMN
+                       , R.UPDT_ADMN_NAME
+                       , R.UPDT_DATE
+                       , ROWNUM AS ROW_NUMB
+                    FROM (  SELECT <include refid="menuColumns"/>
+                              FROM TM_ADMENU M
+                             WHERE M.SUBX_NUMB = #{topMenuSubxNumb}
+                          ORDER BY NVL(M.SORT_ORDR, 9999)
+                                 , TO_NUMBER(M.MENU_NUMB)
+                         ) R
+                   WHERE ROWNUM <![CDATA[<=]]> #{endRow}
+               ) P
+         WHERE P.ROW_NUMB <![CDATA[>=]]> #{startRow}
+    </select>
+
+    <!-- 메뉴관리 상위 메뉴 전체 건수를 조회한다 -->
+    <select id="getMenuMngCount" resultType="int">
+        <bind name="topMenuSubxNumb" value="@org.sadari.admin.sadariadmin.common.constant.Constant@TOP_MENU_SUBX_NUMB"/>
+        SELECT /* getMenuMngCount */
+               COUNT(1)
+          FROM TM_ADMENU
+         WHERE SUBX_NUMB = #{topMenuSubxNumb}
     </select>
 
     <!-- 메뉴 번호와 하위 메뉴 번호로 메뉴 상세를 조회한다 -->

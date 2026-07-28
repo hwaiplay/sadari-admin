@@ -2,6 +2,8 @@ import { useEffect, useState } from 'react'
 import { getAdminAuthManage, updateAdminAuths } from '../../api/adminAuthManageApi'
 import { useMenuPermission } from '../../contexts/MenuPermissionContext'
 import type { AdminAuth, AdminAuthGroup } from '../../types/adminAuth'
+import type { PageData } from '../../types/common'
+import { Pagination } from '../../components/Pagination'
 
 type AdminAuthManagePageProps = {
   onError: (message: string | null) => void
@@ -11,6 +13,7 @@ type AdminAuthManagePageProps = {
 export function AdminAuthManagePage({ onError }: AdminAuthManagePageProps) {
   const permission = useMenuPermission()
   const [admins, setAdmins] = useState<AdminAuth[]>([])
+  const [pageData, setPageData] = useState<PageData<AdminAuth>>({ items: [], totalCount: 0, pageNumber: 1, pageSize: 20, totalPages: 0 })
   const [authGroups, setAuthGroups] = useState<AdminAuthGroup[]>([])
   const [saving, setSaving] = useState(false)
 
@@ -19,11 +22,20 @@ export function AdminAuthManagePage({ onError }: AdminAuthManagePageProps) {
     onError(null)
     getAdminAuthManage()
       .then((result) => {
-        setAdmins(result.admins)
+        setPageData(result.admins)
+        setAdmins(result.admins.items)
         setAuthGroups(result.authGroups.filter((group) => group.useeYsno === 'Y'))
       })
       .catch((error: unknown) => onError(error instanceof Error ? error.message : '관리자 권한 정보를 불러오지 못했습니다.'))
   }, [])
+
+  /** 관리자 권한 목록 페이지 조회 */
+  const loadListPage = async (pageNumber: number) => {
+    const result = await getAdminAuthManage(pageNumber)
+    setPageData(result.admins)
+    setAdmins(result.admins.items)
+    setAuthGroups(result.authGroups.filter((group) => group.useeYsno === 'Y'))
+  }
 
   /** 관리자 권한 코드 변경 */
   const changeAuthCode = (index: number, authCode: string) => {
@@ -39,8 +51,9 @@ export function AdminAuthManagePage({ onError }: AdminAuthManagePageProps) {
     setSaving(true)
     onError(null)
     try {
-      const result = await updateAdminAuths(admins)
-      setAdmins(result.data.admins)
+      const result = await updateAdminAuths(admins, pageData.pageNumber)
+      setPageData(result.data.admins)
+      setAdmins(result.data.admins.items)
       setAuthGroups(result.data.authGroups.filter((group) => group.useeYsno === 'Y'))
       alert(result.message)
     } catch (error) {
@@ -54,7 +67,7 @@ export function AdminAuthManagePage({ onError }: AdminAuthManagePageProps) {
     <section className="menu-manage">
       <section className="content-header">
         <h1>관리자 권한 관리</h1>
-        <div className="status">총 {admins.length}건</div>
+        <div className="status">총 {pageData.totalCount}건</div>
       </section>
       <section className="table-wrap admin-auth-table">
         <table>
@@ -86,6 +99,7 @@ export function AdminAuthManagePage({ onError }: AdminAuthManagePageProps) {
           </tbody>
         </table>
       </section>
+      <Pagination pageNumber={pageData.pageNumber} totalPages={pageData.totalPages} onPageChange={(pageNumber) => void loadListPage(pageNumber)} />
       {permission.writYsno === 'Y' && (
         <div className="detail-footer">
           <div className="detail-footer-left" />

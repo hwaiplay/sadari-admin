@@ -1,9 +1,10 @@
 import { fetchJson, fetchResult } from './client'
 import { DEFAULT_USEE_YSNO } from '../constants/codes'
 import type { UserMenu, UserMenuForm } from '../types/userMenu'
+import type { PageData } from '../types/common'
 
 /** 사용자 상위 메뉴 목록 조회 */
-export const getUserMenus = () => fetchJson<UserMenu[]>('/api/user-menus', undefined, '사용자 메뉴 목록 조회에 실패했습니다.')
+export const getUserMenus = (pageNumber = 1) => fetchJson<PageData<UserMenu>>(`/api/user-menus?page=${pageNumber}`, undefined, '사용자 메뉴 목록 조회에 실패했습니다.')
 
 /** 사용자 메뉴 상세 조회 */
 export const getUserMenuDetail = (menuNumb: string, subxNumb: string) =>

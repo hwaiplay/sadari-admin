@@ -1,5 +1,6 @@
 import { fetchJson, fetchResult } from './client'
 import type { Code, CodeMaster, DetailCodePayload } from '../types/code'
+import type { PageData } from '../types/common'
 
 /**
  * 세부코드 목록 조회
@@ -14,7 +15,7 @@ export const getCodeList = (commCode: string) => fetchJson<Code[]>(`/api/codes/$
  * @Author SeungHyeon.Kang
  * @return
  */
-export const getCodeMasters = () => fetchJson<CodeMaster[]>('/api/code-manage/masters', undefined, '공통코드 목록 조회에 실패했습니다.')
+export const getCodeMasters = (pageNumber = 1) => fetchJson<PageData<CodeMaster>>(`/api/code-manage/masters?page=${pageNumber}`, undefined, '공통코드 목록 조회에 실패했습니다.')
 
 /**
  * 공통코드 상세 조회
