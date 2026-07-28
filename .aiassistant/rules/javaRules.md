@@ -110,8 +110,8 @@ Java 코드를 생성하거나 수정할 때 아래 규칙을 예외 없이 적�
 
 ```java
 public ResultData setReport(@AuthenticationPrincipal Long userNumb, Long reptNumb, String sourceType
-        , @Valid @RequestBody ReportDto reportDto
-        , @RequestParam(required = false) String requestType, HttpServletRequest request) {
+                          , @Valid @RequestBody ReportDto reportDto
+                          , @RequestParam(required = false) String requestType, HttpServletRequest request) {
     // 독후감 등록에 필요한 사용자 번호와 요청 데이터를 서비스에 전달한다
     return reportService.setReport(userNumb, reptNumb, sourceType, reportDto, requestType, request);
 }
@@ -132,8 +132,8 @@ public ResultData setReport(@AuthenticationPrincipal Long userNumb, Long reptNum
 log.error("알림 발송에 실패했습니다. 사용자 번호={}, 독후감 번호={}", userNumb, reptNumb, e);
 
 log.info("스케줄러가 종료되었습니다. 조회 건수={}, 성공 건수={}, 실패 건수={}, 최대 조회 건수={}"
-                 , targetCnt, successCnt, failureCnt
-        , maxSize);
+       , targetCnt, successCnt, failureCnt
+       , maxSize);
 ```
 
 ## 6. REST API 규칙
@@ -192,6 +192,9 @@ public class BookController {
 
 - 모든 클래스와 Public 메서드에 Javadoc을 작성합니다.
 - 첫 문장에는 클래스 또는 메서드의 핵심 역할을 구체적으로 설명합니다.
+- 외부 클래스와 중첩 클래스를 포함한 모든 클래스 선언의 여는 중괄호 바로 다음에는 이유와 다음 내용의 종류에 관계없이 빈 줄을 정확히 한 줄 작성합니다.
+- 클래스 선언 직후 필드, 상수, 생성자, 메서드, 주석 또는 어노테이션이 오더라도 클래스 여는 중괄호와 해당 내용 사이의 빈 줄을 생략하지 않습니다.
+- 클래스 선언 직후 주석이 있어도 주석을 빈 줄로 간주하지 않습니다.
 - 메서드 JavaDoc에는 메서드명을 반복하거나 `요청을 검증하고 업무 처리 결과를 반환한다`와 같은 공통 문구만 작성하지 않습니다.
 - 메서드 JavaDoc에는 도서 검색, 평점 조회, 사용자 수정처럼 메서드가 처리하는 실제 업무 대상과 기능을 반드시 작성합니다.
 
@@ -286,9 +289,9 @@ if (hasCause(throwable, CannotGetJdbcConnectionException.class) || hasCause(thro
         || hasCause(throwable, SQLRecoverableException.class) || hasCause(throwable, SQLTransientConnectionException.class)
         || hasCause(throwable, SQLNonTransientConnectionException.class) || hasCause(throwable, SQLTimeoutException.class)
         || hasCause(throwable, ConnectException.class) || hasCause(throwable, SocketTimeoutException.class)) {
-        // 데이터베이스 연결 실패로 판정한다
-        return true;
-        }
+    // 데이터베이스 연결 실패로 판정한다
+    return true;
+}
 ```
 
 ### 8.6 함수 호출과 값 설정
