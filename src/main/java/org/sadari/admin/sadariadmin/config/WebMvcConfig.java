@@ -13,6 +13,7 @@ import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
  * DATE              AUTHOR             NOTE
  * -----------------------------------------------------------
  * 2026-07-27        SeungHyeon.Kang    최초 생성
+ * 2026-07-28        SeungHyeon.Kang    스케줄러 로그 조회 권한 경로 추가
  */
 @Configuration
 public class WebMvcConfig implements WebMvcConfigurer {
@@ -35,7 +36,8 @@ public class WebMvcConfig implements WebMvcConfigurer {
                         "/api/code-manage/**",
                         "/api/alim-temps/**",
                         "/api/auth-groups/**",
-                        "/api/admin-auths/**"
+                        "/api/admin-auths/**",
+                        "/api/schedule-logs/**"
                 );
     }
 }

@@ -539,7 +539,7 @@ tbody tr:last-child > td {
 .floating-button {
   position: fixed;
   z-index: 15;
-  right: 30px;
+  right: max(32px, calc(100vw - 1816px));
   bottom: 28px;
   min-width: 82px;
   box-shadow: 0 8px 20px rgba(20, 93, 120, 0.22);
@@ -974,7 +974,7 @@ tbody tr:last-child > td {
   }
 
   .floating-button {
-    right: 16px;
+    right: 14px;
     bottom: 16px;
   }
 }
@@ -992,6 +992,149 @@ tbody tr:last-child > td {
 
 .admin-auth-table select {
   min-width: 220px;
+}
+
+.schedule-log-table table {
+  min-width: 1460px;
+}
+
+.schedule-log-table tbody tr {
+  cursor: default;
+}
+
+.schedule-log-page .col-run-number {
+  width: 90px;
+  min-width: 90px;
+  text-align: center;
+}
+
+.schedule-log-page .col-schedule-status {
+  width: 112px;
+  min-width: 112px;
+  text-align: center;
+}
+
+.schedule-log-page .col-date-time {
+  width: 168px;
+  min-width: 168px;
+  white-space: nowrap;
+}
+
+.schedule-log-page .col-count {
+  width: 76px;
+  min-width: 76px;
+  text-align: right;
+}
+
+.schedule-log-page .col-execution-time {
+  width: 112px;
+  min-width: 112px;
+  text-align: right;
+  white-space: nowrap;
+}
+
+.schedule-log-page .success-count {
+  color: #217346;
+  font-weight: 700;
+}
+
+.schedule-log-page .fail-count {
+  color: #b42318;
+  font-weight: 700;
+}
+
+.table-link-button {
+  height: auto;
+  padding: 2px 4px;
+  border: 0;
+  color: var(--accent);
+  background: transparent;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
+.table-link-button:hover:not(:disabled) {
+  color: var(--button-hover);
+  border: 0;
+  background: transparent;
+}
+
+.schedule-status {
+  display: inline-flex;
+  min-width: 72px;
+  min-height: 26px;
+  align-items: center;
+  justify-content: center;
+  padding: 3px 8px;
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  font-size: 12px;
+  font-weight: 800;
+  box-sizing: border-box;
+}
+
+.schedule-status.success {
+  color: #17663c;
+  border-color: #acd8be;
+  background: #effaf3;
+}
+
+.schedule-status.fail {
+  color: #a4261d;
+  border-color: #efc4bf;
+  background: #fff4f2;
+}
+
+.schedule-status.running {
+  color: #7a5600;
+  border-color: #e6cf8c;
+  background: #fff9e8;
+}
+
+.schedule-status.neutral {
+  color: #52616d;
+  border-color: #cbd3da;
+  background: #f4f7f9;
+}
+
+.schedule-failure-section {
+  margin-top: 24px;
+  padding: 20px;
+  border: 1px solid var(--border);
+  border-radius: 7px;
+  background: #fff;
+}
+
+.schedule-failure-table table {
+  min-width: 1500px;
+}
+
+.schedule-failure-table .col-fail-number {
+  width: 72px;
+  min-width: 72px;
+  text-align: center;
+}
+
+.schedule-failure-table .col-result-code {
+  width: 96px;
+  min-width: 96px;
+  text-align: center;
+}
+
+.error-content-cell {
+  min-width: 420px;
+}
+
+.error-content-cell pre {
+  max-height: 180px;
+  margin: 0;
+  overflow: auto;
+  color: #70413c;
+  font-family: Consolas, "Courier New", monospace;
+  font-size: 12px;
+  line-height: 1.55;
+  white-space: pre-wrap;
+  word-break: break-word;
 }
 
 .auth-menu-table input[type='checkbox'] {

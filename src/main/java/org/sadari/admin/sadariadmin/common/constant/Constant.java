@@ -108,6 +108,9 @@ public final class Constant {
     /** 관리자 권한 부여 API URL 접두어 */
     public static final String API_ADMIN_AUTHS_PREFIX = "/api/admin-auths";
 
+    /** 스케줄러 로그 API 경로 */
+    public static final String API_SCHEDULE_LOGS_PREFIX = "/api/schedule-logs";
+
     /**
      * 공통 상수 생성 방지
      * @author SeungHyeon.Kang

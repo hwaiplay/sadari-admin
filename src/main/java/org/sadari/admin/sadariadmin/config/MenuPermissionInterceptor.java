@@ -28,6 +28,8 @@ import java.util.Map;
  * DATE              AUTHOR             NOTE
  * -----------------------------------------------------------
  * 2026-07-27        SeungHyeon.Kang    최초 생성
+ * 2026-07-28        SeungHyeon.Kang    권한그룹 목록 화면 URL 변경
+ * 2026-07-28        SeungHyeon.Kang    스케줄러 로그 조회 권한 연결
  */
 @Component
 public class MenuPermissionInterceptor implements HandlerInterceptor {
@@ -37,7 +39,8 @@ public class MenuPermissionInterceptor implements HandlerInterceptor {
 
     static {
         MENU_URL_BY_API.put(Constant.API_ADMIN_AUTHS_PREFIX, "/sadari/adm/admin/authAdmin");
-        MENU_URL_BY_API.put(Constant.API_AUTH_GROUP_PREFIX, "/sadari/adm/admin/auth");
+        MENU_URL_BY_API.put(Constant.API_SCHEDULE_LOGS_PREFIX, "/sadari/adm/scheduleLog/list");
+        MENU_URL_BY_API.put(Constant.API_AUTH_GROUP_PREFIX, "/sadari/adm/admin/auth/list");
         MENU_URL_BY_API.put(Constant.API_USER_MENUS_PREFIX, "/sadari/adm/userMenu/list");
         MENU_URL_BY_API.put(Constant.API_CODE_MANAGE_PREFIX, "/sadari/adm/code/list");
         MENU_URL_BY_API.put(Constant.API_ALIM_TEMP_PREFIX, "/sadari/adm/alimTemp/list");
