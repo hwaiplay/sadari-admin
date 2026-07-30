@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
 import { getAdminAuthManage, updateAdminAuths } from '../../api/adminAuthManageApi'
-import { useMenuPermission } from '../../contexts/MenuPermissionContext'
+import { useMenuPermission } from '../../contexts/useMenuPermission'
 import type { AdminAuth, AdminAuthGroup } from '../../types/adminAuth'
 import type { PageData } from '../../types/common'
 import { Pagination } from '../../components/Pagination'
@@ -27,7 +27,7 @@ export function AdminAuthManagePage({ onError }: AdminAuthManagePageProps) {
         setAuthGroups(result.authGroups.filter((group) => group.useeYsno === 'Y'))
       })
       .catch((error: unknown) => onError(error instanceof Error ? error.message : '관리자 권한 정보를 불러오지 못했습니다.'))
-  }, [])
+  }, [onError])
 
   /** 관리자 권한 목록 페이지 조회 */
   const loadListPage = async (pageNumber: number) => {

@@ -10,7 +10,7 @@ import type { Code } from '../../types/code'
 import type { Menu } from '../../types/menu'
 import { AuditInfoTable } from '../../components/AuditInfoTable'
 import { formatDate, getUseeYsnoCodeName } from '../../utils/code'
-import { useMenuPermission } from '../../contexts/MenuPermissionContext'
+import { useMenuPermission } from '../../contexts/useMenuPermission'
 import { Pagination } from '../../components/Pagination'
 import type { PageData } from '../../types/common'
 
@@ -89,7 +89,7 @@ export function AuthGroupManagePage({ currentPath, onMovePath, onError }: AuthGr
       }
     }
     void load()
-  }, [currentPath])
+  }, [currentPath, detailCode, isList, isNew, onError])
 
   /** 권한그룹 목록 페이지 조회 */
   const loadListPage = async (pageNumber: number) => {

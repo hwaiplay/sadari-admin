@@ -10,6 +10,7 @@ package org.sadari.admin.sadariadmin.common.constant;
  * -----------------------------------------------------------
  * 2026-07-09        SeungHyeon.Kang    최초 생성
  * 2026-07-28        SeungHyeon.Kang    스케줄러 코드 공통코드 상수 추가
+ * 2026-07-30        SeungHyeon.Kang    팝업 콘텐츠 관리 상수 추가
  */
 public final class Constant {
 
@@ -33,6 +34,9 @@ public final class Constant {
 
     /** 알림 상황 공통코드 */
     public static final String ALIM_SITU = "ALIM_SITU";
+
+    /** 팝업 사용 화면 구분 공통코드 */
+    public static final String POPU_SITU = "POPU_SITU";
 
     /** 스케줄러 구분 공통코드 */
     public static final String SCHD_CODE = "SCHD_CODE";
@@ -79,6 +83,9 @@ public final class Constant {
     /** 알림 템플릿 관리 API URL 패턴 */
     public static final String API_ALIM_TEMP_PATTERN = "/api/alim-temps/**";
 
+    /** 팝업 콘텐츠 관리 API URL 패턴 */
+    public static final String API_POPUP_CONTENT_PATTERN = "/api/popup-contents/**";
+
     /** 권한그룹 관리 API URL 패턴 */
     public static final String API_AUTH_GROUP_PATTERN = "/api/auth-groups/**";
 
@@ -105,6 +112,9 @@ public final class Constant {
 
     /** 알림 템플릿 관리 API URL 접두어 */
     public static final String API_ALIM_TEMP_PREFIX = "/api/alim-temps";
+
+    /** 팝업 콘텐츠 관리 API URL 접두어 */
+    public static final String API_POPUP_CONTENT_PREFIX = "/api/popup-contents";
 
     /** 권한그룹 관리 API URL 접두어 */
     public static final String API_AUTH_GROUP_PREFIX = "/api/auth-groups";

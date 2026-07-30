@@ -1,0 +1,172 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "https://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="org.sadari.admin.sadariadmin.popup.mapper.PopupContentMapper">
+    <!-- 팝업 사용 화면 구분 코드명 조회에 사용하는 공통코드를 바인딩한다 -->
+    <sql id="popupCodeBindings">
+        <bind name="popupSituCode" value="@org.sadari.admin.sadariadmin.common.constant.Constant@POPU_SITU"/>
+        <bind name="yes" value="@org.sadari.admin.sadariadmin.common.constant.Constant@YES"/>
+    </sql>
+
+    <!-- 팝업 콘텐츠와 등록 및 수정 관리자명을 함께 조회하는 공통 컬럼 목록이다 -->
+    <sql id="popupContentColumns">
+          C.POPU_SITU
+        , D.COMD_NAME AS POPU_SITU_NAME
+        , C.POPU_CODE
+        , C.MNGM_TITL
+        , C.CONT_FIRS
+        , C.CONT_SECO
+        , C.CONT_THIR
+        , C.CONT_FOUR
+        , C.REGI_ADMN
+        , NVL(RA.ADMN_NAME, C.REGI_ADMN) AS REGI_ADMN_NAME
+        , C.REGI_DATE
+        , C.UPDT_ADMN
+        , NVL(UA.ADMN_NAME, C.UPDT_ADMN) AS UPDT_ADMN_NAME
+        , C.UPDT_DATE
+    </sql>
+
+    <!-- 페이징 인라인 뷰에서 외부로 전달하는 팝업 콘텐츠 컬럼 목록이다 -->
+    <sql id="popupContentPageColumns">
+          P.POPU_SITU
+        , P.POPU_SITU_NAME
+        , P.POPU_CODE
+        , P.MNGM_TITL
+        , P.CONT_FIRS
+        , P.CONT_SECO
+        , P.CONT_THIR
+        , P.CONT_FOUR
+        , P.REGI_ADMN
+        , P.REGI_ADMN_NAME
+        , P.REGI_DATE
+        , P.UPDT_ADMN
+        , P.UPDT_ADMN_NAME
+        , P.UPDT_DATE
+    </sql>
+
+    <!-- 팝업 콘텐츠 목록을 화면 구분과 팝업 코드 순서로 조회한다 -->
+    <select id="getPopupContentList" resultType="org.sadari.admin.sadariadmin.popup.vo.PopupContentVO">
+        <include refid="popupCodeBindings"/>
+        SELECT /* getPopupContentList */
+               <include refid="popupContentPageColumns"/>
+          FROM (  SELECT R.POPU_SITU
+                       , R.POPU_SITU_NAME
+                       , R.POPU_CODE
+                       , R.MNGM_TITL
+                       , R.CONT_FIRS
+                       , R.CONT_SECO
+                       , R.CONT_THIR
+                       , R.CONT_FOUR
+                       , R.REGI_ADMN
+                       , R.REGI_ADMN_NAME
+                       , R.REGI_DATE
+                       , R.UPDT_ADMN
+                       , R.UPDT_ADMN_NAME
+                       , R.UPDT_DATE
+                       , ROWNUM AS ROW_NUMB
+                    FROM (  SELECT <include refid="popupContentColumns"/>
+                              FROM CT_POPUPX C
+                         LEFT JOIN TB_CODEXD D
+                                ON D.COMM_CODE = #{popupSituCode}
+                               AND D.COMD_CODE = C.POPU_SITU
+                         LEFT JOIN TM_ADMINX RA
+                                ON TO_CHAR(RA.ADMN_NUMB) = C.REGI_ADMN
+                         LEFT JOIN TM_ADMINX UA
+                                ON TO_CHAR(UA.ADMN_NUMB) = C.UPDT_ADMN
+                          ORDER BY C.POPU_SITU
+                                 , C.POPU_CODE
+                         ) R
+                   WHERE ROWNUM <![CDATA[<=]]> #{endRow}
+               ) P
+         WHERE P.ROW_NUMB <![CDATA[>=]]> #{startRow}
+    </select>
+
+    <!-- 전체 팝업 콘텐츠 건수를 조회한다 -->
+    <select id="getPopupContentListCnt" resultType="int">
+        SELECT /* getPopupContentListCnt */
+               COUNT(1)
+          FROM CT_POPUPX
+    </select>
+
+    <!-- 화면 구분과 팝업 코드로 팝업 콘텐츠 상세를 조회한다 -->
+    <select id="getPopupContentDtl" resultType="org.sadari.admin.sadariadmin.popup.vo.PopupContentVO">
+        <include refid="popupCodeBindings"/>
+        SELECT /* getPopupContentDtl */
+               <include refid="popupContentColumns"/>
+          FROM CT_POPUPX C
+     LEFT JOIN TB_CODEXD D
+            ON D.COMM_CODE = #{popupSituCode}
+           AND D.COMD_CODE = C.POPU_SITU
+     LEFT JOIN TM_ADMINX RA
+            ON TO_CHAR(RA.ADMN_NUMB) = C.REGI_ADMN
+     LEFT JOIN TM_ADMINX UA
+            ON TO_CHAR(UA.ADMN_NUMB) = C.UPDT_ADMN
+         WHERE C.POPU_SITU = #{popuSitu}
+           AND C.POPU_CODE = #{popuCode}
+    </select>
+
+    <!-- 같은 복합키를 사용하는 팝업 콘텐츠 건수를 조회한다 -->
+    <select id="getPopupContentCnt" resultType="int">
+        SELECT /* getPopupContentCnt */
+               COUNT(1)
+          FROM CT_POPUPX
+         WHERE POPU_SITU = #{popuSitu}
+           AND POPU_CODE = #{popuCode}
+    </select>
+
+    <!-- 화면 구분 코드가 사용 가능한 공통코드인지 확인한다 -->
+    <select id="getPopupSituCnt" resultType="int">
+        <include refid="popupCodeBindings"/>
+        SELECT /* getPopupSituCnt */
+               COUNT(1)
+          FROM TB_CODEXD
+         WHERE COMM_CODE = #{popupSituCode}
+           AND COMD_CODE = #{popuSitu}
+           AND NVL(USEE_YSNO, #{yes}) = #{yes}
+    </select>
+
+    <!-- 신규 팝업 콘텐츠와 등록 및 수정 이력을 함께 등록한다 -->
+    <insert id="setPopupContent">
+        /* setPopupContent */
+        INSERT INTO CT_POPUPX (
+                    POPU_SITU
+                  , POPU_CODE
+                  , MNGM_TITL
+                  , CONT_FIRS
+                  , CONT_SECO
+                  , CONT_THIR
+                  , CONT_FOUR
+                  , REGI_ADMN
+                  , REGI_DATE
+                  , UPDT_ADMN
+                  , UPDT_DATE
+        ) VALUES (  #{popuSitu}
+                  , #{popuCode}
+                  , #{mngmTitl}
+                  , #{contFirs}
+                  , #{contSeco,jdbcType=VARCHAR}
+                  , #{contThir,jdbcType=VARCHAR}
+                  , #{contFour,jdbcType=VARCHAR}
+                  , #{regiAdmn}
+                  , SYSDATE
+                  , #{updtAdmn}
+                  , SYSDATE
+        )
+    </insert>
+
+    <!-- 기존 복합키를 유지하면서 팝업 제목과 콘텐츠 영역을 수정한다 -->
+    <update id="uptPopupContent">
+        UPDATE /* uptPopupContent */
+               CT_POPUPX
+           SET MNGM_TITL = #{mngmTitl}
+             , CONT_FIRS = #{contFirs}
+             , CONT_SECO = #{contSeco,jdbcType=VARCHAR}
+             , CONT_THIR = #{contThir,jdbcType=VARCHAR}
+             , CONT_FOUR = #{contFour,jdbcType=VARCHAR}
+             , UPDT_ADMN = #{updtAdmn}
+             , UPDT_DATE = SYSDATE
+         WHERE POPU_SITU = #{popuSitu}
+           AND POPU_CODE = #{popuCode}
+    </update>
+</mapper>

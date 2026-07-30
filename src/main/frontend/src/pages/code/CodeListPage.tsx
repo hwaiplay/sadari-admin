@@ -1,6 +1,6 @@
 import type { Code, CodeMaster } from '../../types/code'
 import { formatDate, getUseeYsnoCodeName } from '../../utils/code'
-import { useMenuPermission } from '../../contexts/MenuPermissionContext'
+import { useMenuPermission } from '../../contexts/useMenuPermission'
 import { Pagination } from '../../components/Pagination'
 import type { PageData } from '../../types/common'
 

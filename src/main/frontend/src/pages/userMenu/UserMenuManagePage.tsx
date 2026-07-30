@@ -14,7 +14,7 @@ import type {Code} from '../../types/code'
 import type {UserMenu, UserMenuForm} from '../../types/userMenu'
 import {formatDate, getUseeYsnoCodeName} from '../../utils/code'
 import {AuditInfoTable} from '../../components/AuditInfoTable'
-import {useMenuPermission} from '../../contexts/MenuPermissionContext'
+import {useMenuPermission} from '../../contexts/useMenuPermission'
 import {Pagination} from '../../components/Pagination'
 import type {PageData} from '../../types/common'
 
@@ -98,7 +98,7 @@ export function UserMenuManagePage({currentPath, onMovePath, onError}: UserMenuM
             }
         }
         void load()
-    }, [currentPath])
+    }, [currentPath, detailKey, isList, isNew, onError])
 
     /** 사용자 메뉴 목록 페이지 조회 */
     const loadListPage = async (pageNumber: number) => {

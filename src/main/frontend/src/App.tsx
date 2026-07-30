@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react'
+import { useEffect, useEffectEvent, useMemo, useState } from 'react'
 import type { FormEvent } from 'react'
 import { getAdminSession, loginAdmin, logoutAdmin } from './api/adminApi'
 import { checkAlimTempDuplicate, getAlimTempDetail, getAlimTempList, saveAlimTempApi } from './api/alimTempApi'
@@ -6,7 +6,7 @@ import { checkMasterDuplicate, createCodeMaster, createDetailCode, getCodeList, 
 import { deleteMenuApi, getMenuDetail, getMenuMngList, getSidebarMenus, getSubMenus, saveMenuApi } from './api/menuApi'
 import './App.css'
 import { DEFAULT_USEE_YSNO, ALIM_SITU, COMM_YSNO } from './constants/codes'
-import { ADMIN_AUTH_MANAGE_PATH, ALIM_TEMP_DETAIL_PREFIX, ALIM_TEMP_LIST_PATH, ALIM_TEMP_NEW_PATH, AUTH_GROUP_DETAIL_PREFIX, AUTH_GROUP_LIST_PATH, AUTH_GROUP_NEW_PATH, CODE_DETAIL_PREFIX, CODE_LIST_PATH, HOME_PATH, LOGIN_PATH, MENU_DETAIL_PREFIX, MENU_LIST_PATH, MENU_NEW_PATH, SCHEDULE_LOG_DETAIL_PREFIX, SCHEDULE_LOG_LIST_PATH, USER_MENU_DETAIL_PREFIX, USER_MENU_LIST_PATH, USER_MENU_NEW_PATH } from './constants/routes'
+import { ADMIN_AUTH_MANAGE_PATH, ALIM_TEMP_DETAIL_PREFIX, ALIM_TEMP_LIST_PATH, ALIM_TEMP_NEW_PATH, AUTH_GROUP_DETAIL_PREFIX, AUTH_GROUP_LIST_PATH, AUTH_GROUP_NEW_PATH, CODE_DETAIL_PREFIX, CODE_LIST_PATH, HOME_PATH, LOGIN_PATH, MENU_DETAIL_PREFIX, MENU_LIST_PATH, MENU_NEW_PATH, POPUP_CONTENT_DETAIL_PREFIX, POPUP_CONTENT_LIST_PATH, POPUP_CONTENT_NEW_PATH, SCHEDULE_LOG_DETAIL_PREFIX, SCHEDULE_LOG_LIST_PATH, USER_MENU_DETAIL_PREFIX, USER_MENU_LIST_PATH, USER_MENU_NEW_PATH } from './constants/routes'
 import { AdminLayout } from './components/AdminLayout'
 import { LoginPage } from './pages/LoginPage'
 import { AlimTempDetailPage } from './pages/alim/AlimTempDetailPage'
@@ -21,6 +21,7 @@ import { AuthGroupManagePage } from './pages/authGroup/AuthGroupManagePage'
 import { AdminAuthManagePage } from './pages/adminAuth/AdminAuthManagePage'
 import { ScheduleLogListPage } from './pages/scheduleLog/ScheduleLogListPage'
 import { ScheduleLogDetailPage } from './pages/scheduleLog/ScheduleLogDetailPage'
+import { PopupContentManagePage } from './pages/popup/PopupContentManagePage'
 import type { AdminSession } from './types/admin'
 import type { AlimTemp, AlimTempForm } from './types/alim'
 import type { Code, CodeMaster, DetailCodeForm, DetailCodePayload } from './types/code'
@@ -112,12 +113,16 @@ function App() {
   const isAdminAuthManagePage = currentPath === ADMIN_AUTH_MANAGE_PATH
   const isScheduleLogListPage = currentPath === SCHEDULE_LOG_LIST_PATH
   const isScheduleLogDetailPage = scheduleLogDetailKey !== null
+  const isPopupContentPage = currentPath === POPUP_CONTENT_LIST_PATH
+    || currentPath === POPUP_CONTENT_NEW_PATH
+    || currentPath.startsWith(`${POPUP_CONTENT_DETAIL_PREFIX}/`)
 
   const activeMenuPath = useMemo(() => {
     if (currentPath === MENU_NEW_PATH || currentPath.startsWith(`${MENU_NEW_PATH}/`) || currentPath.startsWith(MENU_DETAIL_PREFIX)) return MENU_LIST_PATH
     if (currentPath === USER_MENU_NEW_PATH || currentPath.startsWith(USER_MENU_DETAIL_PREFIX)) return USER_MENU_LIST_PATH
     if (currentPath.startsWith(CODE_DETAIL_PREFIX)) return CODE_LIST_PATH
     if (currentPath === ALIM_TEMP_NEW_PATH || currentPath.startsWith(ALIM_TEMP_DETAIL_PREFIX)) return ALIM_TEMP_LIST_PATH
+    if (currentPath === POPUP_CONTENT_NEW_PATH || currentPath.startsWith(POPUP_CONTENT_DETAIL_PREFIX)) return POPUP_CONTENT_LIST_PATH
     if (currentPath === AUTH_GROUP_NEW_PATH || currentPath.startsWith(AUTH_GROUP_DETAIL_PREFIX)) return AUTH_GROUP_LIST_PATH
     if (currentPath.startsWith(SCHEDULE_LOG_DETAIL_PREFIX)) return SCHEDULE_LOG_LIST_PATH
     return currentPath
@@ -195,6 +200,7 @@ function App() {
   }, [])
 
   useEffect(() => {
+    const initialPath = window.location.pathname
     getAdminSession()
       .then(async (session) => {
         setAdmin(session)
@@ -203,7 +209,7 @@ function App() {
           return
         }
         await loadSidebarMenuList()
-        movePath(currentPath.startsWith('/sadari/adm') && currentPath !== LOGIN_PATH ? currentPath : HOME_PATH)
+        movePath(initialPath.startsWith('/sadari/adm') && initialPath !== LOGIN_PATH ? initialPath : HOME_PATH)
       })
       .catch((err: unknown) => {
         setError(err instanceof Error ? err.message : '세션 확인 중 오류가 발생했습니다.')
@@ -211,18 +217,6 @@ function App() {
       })
       .finally(() => setCheckingSession(false))
   }, [])
-
-  useEffect(() => {
-    if (!admin) return
-    if (isMenuListPage) void openMenuListPage()
-    else if (isMenuNewPage) void openMenuNewPage(parentMenuNumb)
-    else if (detailKey) void openMenuDetailPage(detailKey.menuNumb, detailKey.subxNumb)
-    else if (isCodeListPage) void openCodeListPage()
-    else if (isCodeDetailPage) void openCodeDetailPage(codeDetailKey)
-    else if (isAlimTempListPage) void openAlimTempListPage()
-    else if (isAlimTempNewPage) void openAlimTempNewPage()
-    else if (alimTempDetailKey) void openAlimTempDetailPage(alimTempDetailKey.alimSitu, alimTempDetailKey.tempCode)
-  }, [admin, currentPath])
 
   /**
    * 메뉴관리 목록 화면 열기
@@ -340,6 +334,28 @@ function App() {
     setAlimTempDetail(detail)
     setAlimTempForm({ alimSitu: detail.alimSitu, tempCode: detail.tempCode, tempTitl: detail.tempTitl, alimTitl: detail.alimTitl ?? '', tempCont: detail.tempCont, linkUrlx: detail.linkUrlx, useeYsno: detail.useeYsno ?? DEFAULT_USEE_YSNO })
   }
+
+  /**
+   * 현재 경로에 해당하는 기존 관리자 관리 화면 데이터를 조회한다
+   * @Author SeungHyeon.Kang
+   * @return
+   */
+  const loadCurrentAdminPage = useEffectEvent(() => {
+    if (isMenuListPage) void openMenuListPage()
+    else if (isMenuNewPage) void openMenuNewPage(parentMenuNumb)
+    else if (detailKey) void openMenuDetailPage(detailKey.menuNumb, detailKey.subxNumb)
+    else if (isCodeListPage) void openCodeListPage()
+    else if (isCodeDetailPage) void openCodeDetailPage(codeDetailKey)
+    else if (isAlimTempListPage) void openAlimTempListPage()
+    else if (isAlimTempNewPage) void openAlimTempNewPage()
+    else if (alimTempDetailKey) void openAlimTempDetailPage(alimTempDetailKey.alimSitu, alimTempDetailKey.tempCode)
+  })
+
+  useEffect(() => {
+    if (!admin) return
+    const loadTimer = window.setTimeout(loadCurrentAdminPage, 0)
+    return () => window.clearTimeout(loadTimer)
+  }, [admin, currentPath])
 
   /**
    * 로그인 처리
@@ -896,6 +912,7 @@ function App() {
           onError={setError}
         />
       )}
+      {isPopupContentPage && <PopupContentManagePage currentPath={currentPath} onMovePath={movePath} onError={setError} />}
       {isCodeListPage && <CodeListPage codeMasters={codeMasters} pageData={codePageData} useeYsnoCodes={useeYsnoCodes} onPageChange={(pageNumber) => void openCodeListPage(pageNumber)} onSelect={selectCodeMaster} onOpenRegister={() => setShowMasterForm(true)} />}
       {isCodeDetailPage && (
         <CodeDetailPage

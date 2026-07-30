@@ -3,7 +3,7 @@ import { ALIM_TEMP_LIST_PATH } from '../../constants/routes'
 import type { AlimTemp, AlimTempForm } from '../../types/alim'
 import type { Code } from '../../types/code'
 import { AuditInfoTable } from '../../components/AuditInfoTable'
-import { useMenuPermission } from '../../contexts/MenuPermissionContext'
+import { useMenuPermission } from '../../contexts/useMenuPermission'
 
 type AlimTempDetailPageProps = {
   isNewPage: boolean

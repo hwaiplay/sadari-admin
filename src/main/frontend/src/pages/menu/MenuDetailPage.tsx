@@ -4,7 +4,7 @@ import type { Code } from '../../types/code'
 import type { Menu, MenuForm } from '../../types/menu'
 import { formatDate } from '../../utils/code'
 import { AuditInfoTable } from '../../components/AuditInfoTable'
-import { useMenuPermission } from '../../contexts/MenuPermissionContext'
+import { useMenuPermission } from '../../contexts/useMenuPermission'
 
 type MenuDetailPageProps = {
   isNewPage: boolean

@@ -2,7 +2,7 @@ import { MENU_DETAIL_PREFIX, MENU_NEW_PATH } from '../../constants/routes'
 import type { Code } from '../../types/code'
 import type { Menu } from '../../types/menu'
 import { formatDate, getUseeYsnoCodeName } from '../../utils/code'
-import { useMenuPermission } from '../../contexts/MenuPermissionContext'
+import { useMenuPermission } from '../../contexts/useMenuPermission'
 import { Pagination } from '../../components/Pagination'
 import type { PageData } from '../../types/common'
 

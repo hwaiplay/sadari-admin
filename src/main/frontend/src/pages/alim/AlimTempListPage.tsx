@@ -2,7 +2,7 @@ import { ALIM_TEMP_DETAIL_PREFIX, ALIM_TEMP_NEW_PATH } from '../../constants/rou
 import type { AlimTemp } from '../../types/alim'
 import type { Code } from '../../types/code'
 import { formatDate, getUseeYsnoCodeName } from '../../utils/code'
-import { useMenuPermission } from '../../contexts/MenuPermissionContext'
+import { useMenuPermission } from '../../contexts/useMenuPermission'
 import { Pagination } from '../../components/Pagination'
 import type { PageData } from '../../types/common'
 

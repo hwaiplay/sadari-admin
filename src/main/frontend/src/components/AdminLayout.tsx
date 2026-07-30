@@ -90,7 +90,7 @@ export function AdminLayout({ admin, menus, activePath, error, onMovePath, onLog
         </header>
         <main className="content">
           {error && <div className="error">{error}</div>}
-          <MenuPermissionProvider menuUrlx={activePath}>{children}</MenuPermissionProvider>
+          <MenuPermissionProvider key={activePath} menuUrlx={activePath}>{children}</MenuPermissionProvider>
         </main>
       </div>
     </div>

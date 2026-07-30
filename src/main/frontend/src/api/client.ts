@@ -46,7 +46,7 @@ export const fetchResult = async <T,>(input: RequestInfo | URL, init?: RequestIn
  * @return
  */
 const getResult = async <T,>(response: Response, errorMessage: string): Promise<ApiResult<T>> => {
-  let result: ApiResult<T> | null = null
+  let result: ApiResult<T>
   try {
     result = (await response.json()) as ApiResult<T>
   } catch {

@@ -76,6 +76,18 @@ public enum ResultEnum {
     /** 알림 템플릿 없음 */
     ALIM_TEMP_NOT_FOUND(2004, "alim-temp.not-found"),
 
+    /** 팝업 콘텐츠 중복 */
+    POPUP_CONTENT_DUPLICATE(2009, "popup-content.duplicate"),
+
+    /** 팝업 콘텐츠 없음 */
+    POPUP_CONTENT_NOT_FOUND(2004, "popup-content.not-found"),
+
+    /** 팝업 콘텐츠 형식 오류 */
+    POPUP_CONTENT_INVALID(2009, "popup-content.invalid"),
+
+    /** 팝업 콘텐츠 길이 초과 */
+    POPUP_CONTENT_TOO_LONG(2009, "popup-content.too-long"),
+
     /** 권한그룹 중복 */
     AUTH_GROUP_DUPLICATE(2009, "auth-group.duplicate"),
 

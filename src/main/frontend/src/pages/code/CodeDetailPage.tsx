@@ -3,7 +3,7 @@ import type {Code, CodeMaster, DetailCodeForm} from '../../types/code'
 import {CODE_LIST_PATH} from '../../constants/routes'
 import {formatDate} from '../../utils/code'
 import {AuditInfoTable} from '../../components/AuditInfoTable'
-import {useMenuPermission} from '../../contexts/MenuPermissionContext'
+import {useMenuPermission} from '../../contexts/useMenuPermission'
 
 type CodeDetailPageProps = {
     selectedMaster: CodeMaster | null
