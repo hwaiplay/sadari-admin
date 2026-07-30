@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import type { FormEvent } from 'react'
+import type { FormEvent, MouseEvent } from 'react'
 import {
   createCurrentUserSuspension,
   getCurrentUser,
@@ -29,6 +29,12 @@ type CurrentUserDetailPageProps = {
   adminAuthCode: string
   onMovePath: (path: string) => void
   onError: (message: string | null) => void
+}
+
+// 사용자 서버 반영 대기 상태일 때만 회원 상태 뒤에 붙일 안내 문구를 정의한다.
+const USER_STATUS_SYNC_SUFFIX: Record<string, string> = {
+  // " (반영 대기)"
+  PENDING: ' (반영 대기)',
 }
 
 const emptyPage = <T,>(): PageData<T> => ({
@@ -79,6 +85,7 @@ export function CurrentUserDetailPage({
   const [releaseContent, setReleaseContent] = useState('')
   const [savingSuspension, setSavingSuspension] = useState(false)
   const [refreshingUserStatusSync, setRefreshingUserStatusSync] = useState(false)
+  const [selectedSuspensionMemo, setSelectedSuspensionMemo] = useState<CurrentUserSuspension | null>(null)
   const [loading, setLoading] = useState(true)
 
   // 사용자 번호가 변경되면 상세와 두 이력의 첫 페이지를 함께 조회한다.
@@ -278,6 +285,37 @@ export function CurrentUserDetailPage({
   }
 
   /**
+   * 선택한 이용 정지 이력의 정지 메모와 해제 메모 팝업을 연다.
+   *
+   * @author SeungHyeon.Kang
+   * @param event 팝업 보기 버튼 클릭 이벤트
+   * @return 반환값이 없다
+   */
+  const handleSuspensionMemoOpen = (event: MouseEvent<HTMLButtonElement>): void => {
+    const suspensionNumber = Number(event.currentTarget.dataset.suspensionNumber)
+    const selectedHistory = suspensionHistories.items.find((history) => history.spndNumb === suspensionNumber)
+
+    // 현재 조회 중인 이력에서 선택한 항목을 찾은 경우에만 팝업을 연다.
+    if (!selectedHistory) {
+      return
+    }
+
+    // 관리자가 선택한 정지 이력의 메모를 팝업에 표시한다.
+    setSelectedSuspensionMemo(selectedHistory)
+  }
+
+  /**
+   * 이용 정지 이력 메모 팝업을 닫는다.
+   *
+   * @author SeungHyeon.Kang
+   * @return 반환값이 없다
+   */
+  const handleSuspensionMemoClose = (): void => {
+    // 선택한 이력을 초기화하여 메모 팝업을 닫는다.
+    setSelectedSuspensionMemo(null)
+  }
+
+  /**
    * 로그인 이력 행을 표시한다.
    *
    * @author SeungHyeon.Kang
@@ -330,8 +368,18 @@ export function CurrentUserDetailPage({
       <td className="col-date-time">{history.endxDate ? formatDate(history.endxDate) : '무기한'}</td>
       <td className="col-date-time">{formatDate(history.rlesDate) || '-'}</td>
       <td>{history.regiAdmnName ?? history.regiAdmn}</td>
-      <td className="current-user-note-cell" title={history.spndCntn ?? ''}>{history.spndCntn ?? '-'}</td>
-      <td className="current-user-note-cell" title={history.rlesCntn ?? ''}>{history.rlesCntn ?? '-'}</td>
+      <td className="current-user-suspension-memo-action">
+        <button
+          type="button"
+          className="subtle-button current-user-suspension-memo-button"
+          data-suspension-number={history.spndNumb}
+          aria-haspopup="dialog"
+          onClick={handleSuspensionMemoOpen}
+        >
+          {/* "팝업 보기" */}
+          팝업 보기
+        </button>
+      </td>
     </tr>
   )
 
@@ -354,16 +402,18 @@ export function CurrentUserDetailPage({
     )
   }
 
+  const userStatusName = currentUser.userStatName ?? currentUser.userStat
+  const userStatusSyncSuffix = USER_STATUS_SYNC_SUFFIX[currentUser.userStatusSyncStat] ?? ''
+  const userStatusWithSyncName = `${userStatusName}${userStatusSyncSuffix}`
   const hasSuspensionHistory = suspensionHistories.items.length > 0
   const isUserStatusSyncPending = currentUser.userStatusSyncStat === 'PENDING'
 
   // 현재 사용자 기본정보와 활동 요약, 두 종류의 이력을 표시한다.
   return (
     <section className="current-user-page">
-      {/* 상세 화면 제목과 현재 상태 */}
+      {/* 상세 화면 제목 */}
       <section className="content-header">
         <h1>현 사용자 상세</h1>
-        <div className="status">{currentUser.userStatName ?? currentUser.userStat}</div>
       </section>
 
       {/* 사용자 계정과 프로필 기본정보 */}
@@ -383,7 +433,7 @@ export function CurrentUserDetailPage({
                 <th>닉네임</th>
                 <td>{currentUser.userNick}</td>
                 <th>회원 상태</th>
-                <td>{currentUser.userStatName ?? currentUser.userStat}</td>
+                <td>{userStatusWithSyncName}</td>
               </tr>
               <tr>
                 <th>가입 제공자</th>
@@ -440,7 +490,17 @@ export function CurrentUserDetailPage({
                     isUserStatusSyncPending ? 'current-user-sync-pending' : 'current-user-sync-completed'
                   }`}
                 >
-                  {isUserStatusSyncPending ? '사용자 서버 반영 대기' : '사용자 서버 반영 완료'}
+                  {isUserStatusSyncPending ? (
+                    <>
+                      {/* "사용자 서버 반영 대기" */}
+                      사용자 서버 반영 대기
+                    </>
+                  ) : (
+                    <>
+                      {/* "사용자 서버 반영 완료" */}
+                      사용자 서버 반영 완료
+                    </>
+                  )}
                 </span>
                 <button
                   type="button"
@@ -466,7 +526,9 @@ export function CurrentUserDetailPage({
               </span>
             </div>
             <label>
-              관리자 내부 해제 메모
+              {/* "해제 메모" */}
+              해제 메모
+              {/* "사용자에게 공개되지 않는 해제 메모" */}
               <textarea
                 value={releaseContent}
                 maxLength={1000}
@@ -534,15 +596,15 @@ export function CurrentUserDetailPage({
               )}
             </div>
 
-            {/* 관리자에게만 공개되는 구체적인 정지 사유 입력 영역 */}
+            {/* 관리자에게만 공개되는 정지 메모 입력 영역 */}
             <label className="current-user-suspension-note">
-              {/* "정지 사유" */}
-              정지 사유
-              {/* "사용자에게 공개되지 않는 구체적인 정지 사유를 입력해 주세요." */}
+              {/* "정지 메모" */}
+              정지 메모
+              {/* "사용자에게 공개되지 않는 정지 메모를 입력해 주세요." */}
               <textarea
                 value={suspensionForm.spndCntn}
                 maxLength={1000}
-                placeholder="사용자에게 공개되지 않는 구체적인 정지 사유를 입력해 주세요."
+                placeholder="사용자에게 공개되지 않는 정지 메모를 입력해 주세요."
                 onChange={(event) => setSuspensionForm({ ...suspensionForm, spndCntn: event.target.value })}
               />
             </label>
@@ -562,7 +624,7 @@ export function CurrentUserDetailPage({
         <div className="detail-title">
           <div>
             <h2>이용 정지 이력</h2>
-            <p>처리 근거와 해제 메모는 관리자에게만 표시되며 사용자 API에는 제공하지 않습니다.</p>
+            <p>정지 메모와 해제 메모는 관리자에게만 표시되며 사용자 API에는 제공하지 않습니다.</p>
           </div>
           <div className="status">총 {suspensionHistories.totalCount.toLocaleString()}건</div>
         </div>
@@ -578,13 +640,15 @@ export function CurrentUserDetailPage({
                 <th className="col-date-time">종료 예정일</th>
                 <th className="col-date-time">해제·만료일</th>
                 <th>등록자</th>
-                <th>내부 메모</th>
-                <th>해제 메모</th>
+                <th>
+                  {/* "메모" */}
+                  메모
+                </th>
               </tr>
             </thead>
             <tbody>
               {suspensionHistories.items.length === 0 ? (
-                <tr className="empty-row"><td colSpan={10}>이용 정지 이력이 없습니다.</td></tr>
+                <tr className="empty-row"><td colSpan={9}>이용 정지 이력이 없습니다.</td></tr>
               ) : suspensionHistories.items.map(renderSuspensionHistoryRow)}
             </tbody>
           </table>
@@ -595,6 +659,60 @@ export function CurrentUserDetailPage({
           onPageChange={(pageNumber) => void loadSuspensionHistoryPage(pageNumber)}
         />
       </section>
+
+      {selectedSuspensionMemo && (
+        /* 이용 정지 이력의 정지 메모와 해제 메모 팝업 영역 */
+        <section className="modal-backdrop">
+          {/* 메모 팝업 본문 영역 */}
+          <section
+            className="modal-panel current-user-suspension-memo-modal"
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="current-user-suspension-memo-title"
+          >
+            {/* 메모 팝업 제목과 이력 식별 정보 영역 */}
+            <div className="current-user-suspension-memo-header">
+              <div>
+                <h2 id="current-user-suspension-memo-title">
+                  {/* "이용 정지 메모" */}
+                  이용 정지 메모
+                </h2>
+                <p>
+                  {selectedSuspensionMemo.spndTypeName ?? selectedSuspensionMemo.spndType}
+                  {' · '}
+                  {selectedSuspensionMemo.spndRsonName ?? selectedSuspensionMemo.spndRson}
+                </p>
+              </div>
+            </div>
+
+            {/* 정지 메모와 해제 메모 내용 영역 */}
+            <div className="current-user-suspension-memo-content">
+              <section>
+                <h3>
+                  {/* "정지 메모" */}
+                  정지 메모
+                </h3>
+                <p>{selectedSuspensionMemo.spndCntn || '-'}</p>
+              </section>
+              <section>
+                <h3>
+                  {/* "해제 메모" */}
+                  해제 메모
+                </h3>
+                <p>{selectedSuspensionMemo.rlesCntn || '-'}</p>
+              </section>
+            </div>
+
+            {/* 메모 팝업 닫기 버튼 영역 */}
+            <div className="form-actions">
+              <button type="button" className="subtle-button" onClick={handleSuspensionMemoClose}>
+                {/* "닫기" */}
+                닫기
+              </button>
+            </div>
+          </section>
+        </section>
+      )}
 
       {/* 서비스 활동 건수 요약 */}
       <section className="detail-panel">

@@ -1484,6 +1484,7 @@ tbody tr:last-child > td {
 .current-user-release-form > div {
   display: flex;
   flex-direction: column;
+  align-self: start;
   gap: 6px;
 }
 
@@ -1497,15 +1498,109 @@ tbody tr:last-child > td {
   font-size: 12px;
 }
 
-.current-user-suspension-table table {
-  min-width: 1540px;
+.current-user-suspension-table {
+  overflow-x: hidden;
 }
 
-.current-user-note-cell {
-  max-width: 220px;
-  overflow: hidden;
-  text-overflow: ellipsis;
+.current-user-suspension-table table {
+  min-width: 0;
+  table-layout: fixed;
+}
+
+.current-user-suspension-table th,
+.current-user-suspension-table td {
+  min-width: 0;
+  padding-right: 7px;
+  padding-left: 7px;
+  overflow-wrap: anywhere;
+}
+
+.current-user-suspension-table .col-history-number,
+.current-user-suspension-table .col-date-time {
+  min-width: 0;
+  white-space: normal;
+}
+
+.current-user-suspension-table th:nth-child(1) {
+  width: 6%;
+}
+
+.current-user-suspension-table th:nth-child(2) {
+  width: 9%;
+}
+
+.current-user-suspension-table th:nth-child(3) {
+  width: 12%;
+}
+
+.current-user-suspension-table th:nth-child(4) {
+  width: 9%;
+}
+
+.current-user-suspension-table th:nth-child(5),
+.current-user-suspension-table th:nth-child(6),
+.current-user-suspension-table th:nth-child(7) {
+  width: 14%;
+}
+
+.current-user-suspension-table th:nth-child(8) {
+  width: 10%;
+}
+
+.current-user-suspension-table th:nth-child(9) {
+  width: 12%;
+}
+
+.current-user-suspension-memo-action {
+  text-align: center;
+}
+
+.current-user-suspension-memo-button {
+  min-width: 0;
+  height: 30px;
+  padding: 0 9px;
+  font-size: 12px;
   white-space: nowrap;
+}
+
+.current-user-suspension-memo-modal {
+  width: min(100%, 620px);
+}
+
+.current-user-suspension-memo-header p {
+  margin: 5px 0 0;
+  color: var(--muted);
+  font-size: 13px;
+}
+
+.current-user-suspension-memo-content {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.current-user-suspension-memo-content section {
+  min-height: 150px;
+  padding: 16px;
+  border: 1px solid var(--border);
+  border-radius: 7px;
+  background: var(--table-head);
+  box-sizing: border-box;
+}
+
+.current-user-suspension-memo-content h3 {
+  margin: 0 0 10px;
+  color: var(--text-h);
+  font-size: 14px;
+}
+
+.current-user-suspension-memo-content p {
+  margin: 0;
+  color: var(--text);
+  font-size: 14px;
+  line-height: 1.65;
+  overflow-wrap: anywhere;
+  white-space: pre-wrap;
 }
 
 @media (max-width: 1280px) {
@@ -1536,7 +1631,8 @@ tbody tr:last-child > td {
   }
 
   .current-user-suspension-fields,
-  .current-user-release-form {
+  .current-user-release-form,
+  .current-user-suspension-memo-content {
     grid-template-columns: 1fr;
   }
 
