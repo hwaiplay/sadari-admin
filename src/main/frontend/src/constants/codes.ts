@@ -1,4 +1,8 @@
 export const ALIM_SITU = 'ALIM_SITU'
 export const POPU_SITU = 'POPU_SITU'
 export const COMM_YSNO = 'COMM_YSNO'
+export const USER_STAT = 'USER_STAT'
+export const USER_PROV = 'USER_PROV'
+export const SPND_TYPE = 'SPND_TYPE'
+export const SPND_RSON = 'SPND_RSON'
 export const DEFAULT_USEE_YSNO = 'Y'

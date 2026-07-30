@@ -11,6 +11,11 @@ package org.sadari.admin.sadariadmin.common.constant;
  * 2026-07-09        SeungHyeon.Kang    최초 생성
  * 2026-07-28        SeungHyeon.Kang    스케줄러 코드 공통코드 상수 추가
  * 2026-07-30        SeungHyeon.Kang    팝업 콘텐츠 관리 상수 추가
+ * 2026-07-30        SeungHyeon.Kang    현재 사용자 조회 관리 상수 추가
+ * 2026-07-30        SeungHyeon.Kang    회원 이용 정지 관리 상수 추가
+ * 2026-07-30        SeungHyeon.Kang    회원 상태 변경 Outbox 이벤트 상수 추가
+ * 2026-07-30        SeungHyeon.Kang    사용자 서버 상태 반영 결과 상수 추가
+ * 2026-07-30        SeungHyeon.Kang    로그인 제공자 공통코드 상수 추가
  */
 public final class Constant {
 
@@ -40,6 +45,63 @@ public final class Constant {
 
     /** 스케줄러 구분 공통코드 */
     public static final String SCHD_CODE = "SCHD_CODE";
+
+    /** 회원 상태 공통코드 */
+    public static final String USER_STAT = "USER_STAT";
+
+    /** 로그인 제공자 공통코드 */
+    public static final String USER_PROV = "USER_PROV";
+
+    /** 회원 탈퇴 유형 공통코드 */
+    public static final String WTHD_TYPE = "WTHD_TYPE";
+
+    /** 회원 탈퇴 사유 공통코드 */
+    public static final String WTHD_RSON = "WTHD_RSON";
+
+    /** 회원 탈퇴 처리 상태 공통코드 */
+    public static final String WTHD_STAT = "WTHD_STAT";
+
+    /** 회원 정지 유형 공통코드 */
+    public static final String SPND_TYPE = "SPND_TYPE";
+
+    /** 회원 정지 사유 공통코드 */
+    public static final String SPND_RSON = "SPND_RSON";
+
+    /** 회원 정지 처리 상태 공통코드 */
+    public static final String SPND_STAT = "SPND_STAT";
+
+    /** 정지 회원 상태 */
+    public static final String USER_STAT_SUSPENDED = "SUSPENDED";
+
+    /** 영구 삭제 대기 회원 상태 */
+    public static final String USER_STAT_DELETE_PENDING = "DELETE_PENDING";
+
+    /** 회원 상태 변경 Outbox 이벤트 유형 */
+    public static final String EVENT_TYPE_USER_STATUS_CHANGED = "USER_STATUS_CHANGED";
+
+    /** 사용자 서버 회원 상태 반영 대기 */
+    public static final String USER_STATUS_SYNC_PENDING = "PENDING";
+
+    /** 사용자 서버 회원 상태 반영 완료 */
+    public static final String USER_STATUS_SYNC_COMPLETED = "COMPLETED";
+
+    /** 기간 정지 유형 */
+    public static final String SPND_TYPE_PERIOD = "PERIOD";
+
+    /** 무기한 정지 유형 */
+    public static final String SPND_TYPE_INDEFINITE = "INDEFINITE";
+
+    /** 적용 중 정지 상태 */
+    public static final String SPND_STAT_ACTIVE = "ACTIVE";
+
+    /** 관리자 해제 정지 상태 */
+    public static final String SPND_STAT_RELEASED = "RELEASED";
+
+    /** 기간 만료 정지 상태 */
+    public static final String SPND_STAT_EXPIRED = "EXPIRED";
+
+    /** 최고 관리자 권한 코드 */
+    public static final String AUTH_CODE_SUPER = "SUPER";
 
     /** 상위 메뉴 SUBX NUMB 값 */
     public static final String TOP_MENU_SUBX_NUMB = "0";
@@ -124,6 +186,12 @@ public final class Constant {
 
     /** 스케줄러 로그 API 경로 */
     public static final String API_SCHEDULE_LOGS_PREFIX = "/api/schedule-logs";
+
+    /** 현재 사용자 관리 API URL 접두어 */
+    public static final String API_CURRENT_USERS_PREFIX = "/api/current-users";
+
+    /** 현재 사용자 관리 API URL 패턴 */
+    public static final String API_CURRENT_USERS_PATTERN = "/api/current-users/**";
 
     /**
      * 공통 상수 생성 방지

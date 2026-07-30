@@ -12,6 +12,8 @@ import org.sadari.admin.sadariadmin.common.util.MessageUtil;
  * DATE              AUTHOR             NOTE
  * -----------------------------------------------------------
  * 2026-07-08        SeungHyeon.Kang    최초 생성
+ * 2026-07-30        SeungHyeon.Kang    현재 사용자 조회 오류 추가
+ * 2026-07-30        SeungHyeon.Kang    회원 이용 정지 관리 오류 추가
  */
 @Getter
 public enum ResultEnum {
@@ -87,6 +89,18 @@ public enum ResultEnum {
 
     /** 팝업 콘텐츠 길이 초과 */
     POPUP_CONTENT_TOO_LONG(2009, "popup-content.too-long"),
+
+    /** 현재 사용자 없음 */
+    CURRENT_USER_NOT_FOUND(2004, "current-user.not-found"),
+
+    /** 적용 중인 회원 정지 중복 */
+    USER_SUSPENSION_DUPLICATE(2009, "user-suspension.duplicate"),
+
+    /** 회원 정지 이력 없음 */
+    USER_SUSPENSION_NOT_FOUND(2004, "user-suspension.not-found"),
+
+    /** 무기한 정지 권한 없음 */
+    USER_SUSPENSION_INDEFINITE_FORBIDDEN(1004, "user-suspension.indefinite-forbidden"),
 
     /** 권한그룹 중복 */
     AUTH_GROUP_DUPLICATE(2009, "auth-group.duplicate"),

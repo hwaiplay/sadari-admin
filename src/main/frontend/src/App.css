@@ -1297,3 +1297,250 @@ tbody tr:last-child > td {
   background: #f8fafc;
   cursor: default;
 }
+
+.current-user-search {
+  display: grid;
+  grid-template-columns: minmax(220px, 1.4fr) repeat(3, minmax(150px, 0.8fr)) repeat(2, minmax(154px, 0.8fr)) auto;
+  align-items: end;
+  gap: 14px;
+  margin-bottom: 18px;
+  padding: 18px;
+  border: 1px solid var(--border);
+  border-radius: 7px;
+  background: #fff;
+}
+
+.current-user-search-actions {
+  display: flex;
+  gap: 8px;
+}
+
+.current-user-list-table table {
+  min-width: 1120px;
+}
+
+.current-user-list-table tbody tr {
+  cursor: pointer;
+}
+
+.current-user-row:hover td,
+.current-user-row:focus-visible td {
+  background: #eff6ff;
+}
+
+.current-user-row:focus-visible {
+  outline: none;
+}
+
+.current-user-page .col-user-number,
+.current-user-page .col-history-number {
+  width: 92px;
+  min-width: 92px;
+  text-align: center;
+}
+
+.current-user-page .col-date-time {
+  width: 168px;
+  min-width: 168px;
+  white-space: nowrap;
+}
+
+.current-user-page .col-count {
+  width: 82px;
+  min-width: 82px;
+  text-align: right;
+}
+
+.current-user-info-table table {
+  min-width: 1040px;
+}
+
+.current-user-info-table th {
+  width: 126px;
+}
+
+.current-user-activity-grid {
+  display: grid;
+  grid-template-columns: repeat(7, minmax(110px, 1fr));
+  gap: 10px;
+}
+
+.current-user-activity-grid > div {
+  display: flex;
+  min-height: 84px;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
+  border: 1px solid var(--border);
+  border-radius: 7px;
+  background: var(--table-head);
+}
+
+.current-user-activity-grid span {
+  color: var(--muted);
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.current-user-activity-grid strong {
+  color: var(--text-h);
+  font-size: 22px;
+}
+
+.current-user-history-table table {
+  min-width: 1100px;
+}
+
+.current-user-history-table .user-agent-cell {
+  max-width: 440px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.current-user-suspended-status {
+  color: #b42318;
+  background: #fff1f0;
+}
+
+.current-user-suspension-status-group {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 8px;
+}
+
+.current-user-sync-pending {
+  color: #9a6700;
+  background: #fff8c5;
+}
+
+.current-user-sync-completed {
+  color: #18794e;
+  background: #e9f7ef;
+}
+
+.current-user-sync-refresh {
+  min-height: 30px;
+  padding: 5px 10px;
+  font-size: 12px;
+}
+
+.current-user-suspension-form {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  padding: 18px;
+  border: 1px solid var(--border);
+  border-radius: 7px;
+  background: var(--table-head);
+}
+
+.current-user-suspension-fields {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  align-items: end;
+  gap: 14px;
+}
+
+.current-user-suspension-form label,
+.current-user-release-form label {
+  display: flex;
+  flex-direction: column;
+  gap: 7px;
+  color: var(--muted);
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.current-user-suspension-form textarea,
+.current-user-release-form textarea {
+  min-height: 96px;
+  resize: vertical;
+}
+
+.current-user-suspension-note {
+  width: 100%;
+}
+
+.current-user-suspension-actions {
+  display: flex;
+  justify-content: flex-end;
+}
+
+.current-user-release-form {
+  display: grid;
+  grid-template-columns: minmax(220px, 0.7fr) minmax(360px, 1.4fr) auto;
+  align-items: end;
+  gap: 14px;
+  padding: 16px;
+  border: 1px solid #f0c7c3;
+  border-radius: 7px;
+  background: #fff8f7;
+}
+
+.current-user-release-form > div {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.current-user-release-form > div strong {
+  color: var(--text-h);
+  font-size: 15px;
+}
+
+.current-user-release-form > div span {
+  color: var(--muted);
+  font-size: 12px;
+}
+
+.current-user-suspension-table table {
+  min-width: 1540px;
+}
+
+.current-user-note-cell {
+  max-width: 220px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+@media (max-width: 1280px) {
+  .current-user-search {
+    grid-template-columns: repeat(3, minmax(180px, 1fr));
+  }
+
+  .current-user-search-actions {
+    justify-content: flex-end;
+  }
+
+  .current-user-activity-grid {
+    grid-template-columns: repeat(4, minmax(110px, 1fr));
+  }
+
+  .current-user-release-form {
+    grid-template-columns: 1fr 1.5fr auto;
+  }
+}
+
+@media (max-width: 760px) {
+  .current-user-search {
+    grid-template-columns: 1fr;
+  }
+
+  .current-user-activity-grid {
+    grid-template-columns: repeat(2, minmax(110px, 1fr));
+  }
+
+  .current-user-suspension-fields,
+  .current-user-release-form {
+    grid-template-columns: 1fr;
+  }
+
+  .current-user-suspension-form {
+    padding: 14px;
+  }
+}

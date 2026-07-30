@@ -6,7 +6,7 @@ import { checkMasterDuplicate, createCodeMaster, createDetailCode, getCodeList, 
 import { deleteMenuApi, getMenuDetail, getMenuMngList, getSidebarMenus, getSubMenus, saveMenuApi } from './api/menuApi'
 import './App.css'
 import { DEFAULT_USEE_YSNO, ALIM_SITU, COMM_YSNO } from './constants/codes'
-import { ADMIN_AUTH_MANAGE_PATH, ALIM_TEMP_DETAIL_PREFIX, ALIM_TEMP_LIST_PATH, ALIM_TEMP_NEW_PATH, AUTH_GROUP_DETAIL_PREFIX, AUTH_GROUP_LIST_PATH, AUTH_GROUP_NEW_PATH, CODE_DETAIL_PREFIX, CODE_LIST_PATH, HOME_PATH, LOGIN_PATH, MENU_DETAIL_PREFIX, MENU_LIST_PATH, MENU_NEW_PATH, POPUP_CONTENT_DETAIL_PREFIX, POPUP_CONTENT_LIST_PATH, POPUP_CONTENT_NEW_PATH, SCHEDULE_LOG_DETAIL_PREFIX, SCHEDULE_LOG_LIST_PATH, USER_MENU_DETAIL_PREFIX, USER_MENU_LIST_PATH, USER_MENU_NEW_PATH } from './constants/routes'
+import { ADMIN_AUTH_MANAGE_PATH, ALIM_TEMP_DETAIL_PREFIX, ALIM_TEMP_LIST_PATH, ALIM_TEMP_NEW_PATH, AUTH_GROUP_DETAIL_PREFIX, AUTH_GROUP_LIST_PATH, AUTH_GROUP_NEW_PATH, CODE_DETAIL_PREFIX, CODE_LIST_PATH, CURRENT_USER_DETAIL_PREFIX, CURRENT_USER_LIST_PATH, HOME_PATH, LOGIN_PATH, MENU_DETAIL_PREFIX, MENU_LIST_PATH, MENU_NEW_PATH, POPUP_CONTENT_DETAIL_PREFIX, POPUP_CONTENT_LIST_PATH, POPUP_CONTENT_NEW_PATH, SCHEDULE_LOG_DETAIL_PREFIX, SCHEDULE_LOG_LIST_PATH, USER_MENU_DETAIL_PREFIX, USER_MENU_LIST_PATH, USER_MENU_NEW_PATH } from './constants/routes'
 import { AdminLayout } from './components/AdminLayout'
 import { LoginPage } from './pages/LoginPage'
 import { AlimTempDetailPage } from './pages/alim/AlimTempDetailPage'
@@ -22,6 +22,8 @@ import { AdminAuthManagePage } from './pages/adminAuth/AdminAuthManagePage'
 import { ScheduleLogListPage } from './pages/scheduleLog/ScheduleLogListPage'
 import { ScheduleLogDetailPage } from './pages/scheduleLog/ScheduleLogDetailPage'
 import { PopupContentManagePage } from './pages/popup/PopupContentManagePage'
+import { CurrentUserListPage } from './pages/currentUser/CurrentUserListPage'
+import { CurrentUserDetailPage } from './pages/currentUser/CurrentUserDetailPage'
 import type { AdminSession } from './types/admin'
 import type { AlimTemp, AlimTempForm } from './types/alim'
 import type { Code, CodeMaster, DetailCodeForm, DetailCodePayload } from './types/code'
@@ -100,6 +102,12 @@ function App() {
     return Number.isInteger(runxNumb) && runxNumb > 0 ? runxNumb : null
   }, [currentPath])
 
+  const currentUserDetailKey = useMemo(() => {
+    if (!currentPath.startsWith(`${CURRENT_USER_DETAIL_PREFIX}/`)) return null
+    const userNumb = Number(currentPath.slice(CURRENT_USER_DETAIL_PREFIX.length + 1))
+    return Number.isInteger(userNumb) && userNumb > 0 ? userNumb : null
+  }, [currentPath])
+
   const isMenuListPage = currentPath === MENU_LIST_PATH
   const isMenuNewPage = currentPath === MENU_NEW_PATH || currentPath.startsWith(`${MENU_NEW_PATH}/`)
   const isMenuDetailPage = detailKey !== null
@@ -113,6 +121,8 @@ function App() {
   const isAdminAuthManagePage = currentPath === ADMIN_AUTH_MANAGE_PATH
   const isScheduleLogListPage = currentPath === SCHEDULE_LOG_LIST_PATH
   const isScheduleLogDetailPage = scheduleLogDetailKey !== null
+  const isCurrentUserListPage = currentPath === CURRENT_USER_LIST_PATH
+  const isCurrentUserDetailPage = currentUserDetailKey !== null
   const isPopupContentPage = currentPath === POPUP_CONTENT_LIST_PATH
     || currentPath === POPUP_CONTENT_NEW_PATH
     || currentPath.startsWith(`${POPUP_CONTENT_DETAIL_PREFIX}/`)
@@ -125,6 +135,7 @@ function App() {
     if (currentPath === POPUP_CONTENT_NEW_PATH || currentPath.startsWith(POPUP_CONTENT_DETAIL_PREFIX)) return POPUP_CONTENT_LIST_PATH
     if (currentPath === AUTH_GROUP_NEW_PATH || currentPath.startsWith(AUTH_GROUP_DETAIL_PREFIX)) return AUTH_GROUP_LIST_PATH
     if (currentPath.startsWith(SCHEDULE_LOG_DETAIL_PREFIX)) return SCHEDULE_LOG_LIST_PATH
+    if (currentPath.startsWith(CURRENT_USER_DETAIL_PREFIX)) return CURRENT_USER_LIST_PATH
     return currentPath
   }, [currentPath])
 
@@ -908,6 +919,15 @@ function App() {
         <ScheduleLogDetailPage
           runxNumb={scheduleLogDetailKey}
           pageTitle={`${activeMenuName || '스케줄러 로그 확인'} 상세`}
+          onMovePath={movePath}
+          onError={setError}
+        />
+      )}
+      {isCurrentUserListPage && <CurrentUserListPage onMovePath={movePath} onError={setError} />}
+      {isCurrentUserDetailPage && (
+        <CurrentUserDetailPage
+          userNumb={currentUserDetailKey}
+          adminAuthCode={admin?.authCode ?? ''}
           onMovePath={movePath}
           onError={setError}
         />

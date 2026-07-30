@@ -25,6 +25,7 @@ import java.nio.charset.StandardCharsets;
  * DATE              AUTHOR             NOTE
  * -----------------------------------------------------------
  * 2026-07-08        SeungHyeon.Kang    최초 생성
+ * 2026-07-30        SeungHyeon.Kang    현재 사용자 관리 API 인증 적용
  */
 @Configuration
 public class SecurityConfig {
@@ -65,7 +66,7 @@ public class SecurityConfig {
                         .requestMatchers(Constant.API_MENUS_PATTERN, Constant.API_USER_MENUS_PATTERN
                                        , Constant.API_CODE_MANAGE_PATTERN, Constant.API_ALIM_TEMP_PATTERN
                                        , Constant.API_POPUP_CONTENT_PATTERN, Constant.API_AUTH_GROUP_PATTERN
-                                       , Constant.API_ADMIN_AUTHS_PATTERN).authenticated()
+                                       , Constant.API_ADMIN_AUTHS_PATTERN, Constant.API_CURRENT_USERS_PATTERN).authenticated()
                         .requestMatchers(Constant.API_EMPLOYEES_PATTERN).authenticated()
                         .anyRequest().permitAll()
                 )

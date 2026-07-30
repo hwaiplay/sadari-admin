@@ -1,0 +1,565 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "https://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="org.sadari.admin.sadariadmin.currentuser.mapper.CurrentUserMapper">
+    <!-- 현재 사용자 목록과 건수에 동일하게 적용할 검색 조건이다 -->
+    <sql id="currentUserSearchConditions">
+        <if test="keyword != null and keyword != ''">
+           AND (
+                   TO_CHAR(U.USER_NUMB) = #{keyword}
+                OR UPPER(U.USER_NICK) LIKE '%' || UPPER(#{keyword}) || '%'
+               )
+        </if>
+        <if test="userStat != null and userStat != ''">
+           AND U.USER_STAT = #{userStat}
+        </if>
+        <if test="userProv != null and userProv != ''">
+           AND U.USER_PROV = #{userProv}
+        </if>
+        <if test="onbdYsno != null and onbdYsno != ''">
+           AND U.ONBD_YSNO = #{onbdYsno}
+        </if>
+        <if test="joinDateFrom != null">
+           AND U.JOIN_DATE <![CDATA[>=]]> #{joinDateFrom}
+        </if>
+        <if test="joinDateTo != null">
+           AND U.JOIN_DATE <![CDATA[<]]> #{joinDateTo} + 1
+        </if>
+    </sql>
+
+    <!-- 현재 사용자 목록의 공통 표시 컬럼이다 -->
+    <sql id="currentUserListColumns">
+          U.USER_NUMB
+        , U.USER_NICK
+        , U.USER_PROV
+        , FN_GET_CODE_NAME(#{userProvCode}, U.USER_PROV, NULL) AS USER_PROV_NAME
+        , U.USER_ROLE
+        , U.USER_STAT
+        , FN_GET_CODE_NAME(#{userStatCode}, U.USER_STAT, #{userStatCode}) AS USER_STAT_NAME
+        , U.ONBD_YSNO
+        , CASE U.ONBD_YSNO WHEN #{yes} THEN '완료' ELSE '미완료' END AS ONBD_YSNO_NAME
+        , U.JOIN_DATE
+        , U.WTHD_DATE
+        , U.DELT_DATE
+        , L.LAST_LOGN_DATE
+        , NVL(R.REPORT_CNTT, 0) AS REPORT_CNTT
+    </sql>
+
+    <!-- 검색 조건에 맞는 현재 사용자를 최근 가입순으로 조회한다 -->
+    <select id="getCurrentUserList" parameterType="org.sadari.admin.sadariadmin.currentuser.vo.CurrentUserSearchVO"
+            resultType="org.sadari.admin.sadariadmin.currentuser.vo.CurrentUserVO">
+        <bind name="userStatCode" value="@org.sadari.admin.sadariadmin.common.constant.Constant@USER_STAT"/>
+        <bind name="userProvCode" value="@org.sadari.admin.sadariadmin.common.constant.Constant@USER_PROV"/>
+        <bind name="yes" value="@org.sadari.admin.sadariadmin.common.constant.Constant@YES"/>
+        SELECT /* getCurrentUserList */
+               P.USER_NUMB
+             , P.USER_NICK
+             , P.USER_PROV
+             , P.USER_PROV_NAME
+             , P.USER_ROLE
+             , P.USER_STAT
+             , P.USER_STAT_NAME
+             , P.ONBD_YSNO
+             , P.ONBD_YSNO_NAME
+             , P.JOIN_DATE
+             , P.WTHD_DATE
+             , P.DELT_DATE
+             , P.LAST_LOGN_DATE
+             , P.REPORT_CNTT
+          FROM (  SELECT R.USER_NUMB
+                       , R.USER_NICK
+                       , R.USER_PROV
+                       , R.USER_PROV_NAME
+                       , R.USER_ROLE
+                       , R.USER_STAT
+                       , R.USER_STAT_NAME
+                       , R.ONBD_YSNO
+                       , R.ONBD_YSNO_NAME
+                       , R.JOIN_DATE
+                       , R.WTHD_DATE
+                       , R.DELT_DATE
+                       , R.LAST_LOGN_DATE
+                       , R.REPORT_CNTT
+                       , ROWNUM AS ROW_NUMB
+                    FROM (  SELECT <include refid="currentUserListColumns"/>
+                              FROM TM_USERXM U
+                         LEFT JOIN (  SELECT H.USER_NUMB
+                                          , MAX(H.LOGN_DATE) AS LAST_LOGN_DATE
+                                       FROM TB_LOGHIS H
+                                      WHERE H.USER_NUMB IS NOT NULL
+                                   GROUP BY H.USER_NUMB
+                                   ) L
+                                ON L.USER_NUMB = U.USER_NUMB
+                         LEFT JOIN (  SELECT T.USER_NUMB
+                                          , COUNT(1) AS REPORT_CNTT
+                                       FROM TM_REPORT T
+                                   GROUP BY T.USER_NUMB
+                                   ) R
+                                ON R.USER_NUMB = U.USER_NUMB
+                             WHERE 1 = 1
+                                   <include refid="currentUserSearchConditions"/>
+                          ORDER BY U.JOIN_DATE DESC
+                                 , U.USER_NUMB DESC
+                         ) R
+                   WHERE ROWNUM <![CDATA[<=]]> #{endRow}
+               ) P
+         WHERE P.ROW_NUMB <![CDATA[>=]]> #{startRow}
+    </select>
+
+    <!-- 검색 조건에 맞는 현재 사용자 전체 건수를 조회한다 -->
+    <select id="getCurrentUserListCount" parameterType="org.sadari.admin.sadariadmin.currentuser.vo.CurrentUserSearchVO"
+            resultType="int">
+        SELECT /* getCurrentUserListCount */
+               COUNT(1)
+          FROM TM_USERXM U
+         WHERE 1 = 1
+               <include refid="currentUserSearchConditions"/>
+    </select>
+
+    <!-- 회원번호로 현재 사용자 기본정보와 활동 집계를 조회한다 -->
+    <select id="getCurrentUserDtl" resultType="org.sadari.admin.sadariadmin.currentuser.vo.CurrentUserVO">
+        <bind name="userStatCode" value="@org.sadari.admin.sadariadmin.common.constant.Constant@USER_STAT"/>
+        <bind name="userProvCode" value="@org.sadari.admin.sadariadmin.common.constant.Constant@USER_PROV"/>
+        <bind name="yes" value="@org.sadari.admin.sadariadmin.common.constant.Constant@YES"/>
+        <bind name="userStatusSyncCompleted" value="@org.sadari.admin.sadariadmin.common.constant.Constant@USER_STATUS_SYNC_COMPLETED"/>
+        SELECT /* getCurrentUserDtl */
+               U.USER_NUMB
+             , U.USER_NICK
+             , U.USER_PROV
+             , FN_GET_CODE_NAME(#{userProvCode}, U.USER_PROV, NULL) AS USER_PROV_NAME
+             , U.USER_ROLE
+             , U.USER_STAT
+             , FN_GET_CODE_NAME(#{userStatCode}, U.USER_STAT, #{userStatCode}) AS USER_STAT_NAME
+             , NVL(E.SYNC_STAT, #{userStatusSyncCompleted}) AS USER_STATUS_SYNC_STAT
+             , U.ONBD_YSNO
+             , CASE U.ONBD_YSNO WHEN #{yes} THEN '완료' ELSE '미완료' END AS ONBD_YSNO_NAME
+             , U.INTR_CNTN
+             , PF.FILE_PATH AS PROF_PATH
+             , BF.FILE_PATH AS BGIM_PATH
+             , U.JOIN_DATE
+             , U.WTHD_DATE
+             , U.DELT_DATE
+             , L.LAST_LOGN_DATE
+             , NVL(R.REPORT_CNTT, 0) AS REPORT_CNTT
+             , NVL(P.REPLY_CNTT, 0) AS REPLY_CNTT
+             , NVL(K.LIKE_CNTT, 0) AS LIKE_CNTT
+             , NVL(F.FOLLOWING_CNTT, 0) AS FOLLOWING_CNTT
+             , NVL(W.FOLLOWER_CNTT, 0) AS FOLLOWER_CNTT
+             , NVL(G.GOAL_CNTT, 0) AS GOAL_CNTT
+             , NVL(S.PUSH_CNTT, 0) AS PUSH_CNTT
+          FROM TM_USERXM U
+     LEFT JOIN TM_FILEXM PF
+            ON PF.FILE_NUMB = U.PROF_NUMB
+     LEFT JOIN TM_FILEXM BF
+            ON BF.FILE_NUMB = U.BGIM_NUMB
+     LEFT JOIN (  SELECT H.USER_NUMB
+                       , MAX(H.LOGN_DATE) AS LAST_LOGN_DATE
+                    FROM TB_LOGHIS H
+                   WHERE H.USER_NUMB = #{userNumb}
+                GROUP BY H.USER_NUMB
+                ) L
+            ON L.USER_NUMB = U.USER_NUMB
+     LEFT JOIN (  SELECT T.USER_NUMB
+                       , COUNT(1) AS REPORT_CNTT
+                    FROM TM_REPORT T
+                   WHERE T.USER_NUMB = #{userNumb}
+                GROUP BY T.USER_NUMB
+                ) R
+            ON R.USER_NUMB = U.USER_NUMB
+     LEFT JOIN (  SELECT P.USER_NUMB
+                       , COUNT(1) AS REPLY_CNTT
+                    FROM TB_REPLXX P
+                   WHERE P.USER_NUMB = #{userNumb}
+                GROUP BY P.USER_NUMB
+                ) P
+            ON P.USER_NUMB = U.USER_NUMB
+     LEFT JOIN (  SELECT K.USER_NUMB
+                       , COUNT(1) AS LIKE_CNTT
+                    FROM TB_LIKEXX K
+                   WHERE K.USER_NUMB = #{userNumb}
+                GROUP BY K.USER_NUMB
+                ) K
+            ON K.USER_NUMB = U.USER_NUMB
+     LEFT JOIN (  SELECT F.USER_NUMB
+                       , COUNT(1) AS FOLLOWING_CNTT
+                    FROM TB_FOLLOW F
+                   WHERE F.USER_NUMB = #{userNumb}
+                GROUP BY F.USER_NUMB
+                ) F
+            ON F.USER_NUMB = U.USER_NUMB
+     LEFT JOIN (  SELECT W.FLOW_NUMB AS USER_NUMB
+                       , COUNT(1) AS FOLLOWER_CNTT
+                    FROM TB_FOLLOW W
+                   WHERE W.FLOW_NUMB = #{userNumb}
+                GROUP BY W.FLOW_NUMB
+                ) W
+            ON W.USER_NUMB = U.USER_NUMB
+     LEFT JOIN (  SELECT G.USER_NUMB
+                       , COUNT(1) AS GOAL_CNTT
+                    FROM TM_GOALXM G
+                   WHERE G.USER_NUMB = #{userNumb}
+                GROUP BY G.USER_NUMB
+                ) G
+            ON G.USER_NUMB = U.USER_NUMB
+     LEFT JOIN (  SELECT S.USER_NUMB
+                       , COUNT(1) AS PUSH_CNTT
+                    FROM TB_PSHSUB S
+                   WHERE S.USER_NUMB = #{userNumb}
+                     AND NVL(S.USEE_YSNO, #{yes}) = #{yes}
+                GROUP BY S.USER_NUMB
+                ) S
+            ON S.USER_NUMB = U.USER_NUMB
+     LEFT JOIN (  SELECT E.USER_NUMB
+                       , MAX(E.SYNC_STAT) KEEP (DENSE_RANK LAST ORDER BY E.SPND_NUMB) AS SYNC_STAT
+                    FROM TH_USSPND E
+                   WHERE E.USER_NUMB = #{userNumb}
+                GROUP BY E.USER_NUMB
+                ) E
+            ON E.USER_NUMB = U.USER_NUMB
+         WHERE U.USER_NUMB = #{userNumb}
+    </select>
+
+    <!-- 회원번호에 해당하는 현재 사용자 존재 여부를 조회한다 -->
+    <select id="getCurrentUserCount" resultType="int">
+        SELECT /* getCurrentUserCount */
+               COUNT(1)
+          FROM TM_USERXM
+         WHERE USER_NUMB = #{userNumb}
+    </select>
+
+    <!-- 현재 사용자의 로그인 이력을 개인정보 마스킹 후 최신순으로 조회한다 -->
+    <select id="getLoginHistoryList" resultType="org.sadari.admin.sadariadmin.currentuser.vo.CurrentUserLoginHistoryVO">
+        <bind name="userProvCode" value="@org.sadari.admin.sadariadmin.common.constant.Constant@USER_PROV"/>
+        SELECT /* getLoginHistoryList */
+               P.LOGN_NUMB
+             , P.LOGN_DATE
+             , P.LOGN_IPXX
+             , P.USER_AGNT
+             , P.PROV_CODE
+             , P.PROV_CODE_NAME
+          FROM (  SELECT R.LOGN_NUMB
+                       , R.LOGN_DATE
+                       , R.LOGN_IPXX
+                       , R.USER_AGNT
+                       , R.PROV_CODE
+                       , R.PROV_CODE_NAME
+                       , ROWNUM AS ROW_NUMB
+                    FROM (  SELECT H.LOGN_NUMB
+                                 , H.LOGN_DATE
+                                 , CASE
+                                       WHEN H.LOGN_IPXX IS NULL THEN NULL
+                                       WHEN INSTR(H.LOGN_IPXX, '.') > 0
+                                           THEN SUBSTR(H.LOGN_IPXX, 1, INSTR(H.LOGN_IPXX, '.', 1, 2)) || '***.***'
+                                       ELSE SUBSTR(H.LOGN_IPXX, 1, 4) || ':****'
+                                   END AS LOGN_IPXX
+                                 , H.USER_AGNT
+                                 , H.PROV_CODE
+                                 , FN_GET_CODE_NAME(
+                                       #{userProvCode}, H.PROV_CODE, NULL
+                                   ) AS PROV_CODE_NAME
+                              FROM TB_LOGHIS H
+                             WHERE H.USER_NUMB = #{userNumb}
+                          ORDER BY H.LOGN_DATE DESC
+                                 , H.LOGN_NUMB DESC
+                         ) R
+                   WHERE ROWNUM <![CDATA[<=]]> #{endRow}
+               ) P
+         WHERE P.ROW_NUMB <![CDATA[>=]]> #{startRow}
+    </select>
+
+    <!-- 현재 사용자의 로그인 이력 전체 건수를 조회한다 -->
+    <select id="getLoginHistoryListCount" resultType="int">
+        SELECT /* getLoginHistoryListCount */
+               COUNT(1)
+          FROM TB_LOGHIS
+         WHERE USER_NUMB = #{userNumb}
+    </select>
+
+    <!-- 현재 사용자의 계정 처리 이력을 코드명과 함께 최신순으로 조회한다 -->
+    <select id="getWithdrawalHistoryList"
+            resultType="org.sadari.admin.sadariadmin.currentuser.vo.CurrentUserWithdrawalHistoryVO">
+        <bind name="wthdType" value="@org.sadari.admin.sadariadmin.common.constant.Constant@WTHD_TYPE"/>
+        <bind name="wthdRson" value="@org.sadari.admin.sadariadmin.common.constant.Constant@WTHD_RSON"/>
+        <bind name="wthdStat" value="@org.sadari.admin.sadariadmin.common.constant.Constant@WTHD_STAT"/>
+        SELECT /* getWithdrawalHistoryList */
+               P.WTHD_NUMB
+             , P.WTHD_TYPE
+             , P.WTHD_TYPE_NAME
+             , P.WTHD_RSON
+             , P.WTHD_RSON_NAME
+             , P.WTHD_STAT
+             , P.WTHD_STAT_NAME
+             , P.REQU_DATE
+             , P.DELT_DATE
+             , P.PROC_DATE
+             , P.RCOV_DATE
+          FROM (  SELECT R.WTHD_NUMB
+                       , R.WTHD_TYPE
+                       , R.WTHD_TYPE_NAME
+                       , R.WTHD_RSON
+                       , R.WTHD_RSON_NAME
+                       , R.WTHD_STAT
+                       , R.WTHD_STAT_NAME
+                       , R.REQU_DATE
+                       , R.DELT_DATE
+                       , R.PROC_DATE
+                       , R.RCOV_DATE
+                       , ROWNUM AS ROW_NUMB
+                    FROM (  SELECT W.WTHD_NUMB
+                                 , W.WTHD_TYPE
+                                 , FN_GET_CODE_NAME(#{wthdType}, W.WTHD_TYPE, #{wthdType}) AS WTHD_TYPE_NAME
+                                 , W.WTHD_RSON
+                                 , FN_GET_CODE_NAME(#{wthdRson}, W.WTHD_RSON, #{wthdRson}) AS WTHD_RSON_NAME
+                                 , W.WTHD_STAT
+                                 , FN_GET_CODE_NAME(#{wthdStat}, W.WTHD_STAT, #{wthdStat}) AS WTHD_STAT_NAME
+                                 , W.REQU_DATE
+                                 , W.DELT_DATE
+                                 , W.PROC_DATE
+                                 , W.RCOV_DATE
+                              FROM TH_USWTHD W
+                             WHERE W.USER_NUMB = #{userNumb}
+                          ORDER BY W.REQU_DATE DESC
+                                 , W.WTHD_NUMB DESC
+                         ) R
+                   WHERE ROWNUM <![CDATA[<=]]> #{endRow}
+               ) P
+         WHERE P.ROW_NUMB <![CDATA[>=]]> #{startRow}
+    </select>
+
+    <!-- 현재 사용자의 계정 처리 이력 전체 건수를 조회한다 -->
+    <select id="getWithdrawalHistoryListCount" resultType="int">
+        SELECT /* getWithdrawalHistoryListCount */
+               COUNT(1)
+          FROM TH_USWTHD
+         WHERE USER_NUMB = #{userNumb}
+    </select>
+
+    <!-- 동시 정지 등록과 해제를 직렬화하기 위해 회원 행을 잠그고 상태를 조회한다 -->
+    <select id="getCurrentUserStatusForUpdate" resultType="string">
+        SELECT /* getCurrentUserStatusForUpdate */
+               USER_STAT
+          FROM TM_USERXM
+         WHERE USER_NUMB = #{userNumb}
+           FOR UPDATE
+    </select>
+
+    <!-- 회원의 적용 중 정지 이력을 잠금 조회한다 -->
+    <select id="getActiveSuspensionForUpdate"
+            resultType="org.sadari.admin.sadariadmin.currentuser.vo.CurrentUserSuspensionVO">
+        SELECT /* getActiveSuspensionForUpdate */
+               SPND_NUMB
+             , USER_NUMB
+             , PREV_STAT
+             , SPND_TYPE
+             , SPND_RSON
+             , SPND_CNTN
+             , SPND_STAT
+             , SYNC_STAT
+             , STRT_DATE
+             , ENDX_DATE
+             , RLES_DATE
+             , RLES_CNTN
+             , REGI_ADMN
+             , RLES_ADMN
+             , REGI_DATE
+             , UPDT_ADMN
+             , UPDT_DATE
+          FROM TH_USSPND
+         WHERE USER_NUMB = #{userNumb}
+           AND SPND_STAT = 'ACTIVE'
+           FOR UPDATE
+    </select>
+
+    <!-- 회원 이용 정지 이력을 등록한다 -->
+    <insert id="setUserSuspension"
+            parameterType="org.sadari.admin.sadariadmin.currentuser.vo.CurrentUserSuspensionVO">
+        <selectKey keyProperty="spndNumb" resultType="long" order="BEFORE">
+            SELECT TH_USSPND_SEQ.NEXTVAL
+              FROM DUAL
+        </selectKey>
+        INSERT /* setUserSuspension */
+          INTO TH_USSPND (
+               SPND_NUMB
+             , USER_NUMB
+             , PREV_STAT
+             , SPND_TYPE
+             , SPND_RSON
+             , SPND_CNTN
+             , SPND_STAT
+             , SYNC_STAT
+             , STRT_DATE
+             , ENDX_DATE
+             , REGI_ADMN
+             , REGI_DATE
+             , UPDT_ADMN
+             , UPDT_DATE
+        ) VALUES (
+               #{spndNumb}
+             , #{userNumb}
+             , #{prevStat}
+             , #{spndType}
+             , #{spndRson}
+             , #{spndCntn,jdbcType=VARCHAR}
+             , #{spndStat}
+             , #{syncStat}
+             , #{strtDate}
+             , #{endxDate,jdbcType=TIMESTAMP}
+             , #{regiAdmn}
+             , SYSDATE
+             , #{updtAdmn}
+             , SYSDATE
+        )
+    </insert>
+
+    <!-- 적용 중 정지 이력을 관리자 해제로 변경한다 -->
+    <update id="uptUserSuspensionReleased"
+            parameterType="org.sadari.admin.sadariadmin.currentuser.vo.CurrentUserSuspensionVO">
+        UPDATE /* uptUserSuspensionReleased */
+               TH_USSPND
+           SET SPND_STAT = 'RELEASED'
+             , RLES_DATE = SYSDATE
+             , RLES_CNTN = #{rlesCntn,jdbcType=VARCHAR}
+             , RLES_ADMN = #{rlesAdmn}
+             , UPDT_ADMN = #{updtAdmn}
+             , UPDT_DATE = SYSDATE
+         WHERE SPND_NUMB = #{spndNumb}
+           AND USER_NUMB = #{userNumb}
+           AND SPND_STAT = 'ACTIVE'
+    </update>
+
+    <!-- 종료 시각이 지난 기간 정지 이력을 만료로 변경한다 -->
+    <update id="uptUserSuspensionExpired"
+            parameterType="org.sadari.admin.sadariadmin.currentuser.vo.CurrentUserSuspensionVO">
+        UPDATE /* uptUserSuspensionExpired */
+               TH_USSPND
+           SET SPND_STAT = 'EXPIRED'
+             , RLES_DATE = SYSDATE
+             , UPDT_ADMN = #{updtAdmn,jdbcType=NUMERIC}
+             , UPDT_DATE = SYSDATE
+         WHERE SPND_NUMB = #{spndNumb}
+           AND SPND_STAT = 'ACTIVE'
+           AND SPND_TYPE = 'PERIOD'
+           AND ENDX_DATE <![CDATA[<=]]> SYSDATE
+    </update>
+
+    <!-- 정상 또는 비활성화 회원에게 관리자 정지 상태를 적용한다 -->
+    <update id="uptCurrentUserSuspended">
+        UPDATE /* uptCurrentUserSuspended */
+               TM_USERXM
+           SET USER_STAT = 'SUSPENDED'
+         WHERE USER_NUMB = #{userNumb}
+           AND USER_STAT IN ('ACTIVE', 'WITHDRAWN')
+    </update>
+
+    <!-- 현재 정지 상태인 회원만 정지 직전 상태로 복구한다 -->
+    <update id="uptCurrentUserStatusAfterSuspension">
+        UPDATE /* uptCurrentUserStatusAfterSuspension */
+               TM_USERXM
+           SET USER_STAT = #{userStat}
+         WHERE USER_NUMB = #{userNumb}
+           AND USER_STAT = 'SUSPENDED'
+    </update>
+
+    <!-- 회원 상태가 변경된 정지 이력을 사용자 서버 반영 대기 상태로 변경한다 -->
+    <update id="uptUserSuspensionSyncPending">
+        <bind name="userStatusSyncPending" value="@org.sadari.admin.sadariadmin.common.constant.Constant@USER_STATUS_SYNC_PENDING"/>
+        UPDATE /* uptUserSuspensionSyncPending */
+               TH_USSPND
+           SET SYNC_STAT = #{userStatusSyncPending}
+         WHERE SPND_NUMB = #{spndNumb}
+    </update>
+
+    <!-- 사용자 서버가 현재 회원 상태를 다시 반영하도록 Outbox 이벤트를 등록한다 -->
+    <insert id="setCurrentUserStatusEvent"
+            parameterType="org.sadari.admin.sadariadmin.currentuser.vo.CurrentUserStatusEventVO">
+        <selectKey keyProperty="evntNumb" resultType="long" order="BEFORE">
+            SELECT TB_EVTBOX_SEQ.NEXTVAL
+              FROM DUAL
+        </selectKey>
+        /* setCurrentUserStatusEvent */
+        INSERT INTO TB_EVTBOX (
+                    EVNT_NUMB
+                  , EVNT_TYPE
+                  , USER_NUMB
+                  , SPND_NUMB
+                  , REGI_DATE
+        ) VALUES (  #{evntNumb}
+                  , #{evntType}
+                  , #{userNumb}
+                  , #{spndNumb}
+                  , SYSDATE
+        )
+    </insert>
+
+    <!-- 관리자 처리 메모를 포함한 회원 정지 이력을 최신순으로 조회한다 -->
+    <select id="getSuspensionHistoryList"
+            resultType="org.sadari.admin.sadariadmin.currentuser.vo.CurrentUserSuspensionVO">
+        <bind name="spndType" value="@org.sadari.admin.sadariadmin.common.constant.Constant@SPND_TYPE"/>
+        <bind name="spndRson" value="@org.sadari.admin.sadariadmin.common.constant.Constant@SPND_RSON"/>
+        <bind name="spndStat" value="@org.sadari.admin.sadariadmin.common.constant.Constant@SPND_STAT"/>
+        SELECT /* getSuspensionHistoryList */
+               P.SPND_NUMB
+             , P.USER_NUMB
+             , P.PREV_STAT
+             , P.SPND_TYPE
+             , P.SPND_TYPE_NAME
+             , P.SPND_RSON
+             , P.SPND_RSON_NAME
+             , P.SPND_CNTN
+             , P.SPND_STAT
+             , P.SPND_STAT_NAME
+             , P.SYNC_STAT
+             , P.STRT_DATE
+             , P.ENDX_DATE
+             , P.RLES_DATE
+             , P.RLES_CNTN
+             , P.REGI_ADMN
+             , P.REGI_ADMN_NAME
+             , P.RLES_ADMN
+             , P.RLES_ADMN_NAME
+             , P.REGI_DATE
+             , P.UPDT_ADMN
+             , P.UPDT_DATE
+          FROM (  SELECT R.*
+                       , ROWNUM AS ROW_NUMB
+                    FROM (  SELECT S.SPND_NUMB
+                                 , S.USER_NUMB
+                                 , S.PREV_STAT
+                                 , S.SPND_TYPE
+                                 , FN_GET_CODE_NAME(#{spndType}, S.SPND_TYPE, #{spndType}) AS SPND_TYPE_NAME
+                                 , S.SPND_RSON
+                                 , FN_GET_CODE_NAME(#{spndRson}, S.SPND_RSON, #{spndRson}) AS SPND_RSON_NAME
+                                 , S.SPND_CNTN
+                                 , S.SPND_STAT
+                                 , FN_GET_CODE_NAME(#{spndStat}, S.SPND_STAT, #{spndStat}) AS SPND_STAT_NAME
+                                 , S.SYNC_STAT
+                                 , S.STRT_DATE
+                                 , S.ENDX_DATE
+                                 , S.RLES_DATE
+                                 , S.RLES_CNTN
+                                 , S.REGI_ADMN
+                                 , FN_GET_ADMIN_NAME(S.REGI_ADMN) AS REGI_ADMN_NAME
+                                 , S.RLES_ADMN
+                                 , FN_GET_ADMIN_NAME(S.RLES_ADMN) AS RLES_ADMN_NAME
+                                 , S.REGI_DATE
+                                 , S.UPDT_ADMN
+                                 , S.UPDT_DATE
+                              FROM TH_USSPND S
+                             WHERE S.USER_NUMB = #{userNumb}
+                          ORDER BY S.STRT_DATE DESC
+                                 , S.SPND_NUMB DESC
+                         ) R
+                   WHERE ROWNUM <![CDATA[<=]]> #{endRow}
+               ) P
+         WHERE P.ROW_NUMB <![CDATA[>=]]> #{startRow}
+    </select>
+
+    <!-- 회원 정지 이력 전체 건수를 조회한다 -->
+    <select id="getSuspensionHistoryListCount" resultType="int">
+        SELECT /* getSuspensionHistoryListCount */
+               COUNT(1)
+          FROM TH_USSPND
+         WHERE USER_NUMB = #{userNumb}
+    </select>
+</mapper>
