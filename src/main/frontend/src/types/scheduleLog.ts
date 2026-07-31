@@ -22,3 +22,10 @@ export type ScheduleFail = {
   erroCntn: string | null
   failDate: string
 }
+export type ScheduleLogSearch = {
+  keyword: string
+  schdCode: string
+  execStat: string
+  strtDateFrom: string
+  strtDateTo: string
+}

@@ -25,3 +25,8 @@ export type UserMenuForm = {
   showYsno: string
   useeYsno: string
 }
+export type UserMenuSearch = {
+  keyword: string
+  showYsno: string
+  useeYsno: string
+}

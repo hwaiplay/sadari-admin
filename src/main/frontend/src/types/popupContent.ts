@@ -29,3 +29,7 @@ export type PopupContentKey = {
   popuSitu: string
   popuCode: string
 }
+export type PopupContentSearch = {
+  keyword: string
+  popuSitu: string
+}

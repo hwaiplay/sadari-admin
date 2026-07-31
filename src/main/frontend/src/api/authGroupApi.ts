@@ -1,10 +1,15 @@
 import { fetchJson, fetchResult } from './client'
-import type { AuthGroup } from '../types/authGroup'
+import type { AuthGroup, AuthGroupSearch } from '../types/authGroup'
 import type { PageData } from '../types/common'
+import { createSearchParams } from '../utils/search'
 
 /** 권한그룹 목록 조회 */
-export const getAuthGroups = (pageNumber = 1) =>
-  fetchJson<PageData<AuthGroup>>(`/api/auth-groups?page=${pageNumber}`, undefined, '권한그룹 목록 조회에 실패했습니다.')
+export const getAuthGroups = (pageNumber: number, search: AuthGroupSearch) =>
+  fetchJson<PageData<AuthGroup>>(
+    `/api/auth-groups?${createSearchParams(pageNumber, search).toString()}`,
+    undefined,
+    '권한그룹 목록 조회에 실패했습니다.',
+  )
 
 /** 권한그룹 상세 조회 */
 export const getAuthGroup = (authCode: string) =>

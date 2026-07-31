@@ -28,7 +28,7 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
  * fileName       : CurrentUserServiceTests
  * author         : SeungHyeon.Kang
  * date           : 2026-07-30
- * description    : 실제 Oracle 스키마에서 현재 사용자 목록·상세·이력 조회를 확인한다.
+ * description    : 실제 MySQL 스키마에서 현재 사용자 목록·상세·이력 조회를 확인한다.
  * ===========================================================
  * DATE              AUTHOR             NOTE
  * -----------------------------------------------------------

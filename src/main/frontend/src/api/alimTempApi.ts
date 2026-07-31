@@ -1,13 +1,19 @@
 import { fetchJson, fetchResult } from './client'
-import type { AlimTemp, AlimTempForm } from '../types/alim'
+import type { AlimTemp, AlimTempForm, AlimTempSearch } from '../types/alim'
 import type { PageData } from '../types/common'
+import { createSearchParams } from '../utils/search'
 
 /**
  * 알림 템플릿 목록 조회
  * @Author SeungHyeon.Kang
  * @return
  */
-export const getAlimTempList = (pageNumber = 1) => fetchJson<PageData<AlimTemp>>(`/api/alim-temps?page=${pageNumber}`, undefined, '알림 템플릿 목록 조회에 실패했습니다.')
+export const getAlimTempList = (pageNumber: number, search: AlimTempSearch) =>
+  fetchJson<PageData<AlimTemp>>(
+    `/api/alim-temps?${createSearchParams(pageNumber, search).toString()}`,
+    undefined,
+    '알림 템플릿 목록 조회에 실패했습니다.',
+  )
 
 /**
  * 알림 템플릿 상세 조회

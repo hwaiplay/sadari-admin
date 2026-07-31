@@ -5,16 +5,17 @@ import org.sadari.admin.sadariadmin.common.constant.Constant;
 import org.sadari.admin.sadariadmin.common.result.ResultData;
 import org.sadari.admin.sadariadmin.common.result.ResultEnum;
 import org.sadari.admin.sadariadmin.menu.service.MenuService;
+import org.sadari.admin.sadariadmin.menu.vo.MenuSearchVO;
 import org.sadari.admin.sadariadmin.menu.vo.MenuVO;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 /**
@@ -26,6 +27,7 @@ import org.springframework.web.bind.annotation.RestController;
  * DATE              AUTHOR             NOTE
  * -----------------------------------------------------------
  * 2026-07-08        SeungHyeon.Kang    최초 생성
+ * 2026-07-31        SeungHyeon.Kang    메뉴 목록 검색 조건 추가
  */
 @RestController
 @RequestMapping(Constant.API_MENUS_PREFIX)
@@ -47,8 +49,9 @@ public class MenuController {
     /**
      * 사이드바 메뉴 목록 조회
      * @author SeungHyeon.Kang
-     * @param admin
-     * @return
+     * @param search 메뉴 검색 조건
+     * @param admin 로그인한 관리자
+     * @return 검색된 메뉴 목록
      */
     @GetMapping("/sidebar")
     public ResultData getMenuList(@AuthenticationPrincipal AdminSessionVO admin) {
@@ -62,9 +65,10 @@ public class MenuController {
      * @return
      */
     @GetMapping
-    public ResultData getMenuMngList(@RequestParam(defaultValue = "1") int page
+    public ResultData getMenuMngList(@ModelAttribute MenuSearchVO search
                                    , @AuthenticationPrincipal AdminSessionVO admin) {
-        return ResultData.success(menuService.getMenuMngList(page, admin));
+        // 검색 조건에 맞는 관리자 메뉴 목록을 반환한다
+        return ResultData.success(menuService.getMenuMngList(search, admin));
     }
 
     /**

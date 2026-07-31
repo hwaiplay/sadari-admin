@@ -1315,6 +1315,24 @@ tbody tr:last-child > td {
   gap: 8px;
 }
 
+.list-search {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  align-items: end;
+  gap: 14px;
+  margin-bottom: 18px;
+  padding: 18px;
+  border: 1px solid var(--border);
+  border-radius: 7px;
+  background: #fff;
+}
+
+.list-search-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+}
+
 .current-user-list-table table {
   min-width: 1120px;
 }
@@ -1622,7 +1640,8 @@ tbody tr:last-child > td {
 }
 
 @media (max-width: 760px) {
-  .current-user-search {
+  .current-user-search,
+  .list-search {
     grid-template-columns: 1fr;
   }
 

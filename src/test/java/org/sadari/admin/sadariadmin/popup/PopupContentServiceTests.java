@@ -5,6 +5,7 @@ import org.sadari.admin.sadariadmin.admin.vo.AdminSessionVO;
 import org.sadari.admin.sadariadmin.common.exception.BusinessException;
 import org.sadari.admin.sadariadmin.common.pagination.PageData;
 import org.sadari.admin.sadariadmin.popup.service.PopupContentService;
+import org.sadari.admin.sadariadmin.popup.vo.PopupContentSearchVO;
 import org.sadari.admin.sadariadmin.popup.vo.PopupContentVO;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -19,11 +20,12 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
  * fileName       : PopupContentServiceTests
  * author         : SeungHyeon.Kang
  * date           : 2026-07-30
- * description    : 실제 Oracle 스키마에서 팝업 콘텐츠 조회와 수정 및 JSON 검증을 확인한다
+ * description    : 실제 MySQL 스키마에서 팝업 콘텐츠 조회와 수정 및 JSON 검증을 확인한다
  * ===========================================================
  * DATE              AUTHOR             NOTE
  * -----------------------------------------------------------
  * 2026-07-30        SeungHyeon.Kang    최초 생성
+ * 2026-07-31        SeungHyeon.Kang    목록 검색 조건 반영
  */
 @SpringBootTest
 @ActiveProfiles("loc")
@@ -42,7 +44,9 @@ class PopupContentServiceTests {
     @Test
     void getAndUpdatePopupContent() {
         // 실제 DB의 팝업 콘텐츠 목록 첫 페이지를 조회한다
-        PageData<PopupContentVO> pageData = popupContentService.getPopupContentList(1, createAdminSession());
+        PopupContentSearchVO search = new PopupContentSearchVO();
+        search.setPage(1);
+        PageData<PopupContentVO> pageData = popupContentService.getPopupContentList(search, createAdminSession());
         // 초기 팝업 콘텐츠가 관리자 목록에 한 건 이상 표시되는지 확인한다
         assertFalse(pageData.getItems().isEmpty());
 

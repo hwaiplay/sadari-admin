@@ -2,6 +2,7 @@ package org.sadari.admin.sadariadmin.adminauth.mapper;
 
 import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Param;
+import org.sadari.admin.sadariadmin.adminauth.vo.AdminAuthSearchVO;
 import org.sadari.admin.sadariadmin.adminauth.vo.AdminAuthVO;
 
 import java.util.List;
@@ -15,13 +16,15 @@ import java.util.List;
  * DATE              AUTHOR             NOTE
  * -----------------------------------------------------------
  * 2026-07-27        SeungHyeon.Kang    최초 생성
+ * 2026-07-31        SeungHyeon.Kang    관리자 권한 목록 검색 조건 추가
  */@Mapper
 public interface AdminAuthMapper {
 
     /** 관리자 권한 목록 조회 */
-    List<AdminAuthVO> getAdminAuthList(@Param("startRow") int startRow, @Param("endRow") int endRow);
+    List<AdminAuthVO> getAdminAuthList(AdminAuthSearchVO search);
 
-    int getAdminAuthListCount();
+    /** 검색 조건에 맞는 관리자 전체 건수 조회 */
+    int getAdminAuthListCount(AdminAuthSearchVO search);
 
     /** 관리자 존재 건수 조회 */
     int getAdminCount(@Param("admnNumb") Long admnNumb);

@@ -9,6 +9,23 @@
         <bind name="useeYsnoCode" value="@org.sadari.admin.sadariadmin.common.constant.Constant@USEE_YSNO_CODE"/>
     </sql>
 
+    <!-- 사용자 메뉴 목록과 건수에 동일하게 적용할 검색 조건이다 -->
+    <sql id="userMenuSearchConditions">
+        <if test="keyword != null and keyword != ''">
+            <bind name="keywordLike" value="'%' + keyword.toUpperCase() + '%'"/>
+           AND (
+                   UPPER(M.MENU_NAME) LIKE #{keywordLike}
+                OR UPPER(M.MENU_URLX) LIKE #{keywordLike}
+               )
+        </if>
+        <if test="showYsno != null and showYsno != ''">
+           AND M.SHOW_YSNO = #{showYsno}
+        </if>
+        <if test="useeYsno != null and useeYsno != ''">
+           AND M.USEE_YSNO = #{useeYsno}
+        </if>
+    </sql>
+
     <!-- 사용자 메뉴 공통 조회 컬럼 목록 -->
     <sql id="userMenuColumns">
           MENU_NUMB
@@ -48,7 +65,8 @@
     </sql>
 
     <!-- 사용자 메뉴관리 화면에 표시할 상위 메뉴 목록을 조회한다 -->
-    <select id="getUserMenuList" resultType="org.sadari.admin.sadariadmin.usermenu.vo.UserMenuVO">
+    <select id="getUserMenuList" parameterType="org.sadari.admin.sadariadmin.usermenu.vo.UserMenuSearchVO"
+            resultType="org.sadari.admin.sadariadmin.usermenu.vo.UserMenuVO">
         <bind name="topMenuSubxNumb" value="@org.sadari.admin.sadariadmin.common.constant.Constant@TOP_MENU_SUBX_NUMB"/>
         <include refid="codeNameBindings"/>
         SELECT /* getUserMenuList */
@@ -68,25 +86,31 @@
                        , R.UPDT_ADMN
                        , R.UPDT_ADMN_NAME
                        , R.UPDT_DATE
-                       , ROWNUM AS ROW_NUMB
+                       , ROW_NUMBER() OVER (
+                             ORDER BY COALESCE(R.SORT_ORDR, 9999)
+                                    , CAST(R.MENU_NUMB AS UNSIGNED)
+                         ) AS ROW_NUMB
                     FROM (  SELECT <include refid="userMenuColumns"/>
-                              FROM TM_URMENU
-                             WHERE SUBX_NUMB = #{topMenuSubxNumb}
-                          ORDER BY NVL(SORT_ORDR, 9999)
-                                 , TO_NUMBER(MENU_NUMB)
+                              FROM TM_URMENU M
+                             WHERE M.SUBX_NUMB = #{topMenuSubxNumb}
+                                   <include refid="userMenuSearchConditions"/>
+                          ORDER BY COALESCE(M.SORT_ORDR, 9999)
+                                 , CAST(M.MENU_NUMB AS UNSIGNED)
                          ) R
-                   WHERE ROWNUM <![CDATA[<=]]> #{endRow}
                ) P
-         WHERE P.ROW_NUMB <![CDATA[>=]]> #{startRow}
+         WHERE P.ROW_NUMB BETWEEN #{startRow} AND #{endRow}
+      ORDER BY P.ROW_NUMB
     </select>
 
     <!-- 사용자 상위 메뉴 전체 건수를 조회한다 -->
-    <select id="getUserMenuCount" resultType="int">
+    <select id="getUserMenuCount" parameterType="org.sadari.admin.sadariadmin.usermenu.vo.UserMenuSearchVO"
+            resultType="int">
         <bind name="topMenuSubxNumb" value="@org.sadari.admin.sadariadmin.common.constant.Constant@TOP_MENU_SUBX_NUMB"/>
         SELECT /* getUserMenuCount */
                COUNT(1)
-          FROM TM_URMENU
-         WHERE SUBX_NUMB = #{topMenuSubxNumb}
+          FROM TM_URMENU M
+         WHERE M.SUBX_NUMB = #{topMenuSubxNumb}
+               <include refid="userMenuSearchConditions"/>
     </select>
 
     <!-- 메뉴 번호와 하위 메뉴 번호로 사용자 메뉴 상세를 조회한다 -->
@@ -108,15 +132,15 @@
           FROM TM_URMENU
          WHERE MENU_NUMB = #{menuNumb}
            AND SUBX_NUMB != #{topMenuSubxNumb}
-      ORDER BY NVL(SORT_ORDR, 9999)
-             , TO_NUMBER(SUBX_NUMB)
+      ORDER BY COALESCE(SORT_ORDR, 9999)
+             , CAST(SUBX_NUMB AS UNSIGNED)
     </select>
 
     <!-- 신규 사용자 상위 메뉴 번호를 조회한다 -->
     <select id="getUserMenuNumb" resultType="string">
         <bind name="topMenuSubxNumb" value="@org.sadari.admin.sadariadmin.common.constant.Constant@TOP_MENU_SUBX_NUMB"/>
         SELECT /* getUserMenuNumb */
-               TO_CHAR(NVL(MAX(TO_NUMBER(MENU_NUMB)), 0) + 1)
+               CAST(COALESCE(MAX(CAST(MENU_NUMB AS UNSIGNED)), 0) + 1 AS CHAR)
           FROM TM_URMENU
          WHERE SUBX_NUMB = #{topMenuSubxNumb}
     </select>
@@ -124,7 +148,7 @@
     <!-- 특정 사용자 상위 메뉴 아래의 신규 하위 메뉴 번호를 조회한다 -->
     <select id="getUserSubxNumb" resultType="string">
         SELECT /* getUserSubxNumb */
-               TO_CHAR(NVL(MAX(TO_NUMBER(SUBX_NUMB)), -1) + 1)
+               CAST(COALESCE(MAX(CAST(SUBX_NUMB AS UNSIGNED)), -1) + 1 AS CHAR)
           FROM TM_URMENU
          WHERE MENU_NUMB = #{menuNumb}
     </select>
@@ -152,9 +176,9 @@
                   , #{showYsno}
                   , #{useeYsno}
                   , #{regiAdmn}
-                  , SYSTIMESTAMP
+                  , CURRENT_TIMESTAMP
                   , #{updtAdmn}
-                  , SYSTIMESTAMP
+                  , CURRENT_TIMESTAMP
         )
     </insert>
 
@@ -168,7 +192,7 @@
              , SHOW_YSNO = #{showYsno}
              , USEE_YSNO = #{useeYsno}
              , UPDT_ADMN = #{updtAdmn}
-             , UPDT_DATE = SYSTIMESTAMP
+             , UPDT_DATE = CURRENT_TIMESTAMP
          WHERE MENU_NUMB = #{menuNumb}
            AND SUBX_NUMB = #{subxNumb}
     </update>

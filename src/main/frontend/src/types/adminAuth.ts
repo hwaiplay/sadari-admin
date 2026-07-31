@@ -18,3 +18,8 @@ export type AdminAuthManage = {
   authGroups: AdminAuthGroup[]
 }
 import type { PageData } from './common'
+export type AdminAuthSearch = {
+  keyword: string
+  deptCode: string
+  authCode: string
+}

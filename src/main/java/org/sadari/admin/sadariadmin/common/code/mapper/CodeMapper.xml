@@ -9,8 +9,23 @@
         <bind name="useeYsnoCode" value="@org.sadari.admin.sadariadmin.common.constant.Constant@USEE_YSNO_CODE"/>
     </sql>
 
+    <!-- 공통코드 목록과 건수에 동일하게 적용할 검색 조건이다 -->
+    <sql id="codeMasterSearchConditions">
+        <if test="keyword != null and keyword != ''">
+            <bind name="keywordLike" value="'%' + keyword.toUpperCase() + '%'"/>
+           AND (
+                   UPPER(C.COMM_CODE) LIKE #{keywordLike}
+                OR UPPER(C.CODE_NAME) LIKE #{keywordLike}
+               )
+        </if>
+        <if test="useeYsno != null and useeYsno != ''">
+           AND C.USEE_YSNO = #{useeYsno}
+        </if>
+    </sql>
+
     <!-- 공통코드 목록을 조회한다 -->
-    <select id="getCommCodeList" resultType="org.sadari.admin.sadariadmin.common.code.vo.CodeMasterVO">
+    <select id="getCommCodeList" parameterType="org.sadari.admin.sadariadmin.common.code.vo.CodeMasterSearchVO"
+            resultType="org.sadari.admin.sadariadmin.common.code.vo.CodeMasterVO">
         <include refid="codeNameBindings"/>
         SELECT /* getCommCodeList */
                P.COMM_CODE
@@ -35,7 +50,7 @@
                        , R.UPDT_ADMN
                        , R.UPDT_ADMN_NAME
                        , R.UPDT_DATE
-                       , ROWNUM AS ROW_NUMB
+                       , ROW_NUMBER() OVER (ORDER BY R.COMM_CODE) AS ROW_NUMB
                     FROM (  SELECT C.COMM_CODE
                                  , C.CODE_NAME
                                  , C.CODE_EXPL
@@ -48,18 +63,23 @@
                                  , FN_GET_ADMIN_NAME(C.UPDT_ADMN) AS UPDT_ADMN_NAME
                                  , C.UPDT_DATE
                               FROM TM_CODEXM C
+                             WHERE 1 = 1
+                                   <include refid="codeMasterSearchConditions"/>
                           ORDER BY C.COMM_CODE
                          ) R
-                   WHERE ROWNUM <![CDATA[<=]]> #{endRow}
                ) P
-         WHERE P.ROW_NUMB <![CDATA[>=]]> #{startRow}
+         WHERE P.ROW_NUMB BETWEEN #{startRow} AND #{endRow}
+      ORDER BY P.ROW_NUMB
     </select>
 
     <!-- 공통코드 전체 건수를 조회한다 -->
-    <select id="getCommCodeListCount" resultType="int">
+    <select id="getCommCodeListCount" parameterType="org.sadari.admin.sadariadmin.common.code.vo.CodeMasterSearchVO"
+            resultType="int">
         SELECT /* getCommCodeListCount */
                COUNT(1)
-          FROM TM_CODEXM
+          FROM TM_CODEXM C
+         WHERE 1 = 1
+               <include refid="codeMasterSearchConditions"/>
     </select>
 
     <!-- 공통코드 상세를 조회한다 -->
@@ -106,9 +126,9 @@
                   , #{codeExpl,jdbcType=VARCHAR}
                   , #{useeYsno}
                   , #{regiAdmn}
-                  , SYSDATE
+                  , CURRENT_TIMESTAMP
                   , #{updtAdmn}
-                  , SYSDATE
+                  , CURRENT_TIMESTAMP
         )
     </insert>
 
@@ -120,7 +140,7 @@
              , CODE_EXPL = #{codeExpl,jdbcType=VARCHAR}
              , USEE_YSNO = #{useeYsno}
              , UPDT_ADMN = #{updtAdmn}
-             , UPDT_DATE = SYSDATE
+             , UPDT_DATE = CURRENT_TIMESTAMP
          WHERE COMM_CODE = #{commCode}
     </update>
 
@@ -151,7 +171,7 @@
              , SORT_ORDR
           FROM TB_CODEXD
          WHERE COMM_CODE = #{commCode}
-      ORDER BY NVL(SORT_ORDR, 9999), COMD_CODE
+      ORDER BY COALESCE(SORT_ORDR, 9999), COMD_CODE
     </select>
 
     <!-- 세부코드 상세를 조회한다 -->
@@ -229,9 +249,9 @@
                   , #{opt4Name,jdbcType=VARCHAR}
                   , #{useeYsno}
                   , #{regiAdmn}
-                  , SYSDATE
+                  , CURRENT_TIMESTAMP
                   , #{updtAdmn}
-                  , SYSDATE
+                  , CURRENT_TIMESTAMP
                   , #{sortOrdr,jdbcType=NUMERIC}
         )
     </insert>
@@ -252,7 +272,7 @@
              , OPT4_NAME = #{opt4Name,jdbcType=VARCHAR}
              , USEE_YSNO = #{useeYsno}
              , UPDT_ADMN = #{updtAdmn}
-             , UPDT_DATE = SYSDATE
+             , UPDT_DATE = CURRENT_TIMESTAMP
              , SORT_ORDR = #{sortOrdr,jdbcType=NUMERIC}
          WHERE COMM_CODE = #{commCode}
            AND COMD_CODE = #{comdCode}
@@ -274,7 +294,7 @@
           FROM TB_CODEXD
          WHERE COMM_CODE = #{commCode}
            AND COMD_CODE = #{comdCode}
-           AND NVL(USEE_YSNO, #{yes}) = #{yes}
+           AND COALESCE(USEE_YSNO, #{yes}) = #{yes}
     </select>
 
     <!-- 세부코드만으로 첫 번째 세부코드명을 조회한다 -->
@@ -285,9 +305,9 @@
           FROM (  SELECT D.COMD_NAME
                    FROM TB_CODEXD D
                   WHERE D.COMD_CODE = #{comdCode}
-                    AND NVL(D.USEE_YSNO, #{yes}) = #{yes}
+                    AND COALESCE(D.USEE_YSNO, #{yes}) = #{yes}
                ORDER BY D.COMM_CODE
                ) C
-         WHERE ROWNUM = 1
+         LIMIT 1
     </select>
 </mapper>

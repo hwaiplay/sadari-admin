@@ -5,17 +5,18 @@ import org.sadari.admin.sadariadmin.common.constant.Constant;
 import org.sadari.admin.sadariadmin.common.result.ResultData;
 import org.sadari.admin.sadariadmin.common.result.ResultEnum;
 import org.sadari.admin.sadariadmin.usermenu.service.UserMenuService;
+import org.sadari.admin.sadariadmin.usermenu.vo.UserMenuSearchVO;
 import org.sadari.admin.sadariadmin.usermenu.vo.UserMenuVO;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
-import org.springframework.web.bind.annotation.RequestParam;
 
 /**
  * fileName       : UserMenuController
@@ -26,6 +27,7 @@ import org.springframework.web.bind.annotation.RequestParam;
  * DATE              AUTHOR             NOTE
  * -----------------------------------------------------------
  * 2026-07-27        SeungHyeon.Kang    최초 생성
+ * 2026-07-31        SeungHyeon.Kang    사용자 메뉴 목록 검색 조건 추가
  */
 @RestController
 @RequestMapping(Constant.API_USER_MENUS_PREFIX)
@@ -41,9 +43,10 @@ public class UserMenuController {
 
     /** 사용자 상위 메뉴 목록 조회 */
     @GetMapping
-    public ResultData getUserMenuList(@RequestParam(defaultValue = "1") int page
+    public ResultData getUserMenuList(@ModelAttribute UserMenuSearchVO search
                                     , @AuthenticationPrincipal AdminSessionVO admin) {
-        return ResultData.success(userMenuService.getUserMenuList(page, admin));
+        // 검색 조건에 맞는 사용자 메뉴 목록을 반환한다
+        return ResultData.success(userMenuService.getUserMenuList(search, admin));
     }
 
     /** 사용자 메뉴 상세 조회 */

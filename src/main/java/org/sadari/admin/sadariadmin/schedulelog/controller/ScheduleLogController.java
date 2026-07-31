@@ -4,12 +4,13 @@ import org.sadari.admin.sadariadmin.admin.vo.AdminSessionVO;
 import org.sadari.admin.sadariadmin.common.constant.Constant;
 import org.sadari.admin.sadariadmin.common.result.ResultData;
 import org.sadari.admin.sadariadmin.schedulelog.service.ScheduleLogService;
+import org.sadari.admin.sadariadmin.schedulelog.vo.ScheduleLogSearchVO;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
-import org.springframework.web.bind.annotation.RequestParam;
 
 /**
  * fileName       : ScheduleLogController
@@ -21,6 +22,7 @@ import org.springframework.web.bind.annotation.RequestParam;
  * -----------------------------------------------------------
  * 2026-07-28        SeungHyeon.Kang    최초 생성
  * 2026-07-28        SeungHyeon.Kang    실행 로그 단건 조회 API 추가
+ * 2026-07-31        SeungHyeon.Kang    스케줄러 로그 검색 조건 추가
  */
 @RestController
 @RequestMapping(Constant.API_SCHEDULE_LOGS_PREFIX)
@@ -43,14 +45,15 @@ public class ScheduleLogController {
      * 스케줄러 실행 결과 목록을 조회한다
      *
      * @author SeungHyeon.Kang
+     * @param search 스케줄러 로그 검색 조건
      * @param admin 로그인한 관리자 정보
      * @return 스케줄러 실행 결과 목록 응답
      */
     @GetMapping
-    public ResultData getScheduleLogList(@RequestParam(defaultValue = "1") int page
+    public ResultData getScheduleLogList(@ModelAttribute ScheduleLogSearchVO search
                                        , @AuthenticationPrincipal AdminSessionVO admin) {
-        // 로그인한 관리자가 조회할 수 있는 스케줄러 실행 결과를 반환한다
-        return ResultData.success(scheduleLogService.getScheduleLogList(page, admin));
+        // 로그인한 관리자가 검색 조건으로 조회할 수 있는 스케줄러 실행 결과를 반환한다
+        return ResultData.success(scheduleLogService.getScheduleLogList(search, admin));
     }
 
     /**

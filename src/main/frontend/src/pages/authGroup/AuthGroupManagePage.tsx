@@ -5,7 +5,7 @@ import { getSidebarMenus } from '../../api/menuApi'
 import { getCodeList } from '../../api/codeApi'
 import { COMM_YSNO, DEFAULT_USEE_YSNO } from '../../constants/codes'
 import { AUTH_GROUP_DETAIL_PREFIX, AUTH_GROUP_LIST_PATH, AUTH_GROUP_NEW_PATH } from '../../constants/routes'
-import type { AuthGroup, AuthMenu } from '../../types/authGroup'
+import type { AuthGroup, AuthGroupSearch, AuthMenu } from '../../types/authGroup'
 import type { Code } from '../../types/code'
 import type { Menu } from '../../types/menu'
 import { AuditInfoTable } from '../../components/AuditInfoTable'
@@ -31,6 +31,11 @@ const emptyGroup = (): AuthGroup => ({
   menus: [],
 })
 
+const DEFAULT_SEARCH: AuthGroupSearch = {
+  keyword: '',
+  useeYsno: '',
+}
+
 /** 관리자 메뉴를 권한 입력 행으로 변환 */
 const toAuthMenu = (menu: Menu): AuthMenu => ({
   authCode: '',
@@ -48,6 +53,8 @@ const toAuthMenu = (menu: Menu): AuthMenu => ({
 export function AuthGroupManagePage({ currentPath, onMovePath, onError }: AuthGroupManagePageProps) {
   const permission = useMenuPermission()
   const [groups, setGroups] = useState<AuthGroup[]>([])
+  const [search, setSearch] = useState<AuthGroupSearch>({ ...DEFAULT_SEARCH })
+  const [appliedSearch, setAppliedSearch] = useState<AuthGroupSearch>({ ...DEFAULT_SEARCH })
   const [pageData, setPageData] = useState<PageData<AuthGroup>>({ items: [], totalCount: 0, pageNumber: 1, pageSize: 20, totalPages: 0 })
   const [form, setForm] = useState<AuthGroup>(emptyGroup())
   const [useeCodes, setUseeCodes] = useState<Code[]>([])
@@ -71,7 +78,7 @@ export function AuthGroupManagePage({ currentPath, onMovePath, onError }: AuthGr
         const codes = await getCodeList(COMM_YSNO)
         setUseeCodes(codes)
         if (isList) {
-          const result = await getAuthGroups(1)
+          const result = await getAuthGroups(1, DEFAULT_SEARCH)
           setPageData(result)
           setGroups(result.items)
           return
@@ -91,11 +98,53 @@ export function AuthGroupManagePage({ currentPath, onMovePath, onError }: AuthGr
     void load()
   }, [currentPath, detailCode, isList, isNew, onError])
 
-  /** 권한그룹 목록 페이지 조회 */
-  const loadListPage = async (pageNumber: number) => {
-    const result = await getAuthGroups(pageNumber)
+  /**
+   * 지정한 검색 조건과 페이지로 권한그룹 목록을 조회한다
+   *
+   * @author SeungHyeon.Kang
+   * @param pageNumber 조회할 페이지 번호
+   * @param targetSearch 적용할 권한그룹 검색 조건
+   * @return 반환값이 없다
+   */
+  const loadListPage = async (pageNumber: number, targetSearch: AuthGroupSearch): Promise<void> => {
+    const result = await getAuthGroups(pageNumber, targetSearch)
     setPageData(result)
     setGroups(result.items)
+  }
+
+  /**
+   * 입력한 권한그룹 조건으로 첫 페이지를 검색한다
+   *
+   * @author SeungHyeon.Kang
+   * @param event 권한그룹 검색 폼 제출 이벤트
+   * @return 반환값이 없다
+   */
+  const handleSearch = (event: FormEvent<HTMLFormElement>): void => {
+    // 브라우저 기본 폼 전송을 막는다
+    event.preventDefault()
+    // 페이지 이동에도 유지할 검색 조건 스냅샷을 저장한다
+    const nextSearch = { ...search }
+    // 적용 검색 조건을 갱신한다
+    setAppliedSearch(nextSearch)
+    // 변경된 조건으로 첫 페이지를 조회한다
+    void loadListPage(1, nextSearch)
+  }
+
+  /**
+   * 권한그룹 검색 조건과 결과를 전체 목록으로 초기화한다
+   *
+   * @author SeungHyeon.Kang
+   * @return 반환값이 없다
+   */
+  const handleReset = (): void => {
+    // 검색 입력과 적용 조건을 기본값으로 되돌린다
+    const nextSearch = { ...DEFAULT_SEARCH }
+    // 검색 입력 조건을 초기화한다
+    setSearch(nextSearch)
+    // 적용 검색 조건을 초기화한다
+    setAppliedSearch(nextSearch)
+    // 전체 권한그룹의 첫 페이지를 조회한다
+    void loadListPage(1, nextSearch)
   }
 
   /** 권한 코드 입력 */
@@ -173,10 +222,38 @@ export function AuthGroupManagePage({ currentPath, onMovePath, onError }: AuthGr
   if (isList) {
     return (
       <section className="menu-manage">
+        {/* 권한그룹 목록 제목과 검색 결과 건수 영역 */}
         <section className="content-header">
           <h1>권한그룹관리</h1>
           <div className="status">총 {pageData.totalCount}건</div>
         </section>
+        {/* 권한그룹 검색 조건 영역 */}
+        <form className="list-search" onSubmit={handleSearch}>
+          <label>
+            <span>권한 코드·권한명</span>
+            <input
+              value={search.keyword}
+              maxLength={100}
+              placeholder="권한 코드 또는 권한명"
+              onChange={(event) => setSearch({ ...search, keyword: event.target.value })}
+            />
+          </label>
+          <label>
+            <span>사용여부</span>
+            <select value={search.useeYsno} onChange={(event) => setSearch({ ...search, useeYsno: event.target.value })}>
+              <option value="">전체</option>
+              {useeCodes.map((code) => (
+                <option key={code.comdCode} value={code.comdCode}>{code.comdName}</option>
+              ))}
+            </select>
+          </label>
+          {/* 권한그룹 검색 실행과 초기화 버튼 영역 */}
+          <div className="list-search-actions">
+            <button type="button" className="subtle-button" onClick={handleReset}>초기화</button>
+            <button type="submit">검색</button>
+          </div>
+        </form>
+        {/* 권한그룹 검색 결과 영역 */}
         <section className="table-wrap">
           <table>
             <thead><tr><th>권한 코드</th><th>권한명</th><th className="col-usee">사용여부</th><th>수정자</th><th>수정일</th></tr></thead>
@@ -193,7 +270,12 @@ export function AuthGroupManagePage({ currentPath, onMovePath, onError }: AuthGr
             </tbody>
           </table>
         </section>
-        <Pagination pageNumber={pageData.pageNumber} totalPages={pageData.totalPages} onPageChange={(pageNumber) => void loadListPage(pageNumber)} />
+        {/* 권한그룹 검색 결과 페이지 이동 영역 */}
+        <Pagination
+          pageNumber={pageData.pageNumber}
+          totalPages={pageData.totalPages}
+          onPageChange={(pageNumber) => void loadListPage(pageNumber, appliedSearch)}
+        />
         {permission.writYsno === 'Y' && <button type="button" className="floating-button" onClick={() => onMovePath(AUTH_GROUP_NEW_PATH)}>등록</button>}
       </section>
     )

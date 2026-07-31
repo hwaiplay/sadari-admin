@@ -23,3 +23,7 @@ export type AuthGroup = {
   updtDate: string | null
   menus: AuthMenu[]
 }
+export type AuthGroupSearch = {
+  keyword: string
+  useeYsno: string
+}

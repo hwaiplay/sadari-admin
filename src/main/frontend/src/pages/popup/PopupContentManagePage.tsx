@@ -15,7 +15,7 @@ import {
 } from '../../constants/routes'
 import type { Code } from '../../types/code'
 import type { PageData } from '../../types/common'
-import type { PopupContent, PopupContentForm } from '../../types/popupContent'
+import type { PopupContent, PopupContentForm, PopupContentSearch } from '../../types/popupContent'
 import { emptyPopupContentForm, popupLinesToJson, toPopupContentForm } from '../../utils/popupContent'
 import { PopupContentDetailPage } from './PopupContentDetailPage'
 import { PopupContentListPage } from './PopupContentListPage'
@@ -32,6 +32,11 @@ const EMPTY_PAGE_DATA: PageData<PopupContent> = {
   pageNumber: 1,
   pageSize: 20,
   totalPages: 0,
+}
+
+const DEFAULT_SEARCH: PopupContentSearch = {
+  keyword: '',
+  popuSitu: '',
 }
 
 /**
@@ -69,19 +74,28 @@ export function PopupContentManagePage({
    *
    * @author SeungHyeon.Kang
    * @param pageNumber 조회할 페이지 번호
+   * @param search 적용할 검색 조건
    * @return 조회 완료 Promise
    */
-  const loadPopupContentList = useCallback(async (pageNumber = 1): Promise<void> => {
+  const loadPopupContentList = useCallback(async (
+    pageNumber = 1,
+    search: PopupContentSearch = DEFAULT_SEARCH,
+  ): Promise<void> => {
     // 새로운 목록 요청 전에 이전 화면 오류를 지운다
     onError(null)
     // 목록 조회 중 빈 화면으로 오인하지 않도록 로딩 상태를 시작한다
     setLoading(true)
     // API 실패를 공통 오류 영역에 격리하여 현재 메뉴 구조를 유지한다
     try {
-      // 요청 페이지의 팝업 콘텐츠 목록과 페이지 정보를 조회한다
-      const pageData = await getPopupContentList(pageNumber)
+      // 요청 페이지의 팝업 콘텐츠 목록과 화면 구분 코드를 동시에 조회한다
+      const [pageData, situCodes] = await Promise.all([
+        getPopupContentList(pageNumber, search),
+        getCodeList(POPU_SITU),
+      ])
       // 검증된 목록과 페이지 정보를 화면 상태에 반영한다
       setPopupPageData(pageData)
+      // 검색 선택 항목을 화면 구분 공통코드로 구성한다
+      setPopupSituCodes(situCodes)
       // 목록 화면에서는 이전에 조회한 상세 감사정보를 제거한다
       setPopupContentDetail(null)
     } catch (error: unknown) {
@@ -288,7 +302,8 @@ export function PopupContentManagePage({
       <PopupContentListPage
         popupContents={popupPageData.items}
         pageData={popupPageData}
-        onPageChange={loadPopupContentList}
+        popupSituCodes={popupSituCodes}
+        onSearch={loadPopupContentList}
         onMovePath={onMovePath}
       />
     )

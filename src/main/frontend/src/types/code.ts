@@ -67,3 +67,7 @@ export type DetailCodePayload = {
   sortOrdr: number
   useeYsno: string
 }
+export type CodeMasterSearch = {
+  keyword: string
+  useeYsno: string
+}

@@ -9,8 +9,23 @@
         <bind name="useeYsnoCode" value="@org.sadari.admin.sadariadmin.common.constant.Constant@USEE_YSNO_CODE"/>
     </sql>
 
+    <!-- 권한그룹 목록과 건수에 동일하게 적용할 검색 조건이다 -->
+    <sql id="authGroupSearchConditions">
+        <if test="keyword != null and keyword != ''">
+            <bind name="keywordLike" value="'%' + keyword.toUpperCase() + '%'"/>
+           AND (
+                   UPPER(A.AUTH_CODE) LIKE #{keywordLike}
+                OR UPPER(A.AUTH_NAME) LIKE #{keywordLike}
+               )
+        </if>
+        <if test="useeYsno != null and useeYsno != ''">
+           AND A.USEE_YSNO = #{useeYsno}
+        </if>
+    </sql>
+
     <!-- 권한그룹 목록을 조회한다 -->
-    <select id="getAuthGroupList" resultType="org.sadari.admin.sadariadmin.authgroup.vo.AuthGroupVO">
+    <select id="getAuthGroupList" parameterType="org.sadari.admin.sadariadmin.authgroup.vo.AuthGroupSearchVO"
+            resultType="org.sadari.admin.sadariadmin.authgroup.vo.AuthGroupVO">
         <include refid="codeNameBindings"/>
         SELECT /* getAuthGroupList */
                P.AUTH_CODE
@@ -33,7 +48,7 @@
                        , R.UPDT_ADMN
                        , R.UPDT_ADMN_NAME
                        , R.UPDT_DATE
-                       , ROWNUM AS ROW_NUMB
+                       , ROW_NUMBER() OVER (ORDER BY R.AUTH_CODE) AS ROW_NUMB
                     FROM (  SELECT A.AUTH_CODE
                                  , A.AUTH_NAME
                                  , A.USEE_YSNO
@@ -45,18 +60,23 @@
                                  , FN_GET_ADMIN_NAME(A.UPDT_ADMN) AS UPDT_ADMN_NAME
                                  , A.UPDT_DATE
                               FROM TM_AUTHXM A
+                             WHERE 1 = 1
+                                   <include refid="authGroupSearchConditions"/>
                           ORDER BY A.AUTH_CODE
                          ) R
-                   WHERE ROWNUM <![CDATA[<=]]> #{endRow}
                ) P
-         WHERE P.ROW_NUMB <![CDATA[>=]]> #{startRow}
+         WHERE P.ROW_NUMB BETWEEN #{startRow} AND #{endRow}
+      ORDER BY P.ROW_NUMB
     </select>
 
     <!-- 권한그룹 전체 건수를 조회한다 -->
-    <select id="getAuthGroupListCount" resultType="int">
+    <select id="getAuthGroupListCount" parameterType="org.sadari.admin.sadariadmin.authgroup.vo.AuthGroupSearchVO"
+            resultType="int">
         SELECT /* getAuthGroupListCount */
                COUNT(1)
-          FROM TM_AUTHXM
+          FROM TM_AUTHXM A
+         WHERE 1 = 1
+               <include refid="authGroupSearchConditions"/>
     </select>
 
     <!-- 권한그룹 상세를 조회한다 -->
@@ -97,9 +117,9 @@
              , M.MENU_NAME
              , M.MENU_URLX
              , M.SORT_ORDR
-             , NVL(A.READ_YSNO, #{no}) AS READ_YSNO
-             , NVL(A.WRIT_YSNO, #{no}) AS WRIT_YSNO
-             , NVL(A.DELT_YSNO, #{no}) AS DELT_YSNO
+             , COALESCE(A.READ_YSNO, #{no}) AS READ_YSNO
+             , COALESCE(A.WRIT_YSNO, #{no}) AS WRIT_YSNO
+             , COALESCE(A.DELT_YSNO, #{no}) AS DELT_YSNO
           FROM TM_ADMENU M
      LEFT JOIN TB_AUTHMN A
             ON A.AUTH_CODE = #{authCode}
@@ -108,12 +128,12 @@
      LEFT JOIN TM_ADMENU P
             ON P.MENU_NUMB = M.MENU_NUMB
            AND P.SUBX_NUMB = #{topMenuSubxNumb}
-         WHERE NVL(M.USEE_YSNO, #{yes}) = #{yes}
-      ORDER BY NVL(P.SORT_ORDR, M.SORT_ORDR)
-             , TO_NUMBER(M.MENU_NUMB)
+         WHERE COALESCE(M.USEE_YSNO, #{yes}) = #{yes}
+      ORDER BY COALESCE(P.SORT_ORDR, M.SORT_ORDR)
+             , CAST(M.MENU_NUMB AS UNSIGNED)
              , CASE WHEN M.SUBX_NUMB = #{topMenuSubxNumb} THEN 0 ELSE 1 END
-             , NVL(M.SORT_ORDR, 9999)
-             , TO_NUMBER(M.SUBX_NUMB)
+             , COALESCE(M.SORT_ORDR, 9999)
+             , CAST(M.SUBX_NUMB AS UNSIGNED)
     </select>
 
     <!-- 권한그룹을 등록한다 -->
@@ -131,9 +151,9 @@
                   , #{authName}
                   , #{useeYsno}
                   , #{regiAdmn}
-                  , SYSTIMESTAMP
+                  , CURRENT_TIMESTAMP
                   , #{updtAdmn}
-                  , SYSTIMESTAMP
+                  , CURRENT_TIMESTAMP
         )
     </insert>
 
@@ -144,7 +164,7 @@
            SET AUTH_NAME = #{authName}
              , USEE_YSNO = #{useeYsno}
              , UPDT_ADMN = #{updtAdmn}
-             , UPDT_DATE = SYSTIMESTAMP
+             , UPDT_DATE = CURRENT_TIMESTAMP
          WHERE AUTH_CODE = #{authCode}
     </update>
 
@@ -169,9 +189,9 @@
                   , #{writYsno}
                   , #{deltYsno}
                   , #{regiAdmn}
-                  , SYSTIMESTAMP
+                  , CURRENT_TIMESTAMP
                   , #{updtAdmn}
-                  , SYSTIMESTAMP
+                  , CURRENT_TIMESTAMP
         )
     </insert>
 

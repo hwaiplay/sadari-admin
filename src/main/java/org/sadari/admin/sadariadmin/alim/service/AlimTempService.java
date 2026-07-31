@@ -1,6 +1,7 @@
 package org.sadari.admin.sadariadmin.alim.service;
 
 import org.sadari.admin.sadariadmin.admin.vo.AdminSessionVO;
+import org.sadari.admin.sadariadmin.alim.vo.AlimTempSearchVO;
 import org.sadari.admin.sadariadmin.alim.vo.AlimTempVO;
 import org.sadari.admin.sadariadmin.common.pagination.PageData;
 
@@ -15,15 +16,17 @@ import java.util.List;
  * DATE              AUTHOR             NOTE
  * -----------------------------------------------------------
  * 2026-07-24        SeungHyeon.Kang    최초 생성
+ * 2026-07-31        SeungHyeon.Kang    알림 템플릿 목록 검색 조건 추가
  */public interface AlimTempService {
 
     /**
      * 알림 템플릿 목록 조회
      * @author SeungHyeon.Kang
-     * @param admin
-     * @return
+     * @param search 알림 템플릿 검색 조건
+     * @param admin 로그인한 관리자
+     * @return 검색된 알림 템플릿 목록
      */
-    PageData<AlimTempVO> getAlimTempList(int pageNumber, AdminSessionVO admin);
+    PageData<AlimTempVO> getAlimTempList(AlimTempSearchVO search, AdminSessionVO admin);
 
     /**
      * 알림 템플릿 상세 조회

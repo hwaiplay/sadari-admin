@@ -1,7 +1,13 @@
 import { fetchJson, fetchResult } from './client'
 import type { PageData } from '../types/common'
-import type { PopupContent, PopupContentForm, PopupContentKey } from '../types/popupContent'
+import type {
+  PopupContent,
+  PopupContentForm,
+  PopupContentKey,
+  PopupContentSearch,
+} from '../types/popupContent'
 import { popupLinesToJson } from '../utils/popupContent'
+import { createSearchParams } from '../utils/search'
 
 /**
  * 팝업 콘텐츠 목록 페이지를 조회한다
@@ -11,10 +17,16 @@ import { popupLinesToJson } from '../utils/popupContent'
  * @return 팝업 콘텐츠 목록과 페이지 정보
  * @throws Error API 조회 또는 공통 응답 검증에 실패할 때 발생한다
  */
-export function getPopupContentList(pageNumber = 1): Promise<PageData<PopupContent>> {
+export function getPopupContentList(
+  pageNumber: number,
+  search: PopupContentSearch,
+): Promise<PageData<PopupContent>> {
   // 요청 페이지의 팝업 콘텐츠 목록을 반환한다
-  return fetchJson<PageData<PopupContent>>(`/api/popup-contents?page=${pageNumber}`, undefined
-                                        , '팝업 콘텐츠 목록 조회에 실패했습니다.')
+  return fetchJson<PageData<PopupContent>>(
+    `/api/popup-contents?${createSearchParams(pageNumber, search).toString()}`,
+    undefined,
+    '팝업 콘텐츠 목록 조회에 실패했습니다.',
+  )
 }
 
 /**

@@ -3,6 +3,29 @@
         PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
         "https://mybatis.org/dtd/mybatis-3-mapper.dtd">
 <mapper namespace="org.sadari.admin.sadariadmin.schedulelog.mapper.ScheduleLogMapper">
+    <!-- 스케줄러 실행 로그 목록과 건수에 동일하게 적용할 검색 조건이다 -->
+    <sql id="scheduleLogSearchConditions">
+        <if test="keyword != null and keyword != ''">
+            <bind name="keywordLike" value="'%' + keyword.toUpperCase() + '%'"/>
+           AND (
+                   CAST(S.RUNX_NUMB AS CHAR) LIKE #{keywordLike}
+                OR UPPER(S.METH_NAME) LIKE #{keywordLike}
+               )
+        </if>
+        <if test="schdCode != null and schdCode != ''">
+           AND S.SCHD_CODE = #{schdCode}
+        </if>
+        <if test="execStat != null and execStat != ''">
+           AND S.EXEC_STAT = #{execStat}
+        </if>
+        <if test="strtDateFrom != null">
+           AND S.STRT_DATE <![CDATA[>=]]> #{strtDateFrom}
+        </if>
+        <if test="strtDateTo != null">
+           AND S.STRT_DATE <![CDATA[<]]> DATE_ADD(#{strtDateTo}, INTERVAL 1 DAY)
+        </if>
+    </sql>
+
     <!-- 스케줄러 실행 결과 공통 조회 컬럼 목록 -->
     <sql id="scheduleLogColumns">
           S.RUNX_NUMB
@@ -34,7 +57,8 @@
     </sql>
 
     <!-- 스케줄러 실행 결과 목록을 최신 실행 순서로 조회한다 -->
-    <select id="getScheduleLogList" resultType="org.sadari.admin.sadariadmin.schedulelog.vo.ScheduleLogVO">
+    <select id="getScheduleLogList" parameterType="org.sadari.admin.sadariadmin.schedulelog.vo.ScheduleLogSearchVO"
+            resultType="org.sadari.admin.sadariadmin.schedulelog.vo.ScheduleLogVO">
         <bind name="scheduleCode" value="@org.sadari.admin.sadariadmin.common.constant.Constant@SCHD_CODE"/>
         SELECT /* getScheduleLogList */
                <include refid="scheduleLogPageColumns"/>
@@ -49,21 +73,26 @@
                        , R.SUCC_CNTT
                        , R.FAIL_CNTT
                        , R.EXEC_MSEC
-                       , ROWNUM AS ROW_NUMB
+                       , ROW_NUMBER() OVER (ORDER BY R.RUNX_NUMB DESC) AS ROW_NUMB
                     FROM (  SELECT <include refid="scheduleLogColumns"/>
                               FROM TL_SCLOGX S
+                             WHERE 1 = 1
+                                   <include refid="scheduleLogSearchConditions"/>
                           ORDER BY S.RUNX_NUMB DESC
                          ) R
-                   WHERE ROWNUM <![CDATA[<=]]> #{endRow}
                ) P
-         WHERE P.ROW_NUMB <![CDATA[>=]]> #{startRow}
+         WHERE P.ROW_NUMB BETWEEN #{startRow} AND #{endRow}
+      ORDER BY P.ROW_NUMB
     </select>
 
     <!-- 스케줄러 실행 로그 전체 건수를 조회한다 -->
-    <select id="getScheduleLogListCount" resultType="int">
+    <select id="getScheduleLogListCount" parameterType="org.sadari.admin.sadariadmin.schedulelog.vo.ScheduleLogSearchVO"
+            resultType="int">
         SELECT /* getScheduleLogListCount */
                COUNT(1)
-          FROM TL_SCLOGX
+          FROM TL_SCLOGX S
+         WHERE 1 = 1
+               <include refid="scheduleLogSearchConditions"/>
     </select>
 
     <!-- 스케줄러 실행 번호로 실행 결과 단건을 조회한다 -->

@@ -9,6 +9,20 @@
         <bind name="yes" value="@org.sadari.admin.sadariadmin.common.constant.Constant@YES"/>
     </sql>
 
+    <!-- 팝업 콘텐츠 목록과 건수에 동일하게 적용할 검색 조건이다 -->
+    <sql id="popupContentSearchConditions">
+        <if test="keyword != null and keyword != ''">
+            <bind name="keywordLike" value="'%' + keyword.toUpperCase() + '%'"/>
+           AND (
+                   UPPER(C.POPU_CODE) LIKE #{keywordLike}
+                OR UPPER(C.MNGM_TITL) LIKE #{keywordLike}
+               )
+        </if>
+        <if test="popuSitu != null and popuSitu != ''">
+           AND C.POPU_SITU = #{popuSitu}
+        </if>
+    </sql>
+
     <!-- 팝업 콘텐츠와 등록 및 수정 관리자명을 함께 조회하는 공통 컬럼 목록이다 -->
     <sql id="popupContentColumns">
           C.POPU_SITU
@@ -20,10 +34,10 @@
         , C.CONT_THIR
         , C.CONT_FOUR
         , C.REGI_ADMN
-        , NVL(RA.ADMN_NAME, C.REGI_ADMN) AS REGI_ADMN_NAME
+        , COALESCE(RA.ADMN_NAME, C.REGI_ADMN) AS REGI_ADMN_NAME
         , C.REGI_DATE
         , C.UPDT_ADMN
-        , NVL(UA.ADMN_NAME, C.UPDT_ADMN) AS UPDT_ADMN_NAME
+        , COALESCE(UA.ADMN_NAME, C.UPDT_ADMN) AS UPDT_ADMN_NAME
         , C.UPDT_DATE
     </sql>
 
@@ -46,7 +60,8 @@
     </sql>
 
     <!-- 팝업 콘텐츠 목록을 화면 구분과 팝업 코드 순서로 조회한다 -->
-    <select id="getPopupContentList" resultType="org.sadari.admin.sadariadmin.popup.vo.PopupContentVO">
+    <select id="getPopupContentList" parameterType="org.sadari.admin.sadariadmin.popup.vo.PopupContentSearchVO"
+            resultType="org.sadari.admin.sadariadmin.popup.vo.PopupContentVO">
         <include refid="popupCodeBindings"/>
         SELECT /* getPopupContentList */
                <include refid="popupContentPageColumns"/>
@@ -64,29 +79,37 @@
                        , R.UPDT_ADMN
                        , R.UPDT_ADMN_NAME
                        , R.UPDT_DATE
-                       , ROWNUM AS ROW_NUMB
+                       , ROW_NUMBER() OVER (
+                             ORDER BY R.POPU_SITU
+                                    , R.POPU_CODE
+                         ) AS ROW_NUMB
                     FROM (  SELECT <include refid="popupContentColumns"/>
                               FROM CT_POPUPX C
                          LEFT JOIN TB_CODEXD D
                                 ON D.COMM_CODE = #{popupSituCode}
                                AND D.COMD_CODE = C.POPU_SITU
                          LEFT JOIN TM_ADMINX RA
-                                ON TO_CHAR(RA.ADMN_NUMB) = C.REGI_ADMN
+                                ON CAST(RA.ADMN_NUMB AS CHAR) = C.REGI_ADMN
                          LEFT JOIN TM_ADMINX UA
-                                ON TO_CHAR(UA.ADMN_NUMB) = C.UPDT_ADMN
+                                ON CAST(UA.ADMN_NUMB AS CHAR) = C.UPDT_ADMN
+                             WHERE 1 = 1
+                                   <include refid="popupContentSearchConditions"/>
                           ORDER BY C.POPU_SITU
                                  , C.POPU_CODE
                          ) R
-                   WHERE ROWNUM <![CDATA[<=]]> #{endRow}
                ) P
-         WHERE P.ROW_NUMB <![CDATA[>=]]> #{startRow}
+         WHERE P.ROW_NUMB BETWEEN #{startRow} AND #{endRow}
+      ORDER BY P.ROW_NUMB
     </select>
 
     <!-- 전체 팝업 콘텐츠 건수를 조회한다 -->
-    <select id="getPopupContentListCnt" resultType="int">
+    <select id="getPopupContentListCnt" parameterType="org.sadari.admin.sadariadmin.popup.vo.PopupContentSearchVO"
+            resultType="int">
         SELECT /* getPopupContentListCnt */
                COUNT(1)
-          FROM CT_POPUPX
+          FROM CT_POPUPX C
+         WHERE 1 = 1
+               <include refid="popupContentSearchConditions"/>
     </select>
 
     <!-- 화면 구분과 팝업 코드로 팝업 콘텐츠 상세를 조회한다 -->
@@ -99,9 +122,9 @@
             ON D.COMM_CODE = #{popupSituCode}
            AND D.COMD_CODE = C.POPU_SITU
      LEFT JOIN TM_ADMINX RA
-            ON TO_CHAR(RA.ADMN_NUMB) = C.REGI_ADMN
+            ON CAST(RA.ADMN_NUMB AS CHAR) = C.REGI_ADMN
      LEFT JOIN TM_ADMINX UA
-            ON TO_CHAR(UA.ADMN_NUMB) = C.UPDT_ADMN
+            ON CAST(UA.ADMN_NUMB AS CHAR) = C.UPDT_ADMN
          WHERE C.POPU_SITU = #{popuSitu}
            AND C.POPU_CODE = #{popuCode}
     </select>
@@ -123,7 +146,7 @@
           FROM TB_CODEXD
          WHERE COMM_CODE = #{popupSituCode}
            AND COMD_CODE = #{popuSitu}
-           AND NVL(USEE_YSNO, #{yes}) = #{yes}
+           AND COALESCE(USEE_YSNO, #{yes}) = #{yes}
     </select>
 
     <!-- 신규 팝업 콘텐츠와 등록 및 수정 이력을 함께 등록한다 -->
@@ -149,9 +172,9 @@
                   , #{contThir,jdbcType=VARCHAR}
                   , #{contFour,jdbcType=VARCHAR}
                   , #{regiAdmn}
-                  , SYSDATE
+                  , CURRENT_TIMESTAMP
                   , #{updtAdmn}
-                  , SYSDATE
+                  , CURRENT_TIMESTAMP
         )
     </insert>
 
@@ -165,7 +188,7 @@
              , CONT_THIR = #{contThir,jdbcType=VARCHAR}
              , CONT_FOUR = #{contFour,jdbcType=VARCHAR}
              , UPDT_ADMN = #{updtAdmn}
-             , UPDT_DATE = SYSDATE
+             , UPDT_DATE = CURRENT_TIMESTAMP
          WHERE POPU_SITU = #{popuSitu}
            AND POPU_CODE = #{popuCode}
     </update>

@@ -2,6 +2,7 @@ package org.sadari.admin.sadariadmin.common.code.controller;
 
 import org.sadari.admin.sadariadmin.admin.vo.AdminSessionVO;
 import org.sadari.admin.sadariadmin.common.code.service.CodeManageService;
+import org.sadari.admin.sadariadmin.common.code.vo.CodeMasterSearchVO;
 import org.sadari.admin.sadariadmin.common.code.vo.CodeMasterVO;
 import org.sadari.admin.sadariadmin.common.code.vo.CodeVO;
 import org.sadari.admin.sadariadmin.common.constant.Constant;
@@ -10,13 +11,13 @@ import org.sadari.admin.sadariadmin.common.result.ResultEnum;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
-import org.springframework.web.bind.annotation.RequestParam;
 
 /**
  * fileName       : CodeManageController
@@ -27,6 +28,7 @@ import org.springframework.web.bind.annotation.RequestParam;
  * DATE              AUTHOR             NOTE
  * -----------------------------------------------------------
  * 2026-07-08        SeungHyeon.Kang    최초 생성
+ * 2026-07-31        SeungHyeon.Kang    공통코드 목록 검색 조건 추가
  */
 @RestController
 @RequestMapping(Constant.API_CODE_MANAGE_PREFIX)
@@ -51,8 +53,9 @@ public class CodeManageController {
      * @return
      */
     @GetMapping("/masters")
-    public ResultData getCommCodeList(@RequestParam(defaultValue = "1") int page) {
-        return ResultData.success(codeManageService.getCommCodeList(page));
+    public ResultData getCommCodeList(@ModelAttribute CodeMasterSearchVO search) {
+        // 검색 조건에 맞는 공통코드 목록을 반환한다
+        return ResultData.success(codeManageService.getCommCodeList(search));
     }
 
     /**

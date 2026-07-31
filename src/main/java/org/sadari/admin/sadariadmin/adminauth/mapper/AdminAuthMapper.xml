@@ -3,8 +3,28 @@
         PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
         "https://mybatis.org/dtd/mybatis-3-mapper.dtd">
 <mapper namespace="org.sadari.admin.sadariadmin.adminauth.mapper.AdminAuthMapper">
+    <!-- 관리자 권한 목록과 건수에 동일하게 적용할 검색 조건이다 -->
+    <sql id="adminAuthSearchConditions">
+        <if test="keyword != null and keyword != ''">
+            <bind name="keywordLike" value="'%' + keyword.toUpperCase() + '%'"/>
+           AND (
+                   CAST(A.ADMN_NUMB AS CHAR) LIKE #{keywordLike}
+                OR UPPER(A.ADMN_IDXX) LIKE #{keywordLike}
+                OR UPPER(A.ADMN_NAME) LIKE #{keywordLike}
+               )
+        </if>
+        <if test="deptCode != null and deptCode != ''">
+            <bind name="deptCodeLike" value="'%' + deptCode.toUpperCase() + '%'"/>
+           AND UPPER(A.DEPT_CODE) LIKE #{deptCodeLike}
+        </if>
+        <if test="authCode != null and authCode != ''">
+           AND A.AUTH_CODE = #{authCode}
+        </if>
+    </sql>
+
     <!-- 관리자와 현재 권한그룹을 조회한다 -->
-    <select id="getAdminAuthList" resultType="org.sadari.admin.sadariadmin.adminauth.vo.AdminAuthVO">
+    <select id="getAdminAuthList" parameterType="org.sadari.admin.sadariadmin.adminauth.vo.AdminAuthSearchVO"
+            resultType="org.sadari.admin.sadariadmin.adminauth.vo.AdminAuthVO">
         SELECT /* getAdminAuthList */
                P.ADMN_NUMB
              , P.ADMN_IDXX
@@ -18,7 +38,7 @@
                        , R.AUTH_CODE
                        , R.AUTH_NAME
                        , R.DEPT_CODE
-                       , ROWNUM AS ROW_NUMB
+                       , ROW_NUMBER() OVER (ORDER BY R.ADMN_NUMB) AS ROW_NUMB
                     FROM (  SELECT A.ADMN_NUMB
                                  , A.ADMN_IDXX
                                  , A.ADMN_NAME
@@ -28,18 +48,23 @@
                               FROM TM_ADMINX A
                          LEFT JOIN TM_AUTHXM G
                                 ON G.AUTH_CODE = A.AUTH_CODE
+                             WHERE 1 = 1
+                                   <include refid="adminAuthSearchConditions"/>
                           ORDER BY A.ADMN_NUMB
                          ) R
-                   WHERE ROWNUM <![CDATA[<=]]> #{endRow}
                ) P
-         WHERE P.ROW_NUMB <![CDATA[>=]]> #{startRow}
+         WHERE P.ROW_NUMB BETWEEN #{startRow} AND #{endRow}
+      ORDER BY P.ROW_NUMB
     </select>
 
     <!-- 관리자 전체 건수를 조회한다 -->
-    <select id="getAdminAuthListCount" resultType="int">
+    <select id="getAdminAuthListCount" parameterType="org.sadari.admin.sadariadmin.adminauth.vo.AdminAuthSearchVO"
+            resultType="int">
         SELECT /* getAdminAuthListCount */
                COUNT(1)
-          FROM TM_ADMINX
+          FROM TM_ADMINX A
+         WHERE 1 = 1
+               <include refid="adminAuthSearchConditions"/>
     </select>
 
     <!-- 관리자 존재 건수를 조회한다 -->
@@ -57,7 +82,7 @@
                COUNT(*)
           FROM TM_AUTHXM
          WHERE AUTH_CODE = #{authCode}
-           AND NVL(USEE_YSNO, #{yes}) = #{yes}
+           AND COALESCE(USEE_YSNO, #{yes}) = #{yes}
     </select>
 
     <!-- 관리자의 권한 코드를 수정한다 -->

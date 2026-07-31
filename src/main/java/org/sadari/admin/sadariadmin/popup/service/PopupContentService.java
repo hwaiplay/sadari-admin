@@ -2,6 +2,7 @@ package org.sadari.admin.sadariadmin.popup.service;
 
 import org.sadari.admin.sadariadmin.admin.vo.AdminSessionVO;
 import org.sadari.admin.sadariadmin.common.pagination.PageData;
+import org.sadari.admin.sadariadmin.popup.vo.PopupContentSearchVO;
 import org.sadari.admin.sadariadmin.popup.vo.PopupContentVO;
 
 /**
@@ -13,6 +14,7 @@ import org.sadari.admin.sadariadmin.popup.vo.PopupContentVO;
  * DATE              AUTHOR             NOTE
  * -----------------------------------------------------------
  * 2026-07-30        SeungHyeon.Kang    최초 생성
+ * 2026-07-31        SeungHyeon.Kang    팝업 콘텐츠 목록 검색 조건 추가
  */
 public interface PopupContentService {
 
@@ -20,11 +22,11 @@ public interface PopupContentService {
      * 로그인 관리자가 조회할 팝업 콘텐츠 목록 페이지를 반환한다
      *
      * @author SeungHyeon.Kang
-     * @param pageNumber 요청 페이지 번호
+     * @param search 팝업 콘텐츠 검색 조건
      * @param admin 로그인 관리자 세션
      * @return 팝업 콘텐츠 목록과 페이지 정보
      */
-    PageData<PopupContentVO> getPopupContentList(int pageNumber, AdminSessionVO admin);
+    PageData<PopupContentVO> getPopupContentList(PopupContentSearchVO search, AdminSessionVO admin);
 
     /**
      * 복합키에 해당하는 팝업 콘텐츠 상세를 반환한다

@@ -2,6 +2,7 @@ package org.sadari.admin.sadariadmin.usermenu.mapper;
 
 import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Param;
+import org.sadari.admin.sadariadmin.usermenu.vo.UserMenuSearchVO;
 import org.sadari.admin.sadariadmin.usermenu.vo.UserMenuVO;
 
 import java.util.List;
@@ -15,13 +16,15 @@ import java.util.List;
  * DATE              AUTHOR             NOTE
  * -----------------------------------------------------------
  * 2026-07-27        SeungHyeon.Kang    최초 생성
+ * 2026-07-31        SeungHyeon.Kang    사용자 메뉴 목록 검색 조건 추가
  */@Mapper
 public interface UserMenuMapper {
 
     /** 사용자 메뉴관리 상위 메뉴 목록 조회 */
-    List<UserMenuVO> getUserMenuList(@Param("startRow") int startRow, @Param("endRow") int endRow);
+    List<UserMenuVO> getUserMenuList(UserMenuSearchVO search);
 
-    int getUserMenuCount();
+    /** 검색 조건에 맞는 사용자 상위 메뉴 전체 건수 조회 */
+    int getUserMenuCount(UserMenuSearchVO search);
 
     /** 사용자 메뉴 상세 조회 */
     UserMenuVO getUserMenuDtl(@Param("menuNumb") String menuNumb, @Param("subxNumb") String subxNumb);

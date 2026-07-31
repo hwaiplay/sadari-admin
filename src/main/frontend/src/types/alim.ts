@@ -25,3 +25,8 @@ export type AlimTempForm = {
   linkUrlx: string
   useeYsno: string
 }
+export type AlimTempSearch = {
+  keyword: string
+  alimSitu: string
+  useeYsno: string
+}

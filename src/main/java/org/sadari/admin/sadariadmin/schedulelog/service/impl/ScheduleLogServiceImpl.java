@@ -9,6 +9,7 @@ import org.sadari.admin.sadariadmin.common.util.StringUtil;
 import org.sadari.admin.sadariadmin.schedulelog.mapper.ScheduleLogMapper;
 import org.sadari.admin.sadariadmin.schedulelog.service.ScheduleLogService;
 import org.sadari.admin.sadariadmin.schedulelog.vo.ScheduleFailVO;
+import org.sadari.admin.sadariadmin.schedulelog.vo.ScheduleLogSearchVO;
 import org.sadari.admin.sadariadmin.schedulelog.vo.ScheduleLogVO;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
@@ -26,6 +27,7 @@ import java.util.List;
  * -----------------------------------------------------------
  * 2026-07-28        SeungHyeon.Kang    최초 생성
  * 2026-07-28        SeungHyeon.Kang    실행 로그 단건 조회 처리 추가
+ * 2026-07-31        SeungHyeon.Kang    스케줄러 로그 검색 조건 추가
  */
 @Service
 @Transactional(readOnly = true)
@@ -48,17 +50,23 @@ public class ScheduleLogServiceImpl implements ScheduleLogService {
      * 스케줄러 실행 결과 목록을 조회한다
      *
      * @author SeungHyeon.Kang
+     * @param search 스케줄러 로그 검색 조건
      * @param admin 로그인한 관리자 정보
      * @return 스케줄러 실행 결과 목록
      */
     @Override
-    public PageData<ScheduleLogVO> getScheduleLogList(int pageNumber, AdminSessionVO admin) {
+    public PageData<ScheduleLogVO> getScheduleLogList(ScheduleLogSearchVO search, AdminSessionVO admin) {
         // 인증되지 않은 요청이 스케줄러 실행 정보를 조회하지 못하도록 로그인 상태를 확인한다
         checkLogin(admin);
-        // 최신 스케줄러 실행 결과 목록을 조회한다
-        PageRequest pageRequest = new PageRequest(pageNumber);
-        return PageData.of(scheduleLogMapper.getScheduleLogList(pageRequest.getStartRow(), pageRequest.getEndRow())
-                         , scheduleLogMapper.getScheduleLogListCount(), pageRequest);
+        // 요청 페이지에 해당하는 조회 행 범위를 계산한다
+        PageRequest pageRequest = new PageRequest(search.getPage());
+        // 목록과 건수 조회에 같은 검색 조건과 시작 행을 적용한다
+        search.setStartRow(pageRequest.getStartRow());
+        // 검색 조건에 페이지 마지막 행을 적용한다
+        search.setEndRow(pageRequest.getEndRow());
+        // 검색 조건에 맞는 스케줄러 실행 결과와 전체 건수로 페이지 응답을 생성한다
+        return PageData.of(scheduleLogMapper.getScheduleLogList(search)
+                         , scheduleLogMapper.getScheduleLogListCount(search), pageRequest);
     }
 
     /**

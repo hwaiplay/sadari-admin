@@ -2,6 +2,7 @@ package org.sadari.admin.sadariadmin.authgroup.controller;
 
 import org.sadari.admin.sadariadmin.admin.vo.AdminSessionVO;
 import org.sadari.admin.sadariadmin.authgroup.service.AuthGroupService;
+import org.sadari.admin.sadariadmin.authgroup.vo.AuthGroupSearchVO;
 import org.sadari.admin.sadariadmin.authgroup.vo.AuthGroupVO;
 import org.sadari.admin.sadariadmin.common.constant.Constant;
 import org.sadari.admin.sadariadmin.common.result.ResultData;
@@ -9,13 +10,13 @@ import org.sadari.admin.sadariadmin.common.result.ResultEnum;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
-import org.springframework.web.bind.annotation.RequestParam;
 
 /**
  * fileName       : AuthGroupController
@@ -26,6 +27,7 @@ import org.springframework.web.bind.annotation.RequestParam;
  * DATE              AUTHOR             NOTE
  * -----------------------------------------------------------
  * 2026-07-27        SeungHyeon.Kang    최초 생성
+ * 2026-07-31        SeungHyeon.Kang    권한그룹 목록 검색 조건 추가
  */
 @RestController
 @RequestMapping(Constant.API_AUTH_GROUP_PREFIX)
@@ -41,9 +43,10 @@ public class AuthGroupController {
 
     /** 권한그룹 목록 조회 */
     @GetMapping
-    public ResultData getAuthGroupList(@RequestParam(defaultValue = "1") int page
+    public ResultData getAuthGroupList(@ModelAttribute AuthGroupSearchVO search
                                      , @AuthenticationPrincipal AdminSessionVO admin) {
-        return ResultData.success(authGroupService.getAuthGroupList(page, admin));
+        // 검색 조건에 맞는 권한그룹 목록을 반환한다
+        return ResultData.success(authGroupService.getAuthGroupList(search, admin));
     }
 
     /** 권한그룹 상세 조회 */

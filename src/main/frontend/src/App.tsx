@@ -25,13 +25,17 @@ import { PopupContentManagePage } from './pages/popup/PopupContentManagePage'
 import { CurrentUserListPage } from './pages/currentUser/CurrentUserListPage'
 import { CurrentUserDetailPage } from './pages/currentUser/CurrentUserDetailPage'
 import type { AdminSession } from './types/admin'
-import type { AlimTemp, AlimTempForm } from './types/alim'
-import type { Code, CodeMaster, DetailCodeForm, DetailCodePayload } from './types/code'
-import type { Menu, MenuForm } from './types/menu'
+import type { AlimTemp, AlimTempForm, AlimTempSearch } from './types/alim'
+import type { Code, CodeMaster, CodeMasterSearch, DetailCodeForm, DetailCodePayload } from './types/code'
+import type { Menu, MenuForm, MenuSearch } from './types/menu'
 import type { PageData } from './types/common'
 import { emptyDetailForm, emptyMenuForm, toDetailCodeForm, toMenuForm } from './utils/forms'
 
 const emptyPageData = <T,>(): PageData<T> => ({ items: [], totalCount: 0, pageNumber: 1, pageSize: 20, totalPages: 0 })
+
+const DEFAULT_MENU_SEARCH: MenuSearch = { keyword: '', useeYsno: '' }
+const DEFAULT_CODE_SEARCH: CodeMasterSearch = { keyword: '', useeYsno: '' }
+const DEFAULT_ALIM_SEARCH: AlimTempSearch = { keyword: '', alimSitu: '', useeYsno: '' }
 
 /**
  * 관리자 프론트 루트 컴포넌트
@@ -51,6 +55,7 @@ function App() {
   const [childForms, setChildForms] = useState<MenuForm[]>([])
   const [codeMasters, setCodeMasters] = useState<CodeMaster[]>([])
   const [codePageData, setCodePageData] = useState<PageData<CodeMaster>>(emptyPageData())
+  const [codeAppliedSearch, setCodeAppliedSearch] = useState<CodeMasterSearch>(DEFAULT_CODE_SEARCH)
   const [selectedMaster, setSelectedMaster] = useState<CodeMaster | null>(null)
   const [masterEditForm, setMasterEditForm] = useState<CodeMaster | null>(null)
   const [detailCodes, setDetailCodes] = useState<Code[]>([])
@@ -231,14 +236,17 @@ function App() {
 
   /**
    * 메뉴관리 목록 화면 열기
-   * @Author SeungHyeon.Kang
-   * @return
+   *
+   * @author SeungHyeon.Kang
+   * @param pageNumber 조회할 페이지 번호
+   * @param search 적용할 메뉴 검색 조건
+   * @return 반환값이 없다
    */
-  const openMenuListPage = async (pageNumber = 1) => {
+  const openMenuListPage = async (pageNumber = 1, search = DEFAULT_MENU_SEARCH) => {
     setError(null)
     setChildForms([])
     setMenuDetail(null)
-    const [pageData] = await Promise.all([getMenuMngList(pageNumber), loadUseeYsnoCodeList()])
+    const [pageData] = await Promise.all([getMenuMngList(pageNumber, search), loadUseeYsnoCodeList()])
     setMenuPageData(pageData)
     setMenuRows(pageData.items)
   }
@@ -276,14 +284,18 @@ function App() {
 
   /**
    * 코드관리 목록 화면 열기
-   * @Author SeungHyeon.Kang
-   * @return
+   *
+   * @author SeungHyeon.Kang
+   * @param pageNumber 조회할 페이지 번호
+   * @param search 적용할 공통코드 검색 조건
+   * @return 반환값이 없다
    */
-  const openCodeListPage = async (pageNumber = 1) => {
+  const openCodeListPage = async (pageNumber = 1, search = DEFAULT_CODE_SEARCH) => {
     setError(null)
-    const [pageData] = await Promise.all([getCodeMasters(pageNumber), loadUseeYsnoCodeList()])
+    const [pageData] = await Promise.all([getCodeMasters(pageNumber, search), loadUseeYsnoCodeList()])
     setCodePageData(pageData)
     setCodeMasters(pageData.items)
+    setCodeAppliedSearch(search)
     setSelectedMaster(null)
     setMasterEditForm(null)
     setDetailCodes([])
@@ -309,12 +321,19 @@ function App() {
 
   /**
    * 알림 템플릿 목록 화면 열기
-   * @Author SeungHyeon.Kang
-   * @return
+   *
+   * @author SeungHyeon.Kang
+   * @param pageNumber 조회할 페이지 번호
+   * @param search 적용할 알림 템플릿 검색 조건
+   * @return 반환값이 없다
    */
-  const openAlimTempListPage = async (pageNumber = 1) => {
+  const openAlimTempListPage = async (pageNumber = 1, search = DEFAULT_ALIM_SEARCH) => {
     setError(null)
-    const [pageData] = await Promise.all([getAlimTempList(pageNumber), loadUseeYsnoCodeList()])
+    const [pageData] = await Promise.all([
+      getAlimTempList(pageNumber, search),
+      loadUseeYsnoCodeList(),
+      loadAlimSituCodeList(),
+    ])
     setAlimPageData(pageData)
     setAlimTemps(pageData.items)
     setAlimTempDetail(null)
@@ -406,16 +425,21 @@ function App() {
 
   /**
    * 메뉴 삭제 처리
-   * @Author SeungHyeon.Kang
-   * @param menu
-   * @return
+   *
+   * @author SeungHyeon.Kang
+   * @param menu 삭제할 메뉴 식별정보
+   * @param search 삭제 후 유지할 메뉴 검색 조건
+   * @return 반환값이 없다
    */
-  const deleteMenu = async (menu: Pick<Menu, 'menuNumb' | 'subxNumb'>) => {
+  const deleteMenu = async (
+    menu: Pick<Menu, 'menuNumb' | 'subxNumb'>,
+    search = DEFAULT_MENU_SEARCH,
+  ) => {
     await deleteMenuApi(menu)
     await loadSidebarMenuList()
     if (isMenuDetailPage && menu.menuNumb === menuForm.menuNumb && menu.subxNumb === menuForm.subxNumb) movePath(MENU_LIST_PATH)
     else if (isMenuDetailPage) await openMenuDetailPage(menuForm.menuNumb, menuForm.subxNumb)
-    else await openMenuListPage(menuPageData.pageNumber)
+    else await openMenuListPage(menuPageData.pageNumber, search)
   }
 
   /**
@@ -638,7 +662,7 @@ function App() {
       const result = await createCodeMaster({ ...masterForm, commCode: masterForm.commCode.trim() })
       alert(result.message)
       const saved = result.data
-      const pageData = await getCodeMasters(codePageData.pageNumber)
+      const pageData = await getCodeMasters(codePageData.pageNumber, codeAppliedSearch)
       setCodePageData(pageData)
       setCodeMasters(pageData.items)
       setSelectedMaster(saved)
@@ -697,7 +721,7 @@ function App() {
       alert(result.message)
       setSelectedMaster(result.data)
       setMasterEditForm(result.data)
-      const pageData = await getCodeMasters(codePageData.pageNumber)
+      const pageData = await getCodeMasters(codePageData.pageNumber, codeAppliedSearch)
       setCodePageData(pageData)
       setCodeMasters(pageData.items)
     } catch (err: unknown) {
@@ -888,7 +912,7 @@ function App() {
 
   return (
     <AdminLayout admin={admin} menus={menus} currentPath={currentPath} activePath={activeMenuPath} error={error} onMovePath={movePath} onLogout={handleLogout}>
-      {isMenuListPage && <MenuListPage menuRows={menuRows} pageData={menuPageData} useeYsnoCodes={useeYsnoCodes} onPageChange={(pageNumber) => void openMenuListPage(pageNumber)} onMovePath={movePath} onDelete={(menu) => void deleteMenu(menu)} />}
+      {isMenuListPage && <MenuListPage menuRows={menuRows} pageData={menuPageData} useeYsnoCodes={useeYsnoCodes} onSearch={(pageNumber, search) => void openMenuListPage(pageNumber, search)} onMovePath={movePath} onDelete={(menu, search) => void deleteMenu(menu, search)} />}
       {(isMenuDetailPage || isMenuNewPage) && (
         <MenuDetailPage
           isNewPage={isMenuNewPage}
@@ -933,7 +957,7 @@ function App() {
         />
       )}
       {isPopupContentPage && <PopupContentManagePage currentPath={currentPath} onMovePath={movePath} onError={setError} />}
-      {isCodeListPage && <CodeListPage codeMasters={codeMasters} pageData={codePageData} useeYsnoCodes={useeYsnoCodes} onPageChange={(pageNumber) => void openCodeListPage(pageNumber)} onSelect={selectCodeMaster} onOpenRegister={() => setShowMasterForm(true)} />}
+      {isCodeListPage && <CodeListPage codeMasters={codeMasters} pageData={codePageData} useeYsnoCodes={useeYsnoCodes} onSearch={(pageNumber, search) => void openCodeListPage(pageNumber, search)} onSelect={selectCodeMaster} onOpenRegister={() => setShowMasterForm(true)} />}
       {isCodeDetailPage && (
         <CodeDetailPage
           selectedMaster={selectedMaster}
@@ -956,7 +980,7 @@ function App() {
           onSaveAll={() => void saveAllCodeDetail()}
         />
       )}
-      {isAlimTempListPage && <AlimTempListPage alimTemps={alimTemps} pageData={alimPageData} useeYsnoCodes={useeYsnoCodes} onPageChange={(pageNumber) => void openAlimTempListPage(pageNumber)} onMovePath={movePath} />}
+      {isAlimTempListPage && <AlimTempListPage alimTemps={alimTemps} pageData={alimPageData} alimSituCodes={alimSituCodes} useeYsnoCodes={useeYsnoCodes} onSearch={(pageNumber, search) => void openAlimTempListPage(pageNumber, search)} onMovePath={movePath} />}
       {(isAlimTempDetailPage || isAlimTempNewPage) && (
         <AlimTempDetailPage
           isNewPage={isAlimTempNewPage}

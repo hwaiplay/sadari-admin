@@ -8,6 +8,7 @@ import org.sadari.admin.sadariadmin.common.result.ResultEnum;
 import org.sadari.admin.sadariadmin.common.util.StringUtil;
 import org.sadari.admin.sadariadmin.popup.mapper.PopupContentMapper;
 import org.sadari.admin.sadariadmin.popup.service.PopupContentService;
+import org.sadari.admin.sadariadmin.popup.vo.PopupContentSearchVO;
 import org.sadari.admin.sadariadmin.popup.vo.PopupContentVO;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
@@ -30,6 +31,7 @@ import java.util.Set;
  * DATE              AUTHOR             NOTE
  * -----------------------------------------------------------
  * 2026-07-30        SeungHyeon.Kang    최초 생성
+ * 2026-07-31        SeungHyeon.Kang    팝업 콘텐츠 목록 검색 조건 추가
  */
 @Service
 @Transactional(readOnly = true)
@@ -38,10 +40,10 @@ public class PopupContentServiceImpl implements PopupContentService {
     // 팝업 코드에서 허용하는 영문 대문자와 숫자 및 밑줄 형식
     private static final String POPUP_CODE_PATTERN = "^[A-Z][A-Z0-9_]*$";
 
-    // 관리용 제목의 Oracle VARCHAR2 저장 가능 바이트
+    // 관리용 제목 저장 가능 바이트
     private static final int TITLE_MAX_BYTES = 200;
 
-    // 각 콘텐츠 영역의 Oracle VARCHAR2 저장 가능 바이트
+    // 각 콘텐츠 영역 저장 가능 바이트
     private static final int CONTENT_MAX_BYTES = 4000;
 
     // 팝업 콘텐츠 Mapper
@@ -66,19 +68,23 @@ public class PopupContentServiceImpl implements PopupContentService {
      * 로그인 관리자에게 팝업 콘텐츠 목록 페이지를 제공한다
      *
      * @author SeungHyeon.Kang
-     * @param pageNumber 요청 페이지 번호
+     * @param search 팝업 콘텐츠 검색 조건
      * @param admin 로그인 관리자 세션
      * @return 팝업 콘텐츠 목록과 페이지 정보
      */
     @Override
-    public PageData<PopupContentVO> getPopupContentList(int pageNumber, AdminSessionVO admin) {
+    public PageData<PopupContentVO> getPopupContentList(PopupContentSearchVO search, AdminSessionVO admin) {
         // 인증되지 않은 관리자가 운영 콘텐츠를 조회하지 못하도록 로그인 상태를 확인한다
         checkLogin(admin);
-        // 요청 페이지를 Oracle 조회 행 범위로 변환한다
-        PageRequest pageRequest = new PageRequest(pageNumber);
-        // 현재 페이지 목록과 전체 건수로 팝업 콘텐츠 페이지를 생성한다
-        return PageData.of(popupContentMapper.getPopupContentList(pageRequest.getStartRow(), pageRequest.getEndRow())
-                         , popupContentMapper.getPopupContentListCnt(), pageRequest);
+        // 요청 페이지를 데이터베이스 조회 행 범위로 변환한다
+        PageRequest pageRequest = new PageRequest(search.getPage());
+        // 목록과 건수 조회에 같은 검색 조건과 시작 행을 적용한다
+        search.setStartRow(pageRequest.getStartRow());
+        // 검색 조건에 페이지 마지막 행을 적용한다
+        search.setEndRow(pageRequest.getEndRow());
+        // 검색 조건에 맞는 목록과 전체 건수로 팝업 콘텐츠 페이지를 생성한다
+        return PageData.of(popupContentMapper.getPopupContentList(search)
+                         , popupContentMapper.getPopupContentListCnt(search), pageRequest);
     }
 
     /**
@@ -188,7 +194,7 @@ public class PopupContentServiceImpl implements PopupContentService {
 
         // 복합키가 허용 형식과 길이를 만족하는지 저장 전에 확인한다
         validateKey(popupContent.getPopuSitu(), popupContent.getPopuCode());
-        // 관리용 제목이 Oracle 컬럼의 실제 바이트 한도를 넘지 않는지 확인한다
+        // 관리용 제목이 데이터베이스 컬럼의 실제 바이트 한도를 넘지 않는지 확인한다
         validateByteLength(popupContent.getMngmTitl().trim(), TITLE_MAX_BYTES);
         // 첫 번째 콘텐츠는 사용자 화면의 필수 목록이므로 하나 이상의 문구를 유지하도록 정규화한다
         popupContent.setContFirs(normalizeContent(popupContent.getContFirs(), true));
@@ -203,7 +209,7 @@ public class PopupContentServiceImpl implements PopupContentService {
     }
 
     /**
-     * JSON 문자열 배열의 공백과 중복을 제거하고 Oracle 저장 한도를 확인한다
+     * JSON 문자열 배열의 공백과 중복을 제거하고 데이터베이스 저장 한도를 확인한다
      *
      * @author SeungHyeon.Kang
      * @param content JSON 문자열 배열
@@ -256,7 +262,7 @@ public class PopupContentServiceImpl implements PopupContentService {
 
             // 검증한 문자열 목록을 일관된 JSON 배열 문자열로 직렬화한다
             String normalizedContent = objectMapper.writeValueAsString(contentItems);
-            // Oracle VARCHAR2에 저장되는 실제 UTF-8 바이트 길이를 확인한다
+            // 데이터베이스 컬럼에 저장되는 실제 UTF-8 바이트 길이를 확인한다
             validateByteLength(normalizedContent, CONTENT_MAX_BYTES);
             // 중복과 불필요한 공백이 제거된 JSON 배열 문자열을 반환한다
             return normalizedContent;
@@ -266,7 +272,7 @@ public class PopupContentServiceImpl implements PopupContentService {
     }
 
     /**
-     * 문자열의 UTF-8 바이트 길이가 Oracle VARCHAR2 한도를 넘지 않는지 확인한다
+     * 문자열의 UTF-8 바이트 길이가 데이터베이스 컬럼 한도를 넘지 않는지 확인한다
      *
      * @author SeungHyeon.Kang
      * @param value 길이를 확인할 문자열
@@ -321,7 +327,7 @@ public class PopupContentServiceImpl implements PopupContentService {
      * @param isNew 신규 등록 여부
      */
     private void setAuditAdmin(PopupContentVO popupContent, AdminSessionVO admin, boolean isNew) {
-        // VARCHAR2 관리 컬럼에 관리자 번호를 일관된 문자열로 저장한다
+        // 관리 컬럼에 관리자 번호를 일관된 문자열로 저장한다
         String adminNumb = String.valueOf(admin.getAdmnNumb());
         // 신규 등록일 때만 최초 등록자를 기록하여 이후 수정에서도 원래 등록 이력을 보존한다
         if (isNew) {

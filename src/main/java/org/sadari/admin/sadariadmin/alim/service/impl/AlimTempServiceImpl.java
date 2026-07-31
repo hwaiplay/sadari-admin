@@ -3,6 +3,7 @@ package org.sadari.admin.sadariadmin.alim.service.impl;
 import org.sadari.admin.sadariadmin.admin.vo.AdminSessionVO;
 import org.sadari.admin.sadariadmin.alim.mapper.AlimTempMapper;
 import org.sadari.admin.sadariadmin.alim.service.AlimTempService;
+import org.sadari.admin.sadariadmin.alim.vo.AlimTempSearchVO;
 import org.sadari.admin.sadariadmin.alim.vo.AlimTempVO;
 import org.sadari.admin.sadariadmin.common.constant.Constant;
 import org.sadari.admin.sadariadmin.common.exception.BusinessException;
@@ -25,6 +26,7 @@ import java.util.List;
  * DATE              AUTHOR             NOTE
  * -----------------------------------------------------------
  * 2026-07-24        SeungHyeon.Kang    최초 생성
+ * 2026-07-31        SeungHyeon.Kang    알림 템플릿 목록 검색 조건 추가
  */
 @Service
 @Transactional(readOnly = true)
@@ -49,15 +51,23 @@ public class AlimTempServiceImpl implements AlimTempService {
     /**
      * 알림 템플릿 목록 조회
      * @author SeungHyeon.Kang
-     * @param admin
-     * @return
+     * @param search 알림 템플릿 검색 조건
+     * @param admin 로그인한 관리자
+     * @return 검색된 알림 템플릿 목록
      */
     @Override
-    public PageData<AlimTempVO> getAlimTempList(int pageNumber, AdminSessionVO admin) {
+    public PageData<AlimTempVO> getAlimTempList(AlimTempSearchVO search, AdminSessionVO admin) {
+        // 인증되지 않은 요청이 알림 템플릿을 조회하지 못하도록 로그인 상태를 확인한다
         checkLogin(admin);
-        PageRequest pageRequest = new PageRequest(pageNumber);
-        return PageData.of(alimTempMapper.getAlimTempList(pageRequest.getStartRow(), pageRequest.getEndRow())
-                         , alimTempMapper.getAlimTempListCount(), pageRequest);
+        // 요청 페이지에 해당하는 조회 행 범위를 계산한다
+        PageRequest pageRequest = new PageRequest(search.getPage());
+        // 목록과 건수 조회에 같은 검색 조건과 시작 행을 적용한다
+        search.setStartRow(pageRequest.getStartRow());
+        // 검색 조건에 페이지 마지막 행을 적용한다
+        search.setEndRow(pageRequest.getEndRow());
+        // 검색 조건에 맞는 알림 템플릿 목록과 전체 건수로 페이지 응답을 생성한다
+        return PageData.of(alimTempMapper.getAlimTempList(search), alimTempMapper.getAlimTempListCount(search)
+                         , pageRequest);
     }
 
     /**

@@ -22,3 +22,7 @@ export type MenuForm = {
   sortOrdr: string
   useeYsno: string
 }
+export type MenuSearch = {
+  keyword: string
+  useeYsno: string
+}

@@ -1,17 +1,25 @@
-import type { KeyboardEvent, MouseEvent } from 'react'
+import { useState } from 'react'
+import type { FormEvent, KeyboardEvent, MouseEvent } from 'react'
 import { Pagination } from '../../components/Pagination'
 import { useMenuPermission } from '../../contexts/useMenuPermission'
 import { POPUP_CONTENT_DETAIL_PREFIX, POPUP_CONTENT_NEW_PATH } from '../../constants/routes'
+import type { Code } from '../../types/code'
 import type { PageData } from '../../types/common'
-import type { PopupContent } from '../../types/popupContent'
+import type { PopupContent, PopupContentSearch } from '../../types/popupContent'
 import { formatDate } from '../../utils/code'
 import { getPopupContentAreaCount } from '../../utils/popupContent'
 
 type PopupContentListPageProps = {
   popupContents: PopupContent[]
   pageData: PageData<PopupContent>
-  onPageChange: (pageNumber: number) => void
+  popupSituCodes: Code[]
+  onSearch: (pageNumber: number, search: PopupContentSearch) => Promise<void>
   onMovePath: (path: string) => void
+}
+
+const DEFAULT_SEARCH: PopupContentSearch = {
+  keyword: '',
+  popuSitu: '',
 }
 
 /**
@@ -20,18 +28,47 @@ type PopupContentListPageProps = {
  * @author SeungHyeon.Kang
  * @param popupContents 현재 페이지 팝업 콘텐츠 목록
  * @param pageData 팝업 콘텐츠 페이지 정보
- * @param onPageChange 페이지 이동 처리 함수
+ * @param popupSituCodes 팝업 사용 화면 공통코드 목록
+ * @param onSearch 검색과 페이지 이동 처리 함수
  * @param onMovePath 관리자 화면 경로 이동 함수
  * @return 팝업 콘텐츠 목록 화면
  */
 export function PopupContentListPage({
   popupContents,
   pageData,
-  onPageChange,
+  popupSituCodes,
+  onSearch,
   onMovePath,
 }: PopupContentListPageProps) {
   // 현재 메뉴의 등록과 수정 가능 여부를 확인한다
   const permission = useMenuPermission()
+  const [search, setSearch] = useState<PopupContentSearch>(DEFAULT_SEARCH)
+  const [appliedSearch, setAppliedSearch] = useState<PopupContentSearch>(DEFAULT_SEARCH)
+
+  /**
+   * 팝업 콘텐츠 검색 조건을 첫 페이지부터 적용한다
+   *
+   * @author SeungHyeon.Kang
+   * @param event 검색 폼 제출 이벤트
+   * @return 반환값이 없다
+   */
+  const handleSearch = async (event: FormEvent<HTMLFormElement>): Promise<void> => {
+    event.preventDefault()
+    await onSearch(1, search)
+    setAppliedSearch(search)
+  }
+
+  /**
+   * 팝업 콘텐츠 검색 조건을 초기화한다
+   *
+   * @author SeungHyeon.Kang
+   * @return 반환값이 없다
+   */
+  const handleSearchReset = async (): Promise<void> => {
+    setSearch(DEFAULT_SEARCH)
+    setAppliedSearch(DEFAULT_SEARCH)
+    await onSearch(1, DEFAULT_SEARCH)
+  }
 
   /**
    * 목록 행에 저장된 복합키로 팝업 상세 화면을 연다
@@ -138,6 +175,30 @@ export function PopupContentListPage({
         <div className="status">총 {pageData.totalCount}건</div>
       </section>
 
+      {/* 팝업 콘텐츠 식별 특성에 맞는 검색 조건 영역 */}
+      <form className="list-search" onSubmit={(event) => void handleSearch(event)}>
+        <label>
+          <span>검색어</span>
+          <input value={search.keyword} placeholder="팝업 코드 또는 관리용 제목"
+                 onChange={(event) => setSearch({ ...search, keyword: event.target.value })} />
+        </label>
+        <label>
+          <span>사용 화면</span>
+          <select value={search.popuSitu}
+                  onChange={(event) => setSearch({ ...search, popuSitu: event.target.value })}>
+            <option value="">전체</option>
+            {popupSituCodes.map((code) => (
+              <option key={code.comdCode} value={code.comdCode}>{code.opt1Name ?? code.comdName}</option>
+            ))}
+          </select>
+        </label>
+        <div className="list-search-actions">
+          <button type="button" className="subtle-button"
+                  onClick={() => void handleSearchReset()}>초기화</button>
+          <button type="submit">검색</button>
+        </div>
+      </form>
+
       {/* 팝업 콘텐츠 목록 표 영역 */}
       <section className="table-wrap popup-content-list-table">
         <table>
@@ -170,7 +231,8 @@ export function PopupContentListPage({
       </section>
 
       {/* 팝업 콘텐츠 목록 페이지 이동 영역 */}
-      <Pagination pageNumber={pageData.pageNumber} totalPages={pageData.totalPages} onPageChange={onPageChange} />
+      <Pagination pageNumber={pageData.pageNumber} totalPages={pageData.totalPages}
+                  onPageChange={(pageNumber) => void onSearch(pageNumber, appliedSearch)} />
 
       {/* 팝업 콘텐츠 신규 등록 진입 영역 */}
       {permission.writYsno === 'Y' && (

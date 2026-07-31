@@ -2,6 +2,7 @@ package org.sadari.admin.sadariadmin.alim.mapper;
 
 import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Param;
+import org.sadari.admin.sadariadmin.alim.vo.AlimTempSearchVO;
 import org.sadari.admin.sadariadmin.alim.vo.AlimTempVO;
 
 import java.util.List;
@@ -15,17 +16,20 @@ import java.util.List;
  * DATE              AUTHOR             NOTE
  * -----------------------------------------------------------
  * 2026-07-24        SeungHyeon.Kang    최초 생성
+ * 2026-07-31        SeungHyeon.Kang    알림 템플릿 목록 검색 조건 추가
  */@Mapper
 public interface AlimTempMapper {
 
     /**
      * 알림 템플릿 목록 조회
      * @author SeungHyeon.Kang
-     * @return
+     * @param search 알림 템플릿 검색 조건과 페이지 범위
+     * @return 검색된 알림 템플릿 목록
      */
-    List<AlimTempVO> getAlimTempList(@Param("startRow") int startRow, @Param("endRow") int endRow);
+    List<AlimTempVO> getAlimTempList(AlimTempSearchVO search);
 
-    int getAlimTempListCount();
+    /** 검색 조건에 맞는 알림 템플릿 전체 건수 조회 */
+    int getAlimTempListCount(AlimTempSearchVO search);
 
     /**
      * 알림 템플릿 상세 조회

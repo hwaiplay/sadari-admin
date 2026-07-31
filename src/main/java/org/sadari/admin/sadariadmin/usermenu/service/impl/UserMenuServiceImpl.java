@@ -9,6 +9,7 @@ import org.sadari.admin.sadariadmin.common.result.ResultEnum;
 import org.sadari.admin.sadariadmin.common.util.StringUtil;
 import org.sadari.admin.sadariadmin.usermenu.mapper.UserMenuMapper;
 import org.sadari.admin.sadariadmin.usermenu.service.UserMenuService;
+import org.sadari.admin.sadariadmin.usermenu.vo.UserMenuSearchVO;
 import org.sadari.admin.sadariadmin.usermenu.vo.UserMenuVO;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
@@ -25,6 +26,7 @@ import java.util.List;
  * DATE              AUTHOR             NOTE
  * -----------------------------------------------------------
  * 2026-07-27        SeungHyeon.Kang    최초 생성
+ * 2026-07-31        SeungHyeon.Kang    사용자 메뉴 목록 검색 조건 추가
  */
 @Service
 @Transactional(readOnly = true)
@@ -40,11 +42,18 @@ public class UserMenuServiceImpl implements UserMenuService {
 
     /** 사용자 상위 메뉴 목록 조회 */
     @Override
-    public PageData<UserMenuVO> getUserMenuList(int pageNumber, AdminSessionVO admin) {
+    public PageData<UserMenuVO> getUserMenuList(UserMenuSearchVO search, AdminSessionVO admin) {
+        // 인증되지 않은 요청이 사용자 메뉴 정보를 조회하지 못하도록 로그인 상태를 확인한다
         checkLogin(admin);
-        PageRequest pageRequest = new PageRequest(pageNumber);
-        return PageData.of(userMenuMapper.getUserMenuList(pageRequest.getStartRow(), pageRequest.getEndRow())
-                         , userMenuMapper.getUserMenuCount(), pageRequest);
+        // 요청 페이지에 해당하는 조회 행 범위를 계산한다
+        PageRequest pageRequest = new PageRequest(search.getPage());
+        // 목록과 건수 조회에 같은 검색 조건과 시작 행을 적용한다
+        search.setStartRow(pageRequest.getStartRow());
+        // 검색 조건에 페이지 마지막 행을 적용한다
+        search.setEndRow(pageRequest.getEndRow());
+        // 검색 조건에 맞는 사용자 메뉴 목록과 전체 건수로 페이지 응답을 생성한다
+        return PageData.of(userMenuMapper.getUserMenuList(search), userMenuMapper.getUserMenuCount(search)
+                         , pageRequest);
     }
 
     /** 사용자 메뉴 상세 조회 */

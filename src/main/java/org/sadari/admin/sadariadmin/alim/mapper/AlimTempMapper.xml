@@ -10,6 +10,23 @@
         <bind name="useeYsnoCode" value="@org.sadari.admin.sadariadmin.common.constant.Constant@USEE_YSNO_CODE"/>
     </sql>
 
+    <!-- 알림 템플릿 목록과 건수에 동일하게 적용할 검색 조건이다 -->
+    <sql id="alimTempSearchConditions">
+        <if test="keyword != null and keyword != ''">
+            <bind name="keywordLike" value="'%' + keyword.toUpperCase() + '%'"/>
+           AND (
+                   UPPER(A.TEMP_CODE) LIKE #{keywordLike}
+                OR UPPER(A.TEMP_TITL) LIKE #{keywordLike}
+               )
+        </if>
+        <if test="alimSitu != null and alimSitu != ''">
+           AND A.ALIM_SITU = #{alimSitu}
+        </if>
+        <if test="useeYsno != null and useeYsno != ''">
+           AND A.USEE_YSNO = #{useeYsno}
+        </if>
+    </sql>
+
     <!-- 알림 템플릿 공통 조회 컬럼 목록 -->
     <sql id="alimTempColumns">
           ALIM_SITU
@@ -49,7 +66,8 @@
     </sql>
 
     <!-- 알림 템플릿 목록을 조회한다 -->
-    <select id="getAlimTempList" resultType="org.sadari.admin.sadariadmin.alim.vo.AlimTempVO">
+    <select id="getAlimTempList" parameterType="org.sadari.admin.sadariadmin.alim.vo.AlimTempSearchVO"
+            resultType="org.sadari.admin.sadariadmin.alim.vo.AlimTempVO">
         <include refid="codeNameBindings"/>
         SELECT /* getAlimTempList */
                <include refid="alimTempPageColumns"/>
@@ -68,22 +86,30 @@
                        , R.UPDT_ADMN
                        , R.UPDT_ADMN_NAME
                        , R.UPDT_DATE
-                       , ROWNUM AS ROW_NUMB
+                       , ROW_NUMBER() OVER (
+                             ORDER BY R.ALIM_SITU
+                                    , R.TEMP_CODE
+                         ) AS ROW_NUMB
                     FROM (  SELECT <include refid="alimTempColumns"/>
-                              FROM TB_ALTEMP
-                          ORDER BY ALIM_SITU
-                                 , TEMP_CODE
+                              FROM TB_ALTEMP A
+                             WHERE 1 = 1
+                                   <include refid="alimTempSearchConditions"/>
+                          ORDER BY A.ALIM_SITU
+                                 , A.TEMP_CODE
                          ) R
-                   WHERE ROWNUM <![CDATA[<=]]> #{endRow}
                ) P
-         WHERE P.ROW_NUMB <![CDATA[>=]]> #{startRow}
+         WHERE P.ROW_NUMB BETWEEN #{startRow} AND #{endRow}
+      ORDER BY P.ROW_NUMB
     </select>
 
     <!-- 알림 템플릿 전체 건수를 조회한다 -->
-    <select id="getAlimTempListCount" resultType="int">
+    <select id="getAlimTempListCount" parameterType="org.sadari.admin.sadariadmin.alim.vo.AlimTempSearchVO"
+            resultType="int">
         SELECT /* getAlimTempListCount */
                COUNT(1)
-          FROM TB_ALTEMP
+          FROM TB_ALTEMP A
+         WHERE 1 = 1
+               <include refid="alimTempSearchConditions"/>
     </select>
 
     <!-- 알림 상황과 템플릿 코드로 알림 템플릿 상세를 조회한다 -->
@@ -128,9 +154,9 @@
                   , #{linkUrlx}
                   , #{useeYsno}
                   , #{regiAdmn}
-                  , SYSDATE
+                  , CURRENT_TIMESTAMP
                   , #{updtAdmn}
-                  , SYSDATE
+                  , CURRENT_TIMESTAMP
         )
     </insert>
 
@@ -146,7 +172,7 @@
              , LINK_URLX = #{alimTemp.linkUrlx}
              , USEE_YSNO = #{alimTemp.useeYsno}
              , UPDT_ADMN = #{alimTemp.updtAdmn}
-             , UPDT_DATE = SYSDATE
+             , UPDT_DATE = CURRENT_TIMESTAMP
          WHERE ALIM_SITU = #{oldAlimSitu}
            AND TEMP_CODE = #{oldTempCode}
     </update>

@@ -9,6 +9,20 @@
         <bind name="useeYsnoCode" value="@org.sadari.admin.sadariadmin.common.constant.Constant@USEE_YSNO_CODE"/>
     </sql>
 
+    <!-- 관리자 메뉴 목록과 건수에 동일하게 적용할 검색 조건이다 -->
+    <sql id="menuSearchConditions">
+        <if test="keyword != null and keyword != ''">
+            <bind name="keywordLike" value="'%' + keyword.toUpperCase() + '%'"/>
+           AND (
+                   UPPER(M.MENU_NAME) LIKE #{keywordLike}
+                OR UPPER(M.MENU_URLX) LIKE #{keywordLike}
+               )
+        </if>
+        <if test="useeYsno != null and useeYsno != ''">
+           AND M.USEE_YSNO = #{useeYsno}
+        </if>
+    </sql>
+
     <!-- 메뉴 공통 조회 컬럼 목록 -->
     <sql id="menuColumns">
           MENU_NUMB
@@ -70,16 +84,16 @@
            AND A.READ_YSNO = #{yes}
           JOIN TM_AUTHXM G
             ON G.AUTH_CODE = A.AUTH_CODE
-           AND NVL(G.USEE_YSNO, #{yes}) = #{yes}
+           AND COALESCE(G.USEE_YSNO, #{yes}) = #{yes}
      LEFT JOIN TM_ADMENU P
             ON P.MENU_NUMB = M.MENU_NUMB
            AND P.SUBX_NUMB = #{topMenuSubxNumb}
-         WHERE NVL(M.USEE_YSNO, #{yes}) = #{yes}
-      ORDER BY NVL(P.SORT_ORDR, M.SORT_ORDR)
-             , TO_NUMBER(M.MENU_NUMB)
+         WHERE COALESCE(M.USEE_YSNO, #{yes}) = #{yes}
+      ORDER BY COALESCE(P.SORT_ORDR, M.SORT_ORDR)
+             , CAST(M.MENU_NUMB AS UNSIGNED)
              , CASE WHEN M.SUBX_NUMB = #{topMenuSubxNumb} THEN 0 ELSE 1 END
-             , NVL(M.SORT_ORDR, 9999)
-             , TO_NUMBER(M.SUBX_NUMB)
+             , COALESCE(M.SORT_ORDR, 9999)
+             , CAST(M.SUBX_NUMB AS UNSIGNED)
     </select>
 
     <!-- 권한 코드와 메뉴 URL로 조회, 쓰기, 삭제 권한을 조회한다 -->
@@ -87,9 +101,9 @@
         <bind name="no" value="@org.sadari.admin.sadariadmin.common.constant.Constant@NO"/>
         <bind name="yes" value="@org.sadari.admin.sadariadmin.common.constant.Constant@YES"/>
         SELECT /* getMenuPermission */
-               NVL(MAX(A.READ_YSNO), #{no}) AS READ_YSNO
-             , NVL(MAX(A.WRIT_YSNO), #{no}) AS WRIT_YSNO
-             , NVL(MAX(A.DELT_YSNO), #{no}) AS DELT_YSNO
+               COALESCE(MAX(A.READ_YSNO), #{no}) AS READ_YSNO
+             , COALESCE(MAX(A.WRIT_YSNO), #{no}) AS WRIT_YSNO
+             , COALESCE(MAX(A.DELT_YSNO), #{no}) AS DELT_YSNO
           FROM TM_ADMENU M
           JOIN TB_AUTHMN A
             ON A.MENU_NUMB = M.MENU_NUMB
@@ -97,12 +111,13 @@
            AND A.AUTH_CODE = #{authCode}
           JOIN TM_AUTHXM G
             ON G.AUTH_CODE = A.AUTH_CODE
-           AND NVL(G.USEE_YSNO, #{yes}) = #{yes}
+           AND COALESCE(G.USEE_YSNO, #{yes}) = #{yes}
          WHERE TRIM(M.MENU_URLX) = #{menuUrlx}
     </select>
 
     <!-- 메뉴관리 화면에 표시할 전체 메뉴 목록을 조회한다 -->
-    <select id="getMenuMngList" resultType="org.sadari.admin.sadariadmin.menu.vo.MenuVO">
+    <select id="getMenuMngList" parameterType="org.sadari.admin.sadariadmin.menu.vo.MenuSearchVO"
+            resultType="org.sadari.admin.sadariadmin.menu.vo.MenuVO">
         <bind name="topMenuSubxNumb" value="@org.sadari.admin.sadariadmin.common.constant.Constant@TOP_MENU_SUBX_NUMB"/>
         <include refid="codeNameBindings"/>
         SELECT /* getMenuMngList */
@@ -120,25 +135,31 @@
                        , R.UPDT_ADMN
                        , R.UPDT_ADMN_NAME
                        , R.UPDT_DATE
-                       , ROWNUM AS ROW_NUMB
+                       , ROW_NUMBER() OVER (
+                             ORDER BY COALESCE(R.SORT_ORDR, 9999)
+                                    , CAST(R.MENU_NUMB AS UNSIGNED)
+                         ) AS ROW_NUMB
                     FROM (  SELECT <include refid="menuColumns"/>
                               FROM TM_ADMENU M
                              WHERE M.SUBX_NUMB = #{topMenuSubxNumb}
-                          ORDER BY NVL(M.SORT_ORDR, 9999)
-                                 , TO_NUMBER(M.MENU_NUMB)
+                                   <include refid="menuSearchConditions"/>
+                          ORDER BY COALESCE(M.SORT_ORDR, 9999)
+                                 , CAST(M.MENU_NUMB AS UNSIGNED)
                          ) R
-                   WHERE ROWNUM <![CDATA[<=]]> #{endRow}
                ) P
-         WHERE P.ROW_NUMB <![CDATA[>=]]> #{startRow}
+         WHERE P.ROW_NUMB BETWEEN #{startRow} AND #{endRow}
+      ORDER BY P.ROW_NUMB
     </select>
 
     <!-- 메뉴관리 상위 메뉴 전체 건수를 조회한다 -->
-    <select id="getMenuMngCount" resultType="int">
+    <select id="getMenuMngCount" parameterType="org.sadari.admin.sadariadmin.menu.vo.MenuSearchVO"
+            resultType="int">
         <bind name="topMenuSubxNumb" value="@org.sadari.admin.sadariadmin.common.constant.Constant@TOP_MENU_SUBX_NUMB"/>
         SELECT /* getMenuMngCount */
                COUNT(1)
-          FROM TM_ADMENU
-         WHERE SUBX_NUMB = #{topMenuSubxNumb}
+          FROM TM_ADMENU M
+         WHERE M.SUBX_NUMB = #{topMenuSubxNumb}
+               <include refid="menuSearchConditions"/>
     </select>
 
     <!-- 메뉴 번호와 하위 메뉴 번호로 메뉴 상세를 조회한다 -->
@@ -160,14 +181,14 @@
           FROM TM_ADMENU
          WHERE MENU_NUMB = #{menuNumb}
            AND SUBX_NUMB != #{topMenuSubxNumb}
-      ORDER BY NVL(SORT_ORDR, 9999) DESC
+      ORDER BY COALESCE(SORT_ORDR, 9999) DESC
     </select>
 
     <!-- 신규 상위 메뉴 번호를 조회한다 -->
     <select id="getMenuNumb" resultType="string">
         <bind name="topMenuSubxNumb" value="@org.sadari.admin.sadariadmin.common.constant.Constant@TOP_MENU_SUBX_NUMB"/>
         SELECT /* getMenuNumb */
-               TO_CHAR(NVL(MAX(TO_NUMBER(MENU_NUMB)), 0) + 1)
+               CAST(COALESCE(MAX(CAST(MENU_NUMB AS UNSIGNED)), 0) + 1 AS CHAR)
           FROM TM_ADMENU
          WHERE SUBX_NUMB = #{topMenuSubxNumb}
     </select>
@@ -175,7 +196,7 @@
     <!-- 특정 상위 메뉴 아래의 신규 하위 메뉴 번호를 조회한다 -->
     <select id="getSubxNumb" resultType="string">
         SELECT /* getSubxNumb */
-               TO_CHAR(NVL(MAX(TO_NUMBER(SUBX_NUMB)), -1) + 1)
+               CAST(COALESCE(MAX(CAST(SUBX_NUMB AS UNSIGNED)), -1) + 1 AS CHAR)
           FROM TM_ADMENU
          WHERE MENU_NUMB = #{menuNumb}
     </select>
@@ -201,9 +222,9 @@
                   , #{sortOrdr,jdbcType=NUMERIC}
                   , #{useeYsno}
                   , #{regiAdmn}
-                  , SYSTIMESTAMP
+                  , CURRENT_TIMESTAMP
                   , #{updtAdmn}
-                  , SYSTIMESTAMP
+                  , CURRENT_TIMESTAMP
         )
     </insert>
 
@@ -230,9 +251,9 @@
              , #{yes}
              , #{yes}
              , #{regiAdmn}
-             , SYSTIMESTAMP
+             , CURRENT_TIMESTAMP
              , #{updtAdmn}
-             , SYSTIMESTAMP
+             , CURRENT_TIMESTAMP
           FROM TM_AUTHXM A
     </insert>
 
@@ -245,7 +266,7 @@
              , SORT_ORDR = #{sortOrdr,jdbcType=NUMERIC}
              , USEE_YSNO = #{useeYsno}
              , UPDT_ADMN = #{updtAdmn}
-             , UPDT_DATE = SYSTIMESTAMP
+             , UPDT_DATE = CURRENT_TIMESTAMP
          WHERE MENU_NUMB = #{menuNumb}
            AND SUBX_NUMB = #{subxNumb}
     </update>

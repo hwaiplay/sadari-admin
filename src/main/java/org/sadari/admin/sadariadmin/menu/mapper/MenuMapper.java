@@ -2,8 +2,9 @@ package org.sadari.admin.sadariadmin.menu.mapper;
 
 import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Param;
-import org.sadari.admin.sadariadmin.menu.vo.MenuVO;
 import org.sadari.admin.sadariadmin.menu.vo.MenuPermissionVO;
+import org.sadari.admin.sadariadmin.menu.vo.MenuSearchVO;
+import org.sadari.admin.sadariadmin.menu.vo.MenuVO;
 
 import java.util.List;
 
@@ -16,6 +17,7 @@ import java.util.List;
  * DATE              AUTHOR             NOTE
  * -----------------------------------------------------------
  * 2026-07-08        SeungHyeon.Kang    최초 생성
+ * 2026-07-31        SeungHyeon.Kang    메뉴 목록 검색 조건 추가
  */@Mapper
 public interface MenuMapper {
 
@@ -23,7 +25,8 @@ public interface MenuMapper {
      * 권한 레벨별 사이드바 메뉴 목록 조회
      * @author SeungHyeon.Kang
      * @param authLevel
-     * @return
+     * @param search 메뉴 검색 조건과 페이지 범위
+     * @return 검색된 메뉴 목록
      */
     List<MenuVO> getMenuList(@Param("authCode") String authCode);
 
@@ -41,9 +44,16 @@ public interface MenuMapper {
      * @author SeungHyeon.Kang
      * @return
      */
-    List<MenuVO> getMenuMngList(@Param("startRow") int startRow, @Param("endRow") int endRow);
+    List<MenuVO> getMenuMngList(MenuSearchVO search);
 
-    int getMenuMngCount();
+    /**
+     * 검색 조건에 맞는 관리자 메뉴 전체 건수를 조회한다
+     *
+     * @author SeungHyeon.Kang
+     * @param search 메뉴 검색 조건
+     * @return 검색된 메뉴 전체 건수
+     */
+    int getMenuMngCount(MenuSearchVO search);
 
     /**
      * 메뉴 상세 조회

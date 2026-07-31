@@ -2,6 +2,7 @@ package org.sadari.admin.sadariadmin.popup.mapper;
 
 import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Param;
+import org.sadari.admin.sadariadmin.popup.vo.PopupContentSearchVO;
 import org.sadari.admin.sadariadmin.popup.vo.PopupContentVO;
 
 import java.util.List;
@@ -15,6 +16,7 @@ import java.util.List;
  * DATE              AUTHOR             NOTE
  * -----------------------------------------------------------
  * 2026-07-30        SeungHyeon.Kang    최초 생성
+ * 2026-07-31        SeungHyeon.Kang    팝업 콘텐츠 목록 검색 조건 추가
  */
 @Mapper
 public interface PopupContentMapper {
@@ -23,19 +25,19 @@ public interface PopupContentMapper {
      * 팝업 콘텐츠 목록의 현재 페이지 데이터를 조회한다
      *
      * @author SeungHyeon.Kang
-     * @param startRow 조회 시작 행 번호
-     * @param endRow 조회 종료 행 번호
+     * @param search 팝업 콘텐츠 검색 조건과 페이지 범위
      * @return 현재 페이지의 팝업 콘텐츠 목록
      */
-    List<PopupContentVO> getPopupContentList(@Param("startRow") int startRow, @Param("endRow") int endRow);
+    List<PopupContentVO> getPopupContentList(PopupContentSearchVO search);
 
     /**
      * 전체 팝업 콘텐츠 건수를 조회한다
      *
      * @author SeungHyeon.Kang
-     * @return 전체 팝업 콘텐츠 건수
+     * @param search 팝업 콘텐츠 검색 조건
+     * @return 검색된 팝업 콘텐츠 건수
      */
-    int getPopupContentListCnt();
+    int getPopupContentListCnt(PopupContentSearchVO search);
 
     /**
      * 화면 구분과 팝업 코드로 팝업 콘텐츠 상세를 조회한다

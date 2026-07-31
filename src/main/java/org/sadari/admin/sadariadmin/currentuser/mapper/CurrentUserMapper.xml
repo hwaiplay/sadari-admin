@@ -7,8 +7,8 @@
     <sql id="currentUserSearchConditions">
         <if test="keyword != null and keyword != ''">
            AND (
-                   TO_CHAR(U.USER_NUMB) = #{keyword}
-                OR UPPER(U.USER_NICK) LIKE '%' || UPPER(#{keyword}) || '%'
+                   CAST(U.USER_NUMB AS CHAR) = #{keyword}
+                OR UPPER(U.USER_NICK) LIKE CONCAT('%', UPPER(#{keyword}), '%')
                )
         </if>
         <if test="userStat != null and userStat != ''">
@@ -24,7 +24,7 @@
            AND U.JOIN_DATE <![CDATA[>=]]> #{joinDateFrom}
         </if>
         <if test="joinDateTo != null">
-           AND U.JOIN_DATE <![CDATA[<]]> #{joinDateTo} + 1
+           AND U.JOIN_DATE <![CDATA[<]]> DATE_ADD(#{joinDateTo}, INTERVAL 1 DAY)
         </if>
     </sql>
 
@@ -43,7 +43,7 @@
         , U.WTHD_DATE
         , U.DELT_DATE
         , L.LAST_LOGN_DATE
-        , NVL(R.REPORT_CNTT, 0) AS REPORT_CNTT
+        , COALESCE(R.REPORT_CNTT, 0) AS REPORT_CNTT
     </sql>
 
     <!-- 검색 조건에 맞는 현재 사용자를 최근 가입순으로 조회한다 -->
@@ -81,7 +81,10 @@
                        , R.DELT_DATE
                        , R.LAST_LOGN_DATE
                        , R.REPORT_CNTT
-                       , ROWNUM AS ROW_NUMB
+                       , ROW_NUMBER() OVER (
+                             ORDER BY R.JOIN_DATE DESC
+                                    , R.USER_NUMB DESC
+                         ) AS ROW_NUMB
                     FROM (  SELECT <include refid="currentUserListColumns"/>
                               FROM TM_USERXM U
                          LEFT JOIN (  SELECT H.USER_NUMB
@@ -102,9 +105,9 @@
                           ORDER BY U.JOIN_DATE DESC
                                  , U.USER_NUMB DESC
                          ) R
-                   WHERE ROWNUM <![CDATA[<=]]> #{endRow}
                ) P
-         WHERE P.ROW_NUMB <![CDATA[>=]]> #{startRow}
+         WHERE P.ROW_NUMB BETWEEN #{startRow} AND #{endRow}
+      ORDER BY P.ROW_NUMB
     </select>
 
     <!-- 검색 조건에 맞는 현재 사용자 전체 건수를 조회한다 -->
@@ -131,7 +134,7 @@
              , U.USER_ROLE
              , U.USER_STAT
              , FN_GET_CODE_NAME(#{userStatCode}, U.USER_STAT, #{userStatCode}) AS USER_STAT_NAME
-             , NVL(E.SYNC_STAT, #{userStatusSyncCompleted}) AS USER_STATUS_SYNC_STAT
+             , COALESCE(E.SYNC_STAT, #{userStatusSyncCompleted}) AS USER_STATUS_SYNC_STAT
              , U.ONBD_YSNO
              , CASE U.ONBD_YSNO WHEN #{yes} THEN '완료' ELSE '미완료' END AS ONBD_YSNO_NAME
              , U.INTR_CNTN
@@ -141,13 +144,13 @@
              , U.WTHD_DATE
              , U.DELT_DATE
              , L.LAST_LOGN_DATE
-             , NVL(R.REPORT_CNTT, 0) AS REPORT_CNTT
-             , NVL(P.REPLY_CNTT, 0) AS REPLY_CNTT
-             , NVL(K.LIKE_CNTT, 0) AS LIKE_CNTT
-             , NVL(F.FOLLOWING_CNTT, 0) AS FOLLOWING_CNTT
-             , NVL(W.FOLLOWER_CNTT, 0) AS FOLLOWER_CNTT
-             , NVL(G.GOAL_CNTT, 0) AS GOAL_CNTT
-             , NVL(S.PUSH_CNTT, 0) AS PUSH_CNTT
+             , COALESCE(R.REPORT_CNTT, 0) AS REPORT_CNTT
+             , COALESCE(P.REPLY_CNTT, 0) AS REPLY_CNTT
+             , COALESCE(K.LIKE_CNTT, 0) AS LIKE_CNTT
+             , COALESCE(F.FOLLOWING_CNTT, 0) AS FOLLOWING_CNTT
+             , COALESCE(W.FOLLOWER_CNTT, 0) AS FOLLOWER_CNTT
+             , COALESCE(G.GOAL_CNTT, 0) AS GOAL_CNTT
+             , COALESCE(S.PUSH_CNTT, 0) AS PUSH_CNTT
           FROM TM_USERXM U
      LEFT JOIN TM_FILEXM PF
             ON PF.FILE_NUMB = U.PROF_NUMB
@@ -206,15 +209,16 @@
                        , COUNT(1) AS PUSH_CNTT
                     FROM TB_PSHSUB S
                    WHERE S.USER_NUMB = #{userNumb}
-                     AND NVL(S.USEE_YSNO, #{yes}) = #{yes}
+                     AND COALESCE(S.USEE_YSNO, #{yes}) = #{yes}
                 GROUP BY S.USER_NUMB
                 ) S
             ON S.USER_NUMB = U.USER_NUMB
      LEFT JOIN (  SELECT E.USER_NUMB
-                       , MAX(E.SYNC_STAT) KEEP (DENSE_RANK LAST ORDER BY E.SPND_NUMB) AS SYNC_STAT
+                       , E.SYNC_STAT
                     FROM TH_USSPND E
                    WHERE E.USER_NUMB = #{userNumb}
-                GROUP BY E.USER_NUMB
+                ORDER BY E.SPND_NUMB DESC
+                   LIMIT 1
                 ) E
             ON E.USER_NUMB = U.USER_NUMB
          WHERE U.USER_NUMB = #{userNumb}
@@ -244,14 +248,17 @@
                        , R.USER_AGNT
                        , R.PROV_CODE
                        , R.PROV_CODE_NAME
-                       , ROWNUM AS ROW_NUMB
+                       , ROW_NUMBER() OVER (
+                             ORDER BY R.LOGN_DATE DESC
+                                    , R.LOGN_NUMB DESC
+                         ) AS ROW_NUMB
                     FROM (  SELECT H.LOGN_NUMB
                                  , H.LOGN_DATE
                                  , CASE
                                        WHEN H.LOGN_IPXX IS NULL THEN NULL
-                                       WHEN INSTR(H.LOGN_IPXX, '.') > 0
-                                           THEN SUBSTR(H.LOGN_IPXX, 1, INSTR(H.LOGN_IPXX, '.', 1, 2)) || '***.***'
-                                       ELSE SUBSTR(H.LOGN_IPXX, 1, 4) || ':****'
+                                       WHEN LOCATE('.', H.LOGN_IPXX) > 0
+                                           THEN CONCAT(SUBSTRING_INDEX(H.LOGN_IPXX, '.', 2), '.***.***')
+                                       ELSE CONCAT(SUBSTR(H.LOGN_IPXX, 1, 4), ':****')
                                    END AS LOGN_IPXX
                                  , H.USER_AGNT
                                  , H.PROV_CODE
@@ -263,9 +270,9 @@
                           ORDER BY H.LOGN_DATE DESC
                                  , H.LOGN_NUMB DESC
                          ) R
-                   WHERE ROWNUM <![CDATA[<=]]> #{endRow}
                ) P
-         WHERE P.ROW_NUMB <![CDATA[>=]]> #{startRow}
+         WHERE P.ROW_NUMB BETWEEN #{startRow} AND #{endRow}
+      ORDER BY P.ROW_NUMB
     </select>
 
     <!-- 현재 사용자의 로그인 이력 전체 건수를 조회한다 -->
@@ -305,7 +312,10 @@
                        , R.DELT_DATE
                        , R.PROC_DATE
                        , R.RCOV_DATE
-                       , ROWNUM AS ROW_NUMB
+                       , ROW_NUMBER() OVER (
+                             ORDER BY R.REQU_DATE DESC
+                                    , R.WTHD_NUMB DESC
+                         ) AS ROW_NUMB
                     FROM (  SELECT W.WTHD_NUMB
                                  , W.WTHD_TYPE
                                  , FN_GET_CODE_NAME(#{wthdType}, W.WTHD_TYPE, #{wthdType}) AS WTHD_TYPE_NAME
@@ -322,9 +332,9 @@
                           ORDER BY W.REQU_DATE DESC
                                  , W.WTHD_NUMB DESC
                          ) R
-                   WHERE ROWNUM <![CDATA[<=]]> #{endRow}
                ) P
-         WHERE P.ROW_NUMB <![CDATA[>=]]> #{startRow}
+         WHERE P.ROW_NUMB BETWEEN #{startRow} AND #{endRow}
+      ORDER BY P.ROW_NUMB
     </select>
 
     <!-- 현재 사용자의 계정 처리 이력 전체 건수를 조회한다 -->
@@ -374,9 +384,10 @@
     <!-- 회원 이용 정지 이력을 등록한다 -->
     <insert id="setUserSuspension"
             parameterType="org.sadari.admin.sadariadmin.currentuser.vo.CurrentUserSuspensionVO">
+        <!-- 관리자 단독 등록 정책에 따라 현재 최대 정지 번호의 다음 값을 먼저 발급한다 -->
         <selectKey keyProperty="spndNumb" resultType="long" order="BEFORE">
-            SELECT TH_USSPND_SEQ.NEXTVAL
-              FROM DUAL
+            SELECT COALESCE(MAX(SPND_NUMB), 0) + 1
+              FROM TH_USSPND
         </selectKey>
         INSERT /* setUserSuspension */
           INTO TH_USSPND (
@@ -406,9 +417,9 @@
              , #{strtDate}
              , #{endxDate,jdbcType=TIMESTAMP}
              , #{regiAdmn}
-             , SYSDATE
+             , CURRENT_TIMESTAMP
              , #{updtAdmn}
-             , SYSDATE
+             , CURRENT_TIMESTAMP
         )
     </insert>
 
@@ -418,11 +429,11 @@
         UPDATE /* uptUserSuspensionReleased */
                TH_USSPND
            SET SPND_STAT = 'RELEASED'
-             , RLES_DATE = SYSDATE
+             , RLES_DATE = CURRENT_TIMESTAMP
              , RLES_CNTN = #{rlesCntn,jdbcType=VARCHAR}
              , RLES_ADMN = #{rlesAdmn}
              , UPDT_ADMN = #{updtAdmn}
-             , UPDT_DATE = SYSDATE
+             , UPDT_DATE = CURRENT_TIMESTAMP
          WHERE SPND_NUMB = #{spndNumb}
            AND USER_NUMB = #{userNumb}
            AND SPND_STAT = 'ACTIVE'
@@ -434,13 +445,13 @@
         UPDATE /* uptUserSuspensionExpired */
                TH_USSPND
            SET SPND_STAT = 'EXPIRED'
-             , RLES_DATE = SYSDATE
+             , RLES_DATE = CURRENT_TIMESTAMP
              , UPDT_ADMN = #{updtAdmn,jdbcType=NUMERIC}
-             , UPDT_DATE = SYSDATE
+             , UPDT_DATE = CURRENT_TIMESTAMP
          WHERE SPND_NUMB = #{spndNumb}
            AND SPND_STAT = 'ACTIVE'
            AND SPND_TYPE = 'PERIOD'
-           AND ENDX_DATE <![CDATA[<=]]> SYSDATE
+           AND ENDX_DATE <![CDATA[<=]]> CURRENT_TIMESTAMP
     </update>
 
     <!-- 정상 또는 비활성화 회원에게 관리자 정지 상태를 적용한다 -->
@@ -473,9 +484,10 @@
     <!-- 사용자 서버가 현재 회원 상태를 다시 반영하도록 Outbox 이벤트를 등록한다 -->
     <insert id="setCurrentUserStatusEvent"
             parameterType="org.sadari.admin.sadariadmin.currentuser.vo.CurrentUserStatusEventVO">
+        <!-- 관리자 단독 등록 정책에 따라 현재 최대 이벤트 번호의 다음 값을 먼저 발급한다 -->
         <selectKey keyProperty="evntNumb" resultType="long" order="BEFORE">
-            SELECT TB_EVTBOX_SEQ.NEXTVAL
-              FROM DUAL
+            SELECT COALESCE(MAX(EVNT_NUMB), 0) + 1
+              FROM TB_EVTBOX
         </selectKey>
         /* setCurrentUserStatusEvent */
         INSERT INTO TB_EVTBOX (
@@ -488,7 +500,7 @@
                   , #{evntType}
                   , #{userNumb}
                   , #{spndNumb}
-                  , SYSDATE
+                  , CURRENT_TIMESTAMP
         )
     </insert>
 
@@ -522,7 +534,10 @@
              , P.UPDT_ADMN
              , P.UPDT_DATE
           FROM (  SELECT R.*
-                       , ROWNUM AS ROW_NUMB
+                       , ROW_NUMBER() OVER (
+                             ORDER BY R.STRT_DATE DESC
+                                    , R.SPND_NUMB DESC
+                         ) AS ROW_NUMB
                     FROM (  SELECT S.SPND_NUMB
                                  , S.USER_NUMB
                                  , S.PREV_STAT
@@ -550,9 +565,9 @@
                           ORDER BY S.STRT_DATE DESC
                                  , S.SPND_NUMB DESC
                          ) R
-                   WHERE ROWNUM <![CDATA[<=]]> #{endRow}
                ) P
-         WHERE P.ROW_NUMB <![CDATA[>=]]> #{startRow}
+         WHERE P.ROW_NUMB BETWEEN #{startRow} AND #{endRow}
+      ORDER BY P.ROW_NUMB
     </select>
 
     <!-- 회원 정지 이력 전체 건수를 조회한다 -->

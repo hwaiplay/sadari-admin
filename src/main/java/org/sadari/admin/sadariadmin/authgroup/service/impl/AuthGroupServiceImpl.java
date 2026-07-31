@@ -3,6 +3,7 @@ package org.sadari.admin.sadariadmin.authgroup.service.impl;
 import org.sadari.admin.sadariadmin.admin.vo.AdminSessionVO;
 import org.sadari.admin.sadariadmin.authgroup.mapper.AuthGroupMapper;
 import org.sadari.admin.sadariadmin.authgroup.service.AuthGroupService;
+import org.sadari.admin.sadariadmin.authgroup.vo.AuthGroupSearchVO;
 import org.sadari.admin.sadariadmin.authgroup.vo.AuthGroupVO;
 import org.sadari.admin.sadariadmin.authgroup.vo.AuthMenuVO;
 import org.sadari.admin.sadariadmin.common.constant.Constant;
@@ -26,6 +27,7 @@ import java.util.List;
  * DATE              AUTHOR             NOTE
  * -----------------------------------------------------------
  * 2026-07-27        SeungHyeon.Kang    최초 생성
+ * 2026-07-31        SeungHyeon.Kang    권한그룹 목록 검색 조건 추가
  */
 @Service
 @Transactional(readOnly = true)
@@ -46,11 +48,18 @@ public class AuthGroupServiceImpl implements AuthGroupService {
 
     /** 권한그룹 목록 조회 */
     @Override
-    public PageData<AuthGroupVO> getAuthGroupList(int pageNumber, AdminSessionVO admin) {
+    public PageData<AuthGroupVO> getAuthGroupList(AuthGroupSearchVO search, AdminSessionVO admin) {
+        // 인증되지 않은 요청이 권한그룹 정보를 조회하지 못하도록 로그인 상태를 확인한다
         checkLogin(admin);
-        PageRequest pageRequest = new PageRequest(pageNumber);
-        return PageData.of(authGroupMapper.getAuthGroupList(pageRequest.getStartRow(), pageRequest.getEndRow())
-                         , authGroupMapper.getAuthGroupListCount(), pageRequest);
+        // 요청 페이지에 해당하는 조회 행 범위를 계산한다
+        PageRequest pageRequest = new PageRequest(search.getPage());
+        // 목록과 건수 조회에 같은 검색 조건과 시작 행을 적용한다
+        search.setStartRow(pageRequest.getStartRow());
+        // 검색 조건에 페이지 마지막 행을 적용한다
+        search.setEndRow(pageRequest.getEndRow());
+        // 검색 조건에 맞는 권한그룹 목록과 전체 건수로 페이지 응답을 생성한다
+        return PageData.of(authGroupMapper.getAuthGroupList(search), authGroupMapper.getAuthGroupListCount(search)
+                         , pageRequest);
     }
 
     /** 권한그룹 상세 조회 */

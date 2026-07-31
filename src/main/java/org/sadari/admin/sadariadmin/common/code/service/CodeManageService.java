@@ -2,6 +2,7 @@ package org.sadari.admin.sadariadmin.common.code.service;
 
 import org.sadari.admin.sadariadmin.admin.vo.AdminSessionVO;
 import org.sadari.admin.sadariadmin.common.code.mapper.CodeMapper;
+import org.sadari.admin.sadariadmin.common.code.vo.CodeMasterSearchVO;
 import org.sadari.admin.sadariadmin.common.code.vo.CodeMasterVO;
 import org.sadari.admin.sadariadmin.common.code.vo.CodeVO;
 import org.sadari.admin.sadariadmin.common.pagination.PageData;
@@ -25,6 +26,7 @@ import java.util.List;
  * DATE              AUTHOR             NOTE
  * -----------------------------------------------------------
  * 2026-07-08        SeungHyeon.Kang    최초 생성
+ * 2026-07-31        SeungHyeon.Kang    공통코드 목록 검색 조건 추가
  */
 @Service
 @Transactional(readOnly = true)
@@ -48,10 +50,16 @@ public class CodeManageService {
      * @author SeungHyeon.Kang
      * @return
      */
-    public PageData<CodeMasterVO> getCommCodeList(int pageNumber) {
-        PageRequest pageRequest = new PageRequest(pageNumber);
-        return PageData.of(codeMapper.getCommCodeList(pageRequest.getStartRow(), pageRequest.getEndRow())
-                         , codeMapper.getCommCodeListCount(), pageRequest);
+    public PageData<CodeMasterVO> getCommCodeList(CodeMasterSearchVO search) {
+        // 요청 페이지에 해당하는 조회 행 범위를 계산한다
+        PageRequest pageRequest = new PageRequest(search.getPage());
+        // 목록과 건수 조회에 같은 검색 조건과 시작 행을 적용한다
+        search.setStartRow(pageRequest.getStartRow());
+        // 검색 조건에 페이지 마지막 행을 적용한다
+        search.setEndRow(pageRequest.getEndRow());
+        // 검색 조건에 맞는 공통코드 목록과 전체 건수로 페이지 응답을 생성한다
+        return PageData.of(codeMapper.getCommCodeList(search), codeMapper.getCommCodeListCount(search)
+                         , pageRequest);
     }
 
     /**

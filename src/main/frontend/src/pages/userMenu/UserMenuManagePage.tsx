@@ -11,7 +11,7 @@ import {
 import {COMM_YSNO, DEFAULT_USEE_YSNO} from '../../constants/codes'
 import {USER_MENU_DETAIL_PREFIX, USER_MENU_LIST_PATH, USER_MENU_NEW_PATH} from '../../constants/routes'
 import type {Code} from '../../types/code'
-import type {UserMenu, UserMenuForm} from '../../types/userMenu'
+import type {UserMenu, UserMenuForm, UserMenuSearch} from '../../types/userMenu'
 import {formatDate, getUseeYsnoCodeName} from '../../utils/code'
 import {AuditInfoTable} from '../../components/AuditInfoTable'
 import {useMenuPermission} from '../../contexts/useMenuPermission'
@@ -22,6 +22,12 @@ type UserMenuManagePageProps = {
     currentPath: string
     onMovePath: (path: string) => void
     onError: (message: string | null) => void
+}
+
+const DEFAULT_SEARCH: UserMenuSearch = {
+    keyword: '',
+    showYsno: '',
+    useeYsno: '',
 }
 
 /** 빈 사용자 메뉴 입력 폼 생성 */
@@ -57,6 +63,8 @@ export function UserMenuManagePage({currentPath, onMovePath, onError}: UserMenuM
     const [childForms, setChildForms] = useState<UserMenuForm[]>([])
     const [ysnoCodes, setYsnoCodes] = useState<Code[]>([])
     const [saving, setSaving] = useState(false)
+    const [search, setSearch] = useState<UserMenuSearch>(DEFAULT_SEARCH)
+    const [appliedSearch, setAppliedSearch] = useState<UserMenuSearch>(DEFAULT_SEARCH)
 
     const detailKey = useMemo(() => {
         if (!currentPath.startsWith(USER_MENU_DETAIL_PREFIX)) return null
@@ -75,9 +83,11 @@ export function UserMenuManagePage({currentPath, onMovePath, onError}: UserMenuM
                 setYsnoCodes(codeResult)
                 setChildForms([])
                 if (isList) {
-                    const result = await getUserMenus(1)
+                    const result = await getUserMenus(1, DEFAULT_SEARCH)
                     setPageData(result)
                     setRows(result.items)
+                    setSearch(DEFAULT_SEARCH)
+                    setAppliedSearch(DEFAULT_SEARCH)
                     setDetail(null)
                     return
                 }
@@ -100,11 +110,42 @@ export function UserMenuManagePage({currentPath, onMovePath, onError}: UserMenuM
         void load()
     }, [currentPath, detailKey, isList, isNew, onError])
 
-    /** 사용자 메뉴 목록 페이지 조회 */
-    const loadListPage = async (pageNumber: number) => {
-        const result = await getUserMenus(pageNumber)
+    /**
+     * 지정한 검색 조건과 페이지로 사용자 메뉴 목록을 조회한다
+     *
+     * @author SeungHyeon.Kang
+     * @param pageNumber 조회할 페이지 번호
+     * @param targetSearch 적용할 사용자 메뉴 검색 조건
+     * @return 반환값이 없다
+     */
+    const loadListPage = async (pageNumber: number, targetSearch: UserMenuSearch): Promise<void> => {
+        const result = await getUserMenus(pageNumber, targetSearch)
         setPageData(result)
         setRows(result.items)
+        setAppliedSearch(targetSearch)
+    }
+
+    /**
+     * 입력한 사용자 메뉴 조건으로 첫 페이지를 검색한다
+     *
+     * @author SeungHyeon.Kang
+     * @param event 사용자 메뉴 검색 폼 제출 이벤트
+     * @return 반환값이 없다
+     */
+    const handleSearch = async (event: FormEvent<HTMLFormElement>): Promise<void> => {
+        event.preventDefault()
+        await loadListPage(1, search)
+    }
+
+    /**
+     * 사용자 메뉴 검색 조건과 결과를 전체 목록으로 초기화한다
+     *
+     * @author SeungHyeon.Kang
+     * @return 반환값이 없다
+     */
+    const handleSearchReset = async (): Promise<void> => {
+        setSearch(DEFAULT_SEARCH)
+        await loadListPage(1, DEFAULT_SEARCH)
     }
 
     /** 사용자 메뉴 입력값 변경 */
@@ -165,7 +206,7 @@ export function UserMenuManagePage({currentPath, onMovePath, onError}: UserMenuM
             const result = await deleteUserMenuApi(menu)
             alert(result.message)
             if (detailKey) onMovePath(USER_MENU_LIST_PATH)
-            else await loadListPage(pageData.pageNumber)
+            else await loadListPage(pageData.pageNumber, appliedSearch)
         } catch (error: unknown) {
             onError(error instanceof Error ? error.message : '사용자 메뉴 삭제 중 오류가 발생했습니다.')
         }
@@ -177,6 +218,36 @@ export function UserMenuManagePage({currentPath, onMovePath, onError}: UserMenuM
                 <section className="content-header"><h1>사용자 메뉴관리</h1>
                     <div className="status">총 {pageData.totalCount}건</div>
                 </section>
+                <form className="list-search" onSubmit={(event) => void handleSearch(event)}>
+                    <label>
+                        <span>검색어</span>
+                        <input value={search.keyword} placeholder="메뉴명 또는 URL"
+                               onChange={(event) => setSearch({...search, keyword: event.target.value})}/>
+                    </label>
+                    <label>
+                        <span>햄버거 메뉴 노출</span>
+                        <select value={search.showYsno}
+                                onChange={(event) => setSearch({...search, showYsno: event.target.value})}>
+                            <option value="">전체</option>
+                            {ysnoCodes.map((code) => <option key={code.comdCode}
+                                                            value={code.comdCode}>{code.opt1Name ?? code.comdName}</option>)}
+                        </select>
+                    </label>
+                    <label>
+                        <span>사용여부</span>
+                        <select value={search.useeYsno}
+                                onChange={(event) => setSearch({...search, useeYsno: event.target.value})}>
+                            <option value="">전체</option>
+                            {ysnoCodes.map((code) => <option key={code.comdCode}
+                                                            value={code.comdCode}>{code.opt1Name ?? code.comdName}</option>)}
+                        </select>
+                    </label>
+                    <div className="list-search-actions">
+                        <button type="button" className="subtle-button"
+                                onClick={() => void handleSearchReset()}>초기화</button>
+                        <button type="submit">검색</button>
+                    </div>
+                </form>
                 <section className="table-wrap menu-list-table">
                     <table>
                         <thead>
@@ -215,7 +286,8 @@ export function UserMenuManagePage({currentPath, onMovePath, onError}: UserMenuM
                         </tbody>
                     </table>
                 </section>
-                <Pagination pageNumber={pageData.pageNumber} totalPages={pageData.totalPages} onPageChange={(pageNumber) => void loadListPage(pageNumber)}/>
+                <Pagination pageNumber={pageData.pageNumber} totalPages={pageData.totalPages}
+                            onPageChange={(pageNumber) => void loadListPage(pageNumber, appliedSearch)}/>
                 {permission.writYsno === 'Y' && <button type="button" className="floating-button"
                         onClick={() => onMovePath(USER_MENU_NEW_PATH)}>등록</button>}
             </section>

@@ -5,15 +5,16 @@ import org.sadari.admin.sadariadmin.common.constant.Constant;
 import org.sadari.admin.sadariadmin.common.result.ResultData;
 import org.sadari.admin.sadariadmin.common.result.ResultEnum;
 import org.sadari.admin.sadariadmin.popup.service.PopupContentService;
+import org.sadari.admin.sadariadmin.popup.vo.PopupContentSearchVO;
 import org.sadari.admin.sadariadmin.popup.vo.PopupContentVO;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 /**
@@ -25,6 +26,7 @@ import org.springframework.web.bind.annotation.RestController;
  * DATE              AUTHOR             NOTE
  * -----------------------------------------------------------
  * 2026-07-30        SeungHyeon.Kang    최초 생성
+ * 2026-07-31        SeungHyeon.Kang    팝업 콘텐츠 목록 검색 조건 추가
  */
 @RestController
 @RequestMapping(Constant.API_POPUP_CONTENT_PREFIX)
@@ -47,15 +49,15 @@ public class PopupContentController {
      * 팝업 콘텐츠 목록과 페이지 정보를 조회한다
      *
      * @author SeungHyeon.Kang
-     * @param page 요청 페이지 번호
+     * @param search 팝업 콘텐츠 검색 조건
      * @param admin 로그인 관리자 세션
      * @return 팝업 콘텐츠 목록 조회 성공 응답
      */
     @GetMapping
-    public ResultData getPopupContentList(@RequestParam(defaultValue = "1") int page
+    public ResultData getPopupContentList(@ModelAttribute PopupContentSearchVO search
                                         , @AuthenticationPrincipal AdminSessionVO admin) {
-        // 관리자 권한으로 조회한 팝업 콘텐츠 목록 페이지를 반환한다
-        return ResultData.success(popupContentService.getPopupContentList(page, admin));
+        // 관리자 검색 조건으로 조회한 팝업 콘텐츠 목록 페이지를 반환한다
+        return ResultData.success(popupContentService.getPopupContentList(search, admin));
     }
 
     /**

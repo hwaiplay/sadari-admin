@@ -2,6 +2,7 @@ package org.sadari.admin.sadariadmin.common.code.mapper;
 
 import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Param;
+import org.sadari.admin.sadariadmin.common.code.vo.CodeMasterSearchVO;
 import org.sadari.admin.sadariadmin.common.code.vo.CodeMasterVO;
 import org.sadari.admin.sadariadmin.common.code.vo.CodeVO;
 
@@ -16,6 +17,7 @@ import java.util.List;
  * DATE              AUTHOR             NOTE
  * -----------------------------------------------------------
  * 2026-07-08        SeungHyeon.Kang    최초 생성
+ * 2026-07-31        SeungHyeon.Kang    공통코드 목록 검색 조건 추가
  */@Mapper
 public interface CodeMapper {
 
@@ -24,9 +26,10 @@ public interface CodeMapper {
      * @author SeungHyeon.Kang
      * @return
      */
-    List<CodeMasterVO> getCommCodeList(@Param("startRow") int startRow, @Param("endRow") int endRow);
+    List<CodeMasterVO> getCommCodeList(CodeMasterSearchVO search);
 
-    int getCommCodeListCount();
+    /** 검색 조건에 맞는 공통코드 전체 건수 조회 */
+    int getCommCodeListCount(CodeMasterSearchVO search);
 
     /**
      * 공통코드 상세 조회

@@ -2,6 +2,7 @@ package org.sadari.admin.sadariadmin.schedulelog.mapper;
 
 import org.apache.ibatis.annotations.Mapper;
 import org.sadari.admin.sadariadmin.schedulelog.vo.ScheduleFailVO;
+import org.sadari.admin.sadariadmin.schedulelog.vo.ScheduleLogSearchVO;
 import org.sadari.admin.sadariadmin.schedulelog.vo.ScheduleLogVO;
 
 import java.util.List;
@@ -16,6 +17,7 @@ import java.util.List;
  * -----------------------------------------------------------
  * 2026-07-28        SeungHyeon.Kang    최초 생성
  * 2026-07-28        SeungHyeon.Kang    실행 로그 단건 조회 추가
+ * 2026-07-31        SeungHyeon.Kang    스케줄러 로그 검색 조건 추가
  */
 @Mapper
 public interface ScheduleLogMapper {
@@ -24,12 +26,19 @@ public interface ScheduleLogMapper {
      * 스케줄러 실행 결과 목록을 최신 실행 순서로 조회한다
      *
      * @author SeungHyeon.Kang
+     * @param search 스케줄러 검색 조건과 페이지 범위
      * @return 스케줄러 실행 결과 목록
      */
-    List<ScheduleLogVO> getScheduleLogList(@org.apache.ibatis.annotations.Param("startRow") int startRow
-                                         , @org.apache.ibatis.annotations.Param("endRow") int endRow);
+    List<ScheduleLogVO> getScheduleLogList(ScheduleLogSearchVO search);
 
-    int getScheduleLogListCount();
+    /**
+     * 검색 조건에 맞는 스케줄러 실행 로그 전체 건수를 조회한다
+     *
+     * @author SeungHyeon.Kang
+     * @param search 스케줄러 로그 검색 조건
+     * @return 검색된 스케줄러 실행 로그 전체 건수
+     */
+    int getScheduleLogListCount(ScheduleLogSearchVO search);
 
     /**
      * 스케줄러 실행 번호로 실행 결과 단건을 조회한다

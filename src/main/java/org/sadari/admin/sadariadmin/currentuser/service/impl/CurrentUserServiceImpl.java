@@ -80,7 +80,7 @@ public class CurrentUserServiceImpl implements CurrentUserService {
         checkLogin(admin);
         // 비어 있는 검색 객체를 안전한 기본 검색 조건으로 보정한다
         CurrentUserSearchVO normalizedSearch = normalizeSearch(search);
-        // 검색 요청 페이지에 해당하는 Oracle 행 범위를 계산한다
+        // 검색 요청 페이지에 해당하는 조회 행 범위를 계산한다
         PageRequest pageRequest = new PageRequest(normalizedSearch.getPage());
         // 목록과 건수 SQL이 같은 페이지 범위를 사용하도록 검색 객체에 설정한다
         normalizedSearch.setStartRow(pageRequest.getStartRow());
