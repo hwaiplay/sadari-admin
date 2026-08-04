@@ -60,6 +60,7 @@ export function UserMenuManagePage({currentPath, onMovePath, onError}: UserMenuM
     const [detail, setDetail] = useState<UserMenu | null>(null)
     const [subMenus, setSubMenus] = useState<UserMenu[]>([])
     const [form, setForm] = useState<UserMenuForm>(emptyUserMenuForm())
+    const [subMenuEditForms, setSubMenuEditForms] = useState<UserMenuForm[]>([])
     const [childForms, setChildForms] = useState<UserMenuForm[]>([])
     const [ysnoCodes, setYsnoCodes] = useState<Code[]>([])
     const [saving, setSaving] = useState(false)
@@ -82,6 +83,7 @@ export function UserMenuManagePage({currentPath, onMovePath, onError}: UserMenuM
                 const codeResult = await getCodeList(COMM_YSNO)
                 setYsnoCodes(codeResult)
                 setChildForms([])
+                setSubMenuEditForms([])
                 if (isList) {
                     const result = await getUserMenus(1, DEFAULT_SEARCH)
                     setPageData(result)
@@ -102,6 +104,7 @@ export function UserMenuManagePage({currentPath, onMovePath, onError}: UserMenuM
                     setDetail(menu)
                     setForm(toUserMenuForm(menu))
                     setSubMenus(children)
+                    setSubMenuEditForms(children.map(toUserMenuForm))
                 }
             } catch (error: unknown) {
                 onError(error instanceof Error ? error.message : '사용자 메뉴 조회 중 오류가 발생했습니다.')
@@ -170,6 +173,18 @@ export function UserMenuManagePage({currentPath, onMovePath, onError}: UserMenuM
         }))
     }
 
+    /** 등록된 하위 메뉴 입력값 변경 */
+    const changeSubMenuEditForm = (index: number, field: keyof UserMenuForm, value: string) => {
+        setSubMenuEditForms(subMenuEditForms.map((child, childIndex) => {
+            if (childIndex !== index) return child
+            // 햄버거 메뉴 노출 여부에 따라 등록된 하위 메뉴 정렬 입력값을 사용하거나 제거한다
+            if (field === 'showYsno') {
+                return {...child, showYsno: value, sortOrdr: value === DEFAULT_USEE_YSNO ? child.sortOrdr || '1' : ''}
+            }
+            return {...child, [field]: value}
+        }))
+    }
+
     /** 사용자 메뉴 저장 */
     const saveMenu = async (event?: FormEvent<HTMLFormElement>) => {
         event?.preventDefault()
@@ -177,7 +192,8 @@ export function UserMenuManagePage({currentPath, onMovePath, onError}: UserMenuM
             alert('메뉴명과 URL을 입력해 주세요.')
             return
         }
-        if (childForms.some((child) => !child.menuName.trim() || !child.menuUrlx.trim())) {
+        const menuChildForms = form.subxNumb === '0' ? [...subMenuEditForms, ...childForms] : []
+        if (menuChildForms.some((child) => !child.menuName.trim() || !child.menuUrlx.trim())) {
             alert('하위메뉴명과 URL을 입력해 주세요.')
             return
         }
@@ -185,11 +201,16 @@ export function UserMenuManagePage({currentPath, onMovePath, onError}: UserMenuM
         onError(null)
         try {
             const result = await saveUserMenuApi(form, Boolean(detailKey))
+            if (form.subxNumb === '0') {
+                await Promise.all(subMenuEditForms.map((child) => saveUserMenuApi(child, true)))
+            }
             await Promise.all(childForms.map((child) => saveUserMenuApi(child, false)))
             alert(result.message)
             if (detailKey) {
+                const children = await getUserSubMenus(form.menuNumb)
                 setChildForms([])
-                setSubMenus(await getUserSubMenus(form.menuNumb))
+                setSubMenus(children)
+                setSubMenuEditForms(children.map(toUserMenuForm))
             } else {
                 onMovePath(`${USER_MENU_DETAIL_PREFIX}/${result.data.menuNumb}/${result.data.subxNumb}`)
             }
@@ -205,8 +226,18 @@ export function UserMenuManagePage({currentPath, onMovePath, onError}: UserMenuM
         try {
             const result = await deleteUserMenuApi(menu)
             alert(result.message)
-            if (detailKey) onMovePath(USER_MENU_LIST_PATH)
-            else await loadListPage(pageData.pageNumber, appliedSearch)
+            const isCurrentMenu = detailKey?.menuNumb === menu.menuNumb && detailKey.subxNumb === menu.subxNumb
+            if (isCurrentMenu) {
+                onMovePath(USER_MENU_LIST_PATH)
+                return
+            }
+            if (detailKey && form.subxNumb === '0') {
+                const children = await getUserSubMenus(form.menuNumb)
+                setSubMenus(children)
+                setSubMenuEditForms(children.map(toUserMenuForm))
+                return
+            }
+            await loadListPage(pageData.pageNumber, appliedSearch)
         } catch (error: unknown) {
             onError(error instanceof Error ? error.message : '사용자 메뉴 삭제 중 오류가 발생했습니다.')
         }
@@ -310,10 +341,11 @@ export function UserMenuManagePage({currentPath, onMovePath, onError}: UserMenuM
                 <>
                     <section className="detail-panel">
                         <div className="detail-title">
-                            <div><h2>하위메뉴</h2><p>등록된 사용자 하위메뉴 목록입니다.</p></div>
+                            <div><h2>하위메뉴</h2><p>등록된 사용자 하위메뉴를 상세 이동 없이 바로 수정합니다.</p></div>
                         </div>
-                        <UserSubMenuTable menus={subMenus} ysnoCodes={ysnoCodes} canDelete={permission.deltYsno === 'Y'}
-                                          onMovePath={onMovePath} onDelete={deleteMenu}/>
+                        <UserSubMenuEditTable menus={subMenus} forms={subMenuEditForms}
+                                              ysnoCodes={ysnoCodes} canDelete={permission.deltYsno === 'Y'}
+                                              onChange={changeSubMenuEditForm} onDelete={deleteMenu}/>
                     </section>
                     <section className="detail-panel">
                         <div className="detail-title">
@@ -332,12 +364,14 @@ export function UserMenuManagePage({currentPath, onMovePath, onError}: UserMenuM
                                             <th className="col-usee">햄버거 메뉴 노출</th>
                                             <th className="col-usee">사용여부</th>
                                             <th className="col-sort">정렬</th>
+                                            <th className="col-action">삭제</th>
                                         </tr>
                                         </thead>
                                         <tbody>{childForms.map((child, index) => <UserMenuInputRow key={index}
                                                                                                    form={child}
                                                                                                    ysnoCodes={ysnoCodes}
-                                                                                                   onChange={(field, value) => changeChildForm(index, field, value)}/>)}</tbody>
+                                                                                                   onChange={(field, value) => changeChildForm(index, field, value)}
+                                                                                                   onRemove={() => setChildForms(childForms.filter((_, childIndex) => childIndex !== index))}/>)}</tbody>
                                     </table>
                                 </section>
                             </>
@@ -359,7 +393,12 @@ export function UserMenuManagePage({currentPath, onMovePath, onError}: UserMenuM
     )
 }
 
-type FormProps = { form: UserMenuForm; ysnoCodes: Code[]; onChange: (field: keyof UserMenuForm, value: string) => void }
+type FormProps = {
+    form: UserMenuForm
+    ysnoCodes: Code[]
+    onChange: (field: keyof UserMenuForm, value: string) => void
+    onRemove?: () => void
+}
 
 /** 사용자 메뉴 기본정보 입력 표 */
 function UserMenuFormTable({form, ysnoCodes, onChange}: FormProps) {
@@ -396,7 +435,7 @@ function UserMenuFormTable({form, ysnoCodes, onChange}: FormProps) {
 }
 
 /** 사용자 하위 메뉴 입력 행 */
-function UserMenuInputRow({form, ysnoCodes, onChange}: FormProps) {
+function UserMenuInputRow({form, ysnoCodes, onChange, onRemove}: FormProps) {
     return <tr className="editable-row">
         <td><input value={form.menuName} onChange={(event) => onChange('menuName', event.target.value)} required/></td>
         <td><input value={form.menuUrlx} onChange={(event) => onChange('menuUrlx', event.target.value)} required/></td>
@@ -407,18 +446,22 @@ function UserMenuInputRow({form, ysnoCodes, onChange}: FormProps) {
         <td className="col-sort">{form.showYsno === DEFAULT_USEE_YSNO &&
             <input type="number" min="1" value={form.sortOrdr}
                    onChange={(event) => onChange('sortOrdr', event.target.value)} required/>}</td>
+        {onRemove && <td className="col-action">
+            <button type="button" className="delete-button" onClick={onRemove}>삭제</button>
+        </td>}
     </tr>
 }
 
-/** 사용자 하위 메뉴 목록 표 */
-function UserSubMenuTable({menus, ysnoCodes, canDelete, onMovePath, onDelete}: {
+/** 사용자 하위 메뉴 인라인 수정 표 */
+function UserSubMenuEditTable({menus, forms, ysnoCodes, canDelete, onChange, onDelete}: {
     menus: UserMenu[];
+    forms: UserMenuForm[];
     ysnoCodes: Code[];
     canDelete: boolean;
-    onMovePath: (path: string) => void;
+    onChange: (index: number, field: keyof UserMenuForm, value: string) => void;
     onDelete: (menu: Pick<UserMenu, 'menuNumb' | 'subxNumb'>) => Promise<void>
 }) {
-    return <section className="table-wrap menu-list-table">
+    return <section className="table-wrap menu-edit-table">
         <table>
             <thead>
             <tr>
@@ -427,24 +470,35 @@ function UserSubMenuTable({menus, ysnoCodes, canDelete, onMovePath, onDelete}: {
                 <th className="col-usee">햄버거 메뉴 노출</th>
                 <th className="col-usee">사용여부</th>
                 <th className="col-sort">정렬</th>
+                <th>수정자</th>
+                <th className="col-datetime">수정일</th>
                 <th className="col-action">삭제</th></tr>
             </thead>
             <tbody>{menus.length === 0 ? <tr className="empty-row">
-                <td colSpan={6}>하위메뉴가 없습니다.</td>
-            </tr> : menus.map((menu) => <tr key={`${menu.menuNumb}-${menu.subxNumb}`}
-                                            onClick={() => onMovePath(`${USER_MENU_DETAIL_PREFIX}/${menu.menuNumb}/${menu.subxNumb}`)}>
-                <td>{menu.menuName}</td>
-                <td>{menu.menuUrlx}</td>
-                <td className="col-usee">{getUseeYsnoCodeName(ysnoCodes, menu.showYsno, menu.showYsnoName)}</td>
-                <td className="col-usee">{getUseeYsnoCodeName(ysnoCodes, menu.useeYsno, menu.useeYsnoName)}</td>
-                <td className="col-sort">{menu.showYsno === DEFAULT_USEE_YSNO ? menu.sortOrdr : ''}</td>
-                <td className="col-action">
-                    {canDelete && <button type="button" className="delete-button" onClick={(event) => {
-                        event.stopPropagation();
-                        void onDelete(menu)
-                    }}>삭제
-                    </button>}
-                </td></tr>)}</tbody>
+                <td colSpan={8}>하위메뉴가 없습니다.</td>
+            </tr> : menus.map((menu, index) => {
+                const editForm = forms[index]
+                if (!editForm) return null
+                return <tr className="editable-row" key={`${menu.menuNumb}-${menu.subxNumb}`}>
+                    <td><input value={editForm.menuName}
+                               onChange={(event) => onChange(index, 'menuName', event.target.value)} required/></td>
+                    <td><input value={editForm.menuUrlx}
+                               onChange={(event) => onChange(index, 'menuUrlx', event.target.value)} required/></td>
+                    <td className="col-usee"><YsnoSelect value={editForm.showYsno} codes={ysnoCodes}
+                                                         onChange={(value) => onChange(index, 'showYsno', value)}/></td>
+                    <td className="col-usee"><YsnoSelect value={editForm.useeYsno} codes={ysnoCodes}
+                                                         onChange={(value) => onChange(index, 'useeYsno', value)}/></td>
+                    <td className="col-sort">{editForm.showYsno === DEFAULT_USEE_YSNO &&
+                        <input type="number" min="1" value={editForm.sortOrdr}
+                               onChange={(event) => onChange(index, 'sortOrdr', event.target.value)} required/>}</td>
+                    <td>{menu.updtAdmnName ?? menu.updtAdmn}</td>
+                    <td className="col-datetime">{formatDate(menu.updtDate)}</td>
+                    <td className="col-action">
+                        {canDelete && <button type="button" className="delete-button"
+                                              onClick={() => void onDelete(menu)}>삭제</button>}
+                    </td>
+                </tr>
+            })}</tbody>
         </table>
     </section>
 }

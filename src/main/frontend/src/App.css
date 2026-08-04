@@ -746,6 +746,7 @@ tbody tr:last-child > td {
   min-width: 240px;
 }
 
+.menu-edit-table .col-datetime,
 .code-edit-table .col-datetime {
   width: 184px;
   min-width: 184px;
