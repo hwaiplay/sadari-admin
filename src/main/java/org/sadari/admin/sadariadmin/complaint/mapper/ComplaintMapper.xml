@@ -1,0 +1,224 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "https://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="org.sadari.admin.sadariadmin.complaint.mapper.ComplaintMapper">
+    <!-- 신고 공통코드명 조회에 사용하는 공통코드 그룹을 바인딩한다 -->
+    <sql id="complaintCodeBindings">
+        <bind name="cmplTagt" value="@org.sadari.admin.sadariadmin.common.constant.Constant@CMPL_TAGT"/>
+        <bind name="cmplRson" value="@org.sadari.admin.sadariadmin.common.constant.Constant@CMPL_RSON"/>
+        <bind name="cmplStat" value="@org.sadari.admin.sadariadmin.common.constant.Constant@CMPL_STAT"/>
+        <bind name="cmplUser" value="@org.sadari.admin.sadariadmin.common.constant.Constant@CMPL_TARGET_USER"/>
+    </sql>
+
+    <!-- 신고 목록과 건수에 동일하게 적용할 검색 조건이다 -->
+    <sql id="complaintSearchConditions">
+        <if test="cmplNumb != null">
+           AND C.CMPL_NUMB = #{cmplNumb}
+        </if>
+        <if test="cmplStat != null and cmplStat != ''">
+           AND C.CMPL_STAT = #{cmplStat}
+        </if>
+        <if test="tagtType != null and tagtType != ''">
+           AND C.TAGT_TYPE = #{tagtType}
+        </if>
+        <if test="tagtNumb != null">
+           AND C.TAGT_NUMB = #{tagtNumb}
+        </if>
+        <if test="cmplRson != null and cmplRson != ''">
+           AND C.CMPL_RSON = #{cmplRson}
+        </if>
+        <if test="reporterKeyword != null and reporterKeyword != ''">
+            <bind name="reporterKeywordLike" value="'%' + reporterKeyword.toUpperCase() + '%'"/>
+           AND (
+                   CAST(C.USER_NUMB AS CHAR) LIKE #{reporterKeywordLike}
+                OR UPPER(R.USER_NICK) LIKE #{reporterKeywordLike}
+               )
+        </if>
+        <if test="regiDateFrom != null">
+           AND C.REGI_DATE <![CDATA[>=]]> #{regiDateFrom}
+        </if>
+        <if test="regiDateTo != null">
+           AND C.REGI_DATE <![CDATA[<]]> DATE_ADD(#{regiDateTo}, INTERVAL 1 DAY)
+        </if>
+    </sql>
+
+    <!-- 신고 목록과 상세에서 공통으로 조회할 컬럼이다 -->
+    <sql id="complaintColumns">
+          C.CMPL_NUMB
+        , C.USER_NUMB
+        , R.USER_NICK AS REPORTER_NICK
+        , C.TAGT_TYPE
+        , FN_GET_CODE_NAME(#{cmplTagt}, C.TAGT_TYPE, #{cmplTagt}) AS TAGT_TYPE_NAME
+        , C.TAGT_NUMB
+        , T.USER_NICK AS TARGET_USER_NICK
+        , C.CMPL_RSON
+        , FN_GET_CODE_NAME(#{cmplRson}, C.CMPL_RSON, #{cmplRson}) AS CMPL_RSON_NAME
+        , C.CMPL_CNTN
+        , C.CMPL_STAT
+        , FN_GET_CODE_NAME(#{cmplStat}, C.CMPL_STAT, #{cmplStat}) AS CMPL_STAT_NAME
+        , C.PROC_CNTN
+        , C.PROC_ADMN
+        , FN_GET_ADMIN_NAME(C.PROC_ADMN) AS PROC_ADMN_NAME
+        , C.PROC_DATE
+        , C.REGI_DATE
+        , C.UPDT_DATE
+    </sql>
+
+    <!-- 페이징 인라인 뷰에서 반환할 신고 컬럼이다 -->
+    <sql id="complaintPageColumns">
+          P.CMPL_NUMB
+        , P.USER_NUMB
+        , P.REPORTER_NICK
+        , P.TAGT_TYPE
+        , P.TAGT_TYPE_NAME
+        , P.TAGT_NUMB
+        , P.TARGET_USER_NICK
+        , P.CMPL_RSON
+        , P.CMPL_RSON_NAME
+        , P.CMPL_CNTN
+        , P.CMPL_STAT
+        , P.CMPL_STAT_NAME
+        , P.PROC_CNTN
+        , P.PROC_ADMN
+        , P.PROC_ADMN_NAME
+        , P.PROC_DATE
+        , P.REGI_DATE
+        , P.UPDT_DATE
+    </sql>
+
+    <!-- 검색 조건에 맞는 신고 목록을 최신 접수순으로 조회한다 -->
+    <select id="getComplaintList" parameterType="org.sadari.admin.sadariadmin.complaint.vo.ComplaintSearchVO"
+            resultType="org.sadari.admin.sadariadmin.complaint.vo.ComplaintVO">
+        <include refid="complaintCodeBindings"/>
+        SELECT /* getComplaintList */
+               <include refid="complaintPageColumns"/>
+          FROM (  SELECT Q.CMPL_NUMB
+                       , Q.USER_NUMB
+                       , Q.REPORTER_NICK
+                       , Q.TAGT_TYPE
+                       , Q.TAGT_TYPE_NAME
+                       , Q.TAGT_NUMB
+                       , Q.TARGET_USER_NICK
+                       , Q.CMPL_RSON
+                       , Q.CMPL_RSON_NAME
+                       , Q.CMPL_CNTN
+                       , Q.CMPL_STAT
+                       , Q.CMPL_STAT_NAME
+                       , Q.PROC_CNTN
+                       , Q.PROC_ADMN
+                       , Q.PROC_ADMN_NAME
+                       , Q.PROC_DATE
+                       , Q.REGI_DATE
+                       , Q.UPDT_DATE
+                       , ROW_NUMBER() OVER (
+                             ORDER BY Q.REGI_DATE DESC
+                                    , Q.CMPL_NUMB DESC
+                         ) AS ROW_NUMB
+                    FROM (  SELECT <include refid="complaintColumns"/>
+                              FROM TH_CMPLNT C
+                         LEFT JOIN TM_USERXM R
+                                ON R.USER_NUMB = C.USER_NUMB
+                         LEFT JOIN TM_USERXM T
+                                ON T.USER_NUMB = C.TAGT_NUMB
+                               AND C.TAGT_TYPE = #{cmplUser}
+                             WHERE 1 = 1
+                                   <include refid="complaintSearchConditions"/>
+                         ) Q
+               ) P
+         WHERE P.ROW_NUMB BETWEEN #{startRow} AND #{endRow}
+      ORDER BY P.ROW_NUMB
+    </select>
+
+    <!-- 검색 조건에 맞는 신고 전체 건수를 조회한다 -->
+    <select id="getComplaintListCount" parameterType="org.sadari.admin.sadariadmin.complaint.vo.ComplaintSearchVO"
+            resultType="int">
+        SELECT /* getComplaintListCount */
+               COUNT(1)
+          FROM TH_CMPLNT C
+     LEFT JOIN TM_USERXM R
+            ON R.USER_NUMB = C.USER_NUMB
+         WHERE 1 = 1
+               <include refid="complaintSearchConditions"/>
+    </select>
+
+    <!-- 신고번호에 해당하는 신고 상세를 조회한다 -->
+    <select id="getComplaintDtl" resultType="org.sadari.admin.sadariadmin.complaint.vo.ComplaintVO">
+        <include refid="complaintCodeBindings"/>
+        SELECT /* getComplaintDtl */
+               <include refid="complaintColumns"/>
+          FROM TH_CMPLNT C
+     LEFT JOIN TM_USERXM R
+            ON R.USER_NUMB = C.USER_NUMB
+     LEFT JOIN TM_USERXM T
+            ON T.USER_NUMB = C.TAGT_NUMB
+           AND C.TAGT_TYPE = #{cmplUser}
+         WHERE C.CMPL_NUMB = #{cmplNumb}
+    </select>
+
+    <!-- 신고 처리 전 최신 상태와 담당자를 확인하도록 신고 행을 잠금 조회한다 -->
+    <select id="getComplaintForUpdate" resultType="org.sadari.admin.sadariadmin.complaint.vo.ComplaintVO">
+        SELECT /* getComplaintForUpdate */
+               C.CMPL_NUMB
+             , C.USER_NUMB
+             , C.TAGT_TYPE
+             , C.TAGT_NUMB
+             , C.CMPL_RSON
+             , C.CMPL_CNTN
+             , C.CMPL_STAT
+             , C.PROC_CNTN
+             , C.PROC_ADMN
+             , C.PROC_DATE
+             , C.REGI_DATE
+             , C.UPDT_DATE
+          FROM TH_CMPLNT C
+         WHERE C.CMPL_NUMB = #{cmplNumb}
+           FOR UPDATE
+    </select>
+
+    <!-- 동일 대상의 최근 다른 신고를 관리자 판단 참고용으로 조회한다 -->
+    <select id="getRelatedComplaintList" resultType="org.sadari.admin.sadariadmin.complaint.vo.ComplaintVO">
+        <include refid="complaintCodeBindings"/>
+        SELECT /* getRelatedComplaintList */
+               <include refid="complaintColumns"/>
+          FROM TH_CMPLNT C
+     LEFT JOIN TM_USERXM R
+            ON R.USER_NUMB = C.USER_NUMB
+     LEFT JOIN TM_USERXM T
+            ON T.USER_NUMB = C.TAGT_NUMB
+           AND C.TAGT_TYPE = #{cmplUser}
+         WHERE C.TAGT_TYPE = #{tagtType}
+           AND C.TAGT_NUMB = #{tagtNumb}
+           AND C.CMPL_NUMB != #{cmplNumb}
+      ORDER BY C.REGI_DATE DESC
+             , C.CMPL_NUMB DESC
+         LIMIT 10
+    </select>
+
+    <!-- 동일 대상의 다른 신고 전체 건수를 조회한다 -->
+    <select id="getRelatedComplaintListCount" resultType="int">
+        SELECT /* getRelatedComplaintListCount */
+               COUNT(1)
+          FROM TH_CMPLNT C
+         WHERE C.TAGT_TYPE = #{tagtType}
+           AND C.TAGT_NUMB = #{tagtNumb}
+           AND C.CMPL_NUMB != #{cmplNumb}
+    </select>
+
+    <!-- 신고 검토 담당자와 처리 결과를 하나의 상태 변경으로 저장한다 -->
+    <update id="uptComplaint">
+        <bind name="cmplActioned" value="@org.sadari.admin.sadariadmin.common.constant.Constant@CMPL_STATUS_ACTIONED"/>
+        <bind name="cmplRejected" value="@org.sadari.admin.sadariadmin.common.constant.Constant@CMPL_STATUS_REJECTED"/>
+        UPDATE /* uptComplaint */
+               TH_CMPLNT
+           SET CMPL_STAT = #{update.cmplStat}
+             , PROC_CNTN = #{update.procCntn,jdbcType=VARCHAR}
+             , PROC_ADMN = #{procAdmn}
+             , PROC_DATE = CASE WHEN #{update.cmplStat} IN (#{cmplActioned}, #{cmplRejected})
+                                     THEN CURRENT_TIMESTAMP(6)
+                                ELSE NULL
+                            END
+             , UPDT_DATE = CURRENT_TIMESTAMP(6)
+         WHERE CMPL_NUMB = #{cmplNumb}
+    </update>
+</mapper>

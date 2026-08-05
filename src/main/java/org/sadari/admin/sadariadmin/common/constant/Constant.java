@@ -16,6 +16,7 @@ package org.sadari.admin.sadariadmin.common.constant;
  * 2026-07-30        SeungHyeon.Kang    회원 상태 변경 Outbox 이벤트 상수 추가
  * 2026-07-30        SeungHyeon.Kang    사용자 서버 상태 반영 결과 상수 추가
  * 2026-07-30        SeungHyeon.Kang    로그인 제공자 공통코드 상수 추가
+ * 2026-08-05        SeungHyeon.Kang    신고 관리 공통코드와 API 경로 추가
  */
 public final class Constant {
 
@@ -69,6 +70,30 @@ public final class Constant {
 
     /** 회원 정지 처리 상태 공통코드 */
     public static final String SPND_STAT = "SPND_STAT";
+
+    /** 신고 대상 유형 공통코드 */
+    public static final String CMPL_TAGT = "CMPL_TAGT";
+
+    /** 신고 사유 공통코드 */
+    public static final String CMPL_RSON = "CMPL_RSON";
+
+    /** 신고 처리 상태 공통코드 */
+    public static final String CMPL_STAT = "CMPL_STAT";
+
+    /** 사용자 신고 대상 유형 */
+    public static final String CMPL_TARGET_USER = "CMPL_USER";
+
+    /** 신고 접수 상태 */
+    public static final String CMPL_STATUS_RECEIVED = "CMPL_RECEIVED";
+
+    /** 신고 검토 중 상태 */
+    public static final String CMPL_STATUS_REVIEWING = "CMPL_REVIEWING";
+
+    /** 신고 조치 완료 상태 */
+    public static final String CMPL_STATUS_ACTIONED = "CMPL_ACTIONED";
+
+    /** 신고 반려 상태 */
+    public static final String CMPL_STATUS_REJECTED = "CMPL_REJECTED";
 
     /** 정지 회원 상태 */
     public static final String USER_STAT_SUSPENDED = "SUSPENDED";
@@ -192,6 +217,12 @@ public final class Constant {
 
     /** 현재 사용자 관리 API URL 패턴 */
     public static final String API_CURRENT_USERS_PATTERN = "/api/current-users/**";
+
+    /** 신고 관리 API URL 접두어 */
+    public static final String API_COMPLAINTS_PREFIX = "/api/complaints";
+
+    /** 신고 관리 API URL 패턴 */
+    public static final String API_COMPLAINTS_PATTERN = "/api/complaints/**";
 
     /**
      * 공통 상수 생성 방지

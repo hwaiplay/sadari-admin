@@ -14,6 +14,7 @@ import org.sadari.admin.sadariadmin.common.util.MessageUtil;
  * 2026-07-08        SeungHyeon.Kang    최초 생성
  * 2026-07-30        SeungHyeon.Kang    현재 사용자 조회 오류 추가
  * 2026-07-30        SeungHyeon.Kang    회원 이용 정지 관리 오류 추가
+ * 2026-08-05        SeungHyeon.Kang    신고 조회와 처리 오류 추가
  */
 @Getter
 public enum ResultEnum {
@@ -101,6 +102,21 @@ public enum ResultEnum {
 
     /** 무기한 정지 권한 없음 */
     USER_SUSPENSION_INDEFINITE_FORBIDDEN(1004, "user-suspension.indefinite-forbidden"),
+
+    /** 신고 없음 */
+    COMPLAINT_NOT_FOUND(2004, "complaint.not-found"),
+
+    /** 신고 처리 상태 순서 오류 */
+    COMPLAINT_INVALID_TRANSITION(2009, "complaint.invalid-transition"),
+
+    /** 신고 동시 수정 충돌 */
+    COMPLAINT_CONFLICT(2009, "complaint.conflict"),
+
+    /** 신고 담당자 처리 권한 없음 */
+    COMPLAINT_ASSIGNEE_FORBIDDEN(1004, "complaint.assignee-forbidden"),
+
+    /** 사용자 신고 대상 아님 */
+    COMPLAINT_TARGET_NOT_USER(2009, "complaint.target-not-user"),
 
     /** 권한그룹 중복 */
     AUTH_GROUP_DUPLICATE(2009, "auth-group.duplicate"),

@@ -6,7 +6,7 @@ import { checkMasterDuplicate, createCodeMaster, createDetailCode, getCodeList, 
 import { deleteMenuApi, getMenuDetail, getMenuMngList, getSidebarMenus, getSubMenus, saveMenuApi } from './api/menuApi'
 import './App.css'
 import { DEFAULT_USEE_YSNO, ALIM_SITU, COMM_YSNO } from './constants/codes'
-import { ADMIN_AUTH_MANAGE_PATH, ALIM_TEMP_DETAIL_PREFIX, ALIM_TEMP_LIST_PATH, ALIM_TEMP_NEW_PATH, AUTH_GROUP_DETAIL_PREFIX, AUTH_GROUP_LIST_PATH, AUTH_GROUP_NEW_PATH, CODE_DETAIL_PREFIX, CODE_LIST_PATH, CURRENT_USER_DETAIL_PREFIX, CURRENT_USER_LIST_PATH, HOME_PATH, LOGIN_PATH, MENU_DETAIL_PREFIX, MENU_LIST_PATH, MENU_NEW_PATH, POPUP_CONTENT_DETAIL_PREFIX, POPUP_CONTENT_LIST_PATH, POPUP_CONTENT_NEW_PATH, SCHEDULE_LOG_DETAIL_PREFIX, SCHEDULE_LOG_LIST_PATH, USER_MENU_DETAIL_PREFIX, USER_MENU_LIST_PATH, USER_MENU_NEW_PATH } from './constants/routes'
+import { ADMIN_AUTH_MANAGE_PATH, ALIM_TEMP_DETAIL_PREFIX, ALIM_TEMP_LIST_PATH, ALIM_TEMP_NEW_PATH, AUTH_GROUP_DETAIL_PREFIX, AUTH_GROUP_LIST_PATH, AUTH_GROUP_NEW_PATH, CODE_DETAIL_PREFIX, CODE_LIST_PATH, COMPLAINT_DETAIL_PREFIX, COMPLAINT_LIST_PATH, CURRENT_USER_DETAIL_PREFIX, CURRENT_USER_LIST_PATH, HOME_PATH, LOGIN_PATH, MENU_DETAIL_PREFIX, MENU_LIST_PATH, MENU_NEW_PATH, POPUP_CONTENT_DETAIL_PREFIX, POPUP_CONTENT_LIST_PATH, POPUP_CONTENT_NEW_PATH, SCHEDULE_LOG_DETAIL_PREFIX, SCHEDULE_LOG_LIST_PATH, USER_MENU_DETAIL_PREFIX, USER_MENU_LIST_PATH, USER_MENU_NEW_PATH } from './constants/routes'
 import { AdminLayout } from './components/AdminLayout'
 import { LoginPage } from './pages/LoginPage'
 import { AlimTempDetailPage } from './pages/alim/AlimTempDetailPage'
@@ -24,6 +24,8 @@ import { ScheduleLogDetailPage } from './pages/scheduleLog/ScheduleLogDetailPage
 import { PopupContentManagePage } from './pages/popup/PopupContentManagePage'
 import { CurrentUserListPage } from './pages/currentUser/CurrentUserListPage'
 import { CurrentUserDetailPage } from './pages/currentUser/CurrentUserDetailPage'
+import { ComplaintListPage } from './pages/complaint/ComplaintListPage'
+import { ComplaintDetailPage } from './pages/complaint/ComplaintDetailPage'
 import type { AdminSession } from './types/admin'
 import type { AlimTemp, AlimTempForm, AlimTempSearch } from './types/alim'
 import type { Code, CodeMaster, CodeMasterSearch, DetailCodeForm, DetailCodePayload } from './types/code'
@@ -113,6 +115,12 @@ function App() {
     return Number.isInteger(userNumb) && userNumb > 0 ? userNumb : null
   }, [currentPath])
 
+  const complaintDetailKey = useMemo(() => {
+    if (!currentPath.startsWith(`${COMPLAINT_DETAIL_PREFIX}/`)) return null
+    const cmplNumb = Number(currentPath.slice(COMPLAINT_DETAIL_PREFIX.length + 1))
+    return Number.isInteger(cmplNumb) && cmplNumb > 0 ? cmplNumb : null
+  }, [currentPath])
+
   const isMenuListPage = currentPath === MENU_LIST_PATH
   const isMenuNewPage = currentPath === MENU_NEW_PATH || currentPath.startsWith(`${MENU_NEW_PATH}/`)
   const isMenuDetailPage = detailKey !== null
@@ -128,6 +136,8 @@ function App() {
   const isScheduleLogDetailPage = scheduleLogDetailKey !== null
   const isCurrentUserListPage = currentPath === CURRENT_USER_LIST_PATH
   const isCurrentUserDetailPage = currentUserDetailKey !== null
+  const isComplaintListPage = currentPath === COMPLAINT_LIST_PATH
+  const isComplaintDetailPage = complaintDetailKey !== null
   const isPopupContentPage = currentPath === POPUP_CONTENT_LIST_PATH
     || currentPath === POPUP_CONTENT_NEW_PATH
     || currentPath.startsWith(`${POPUP_CONTENT_DETAIL_PREFIX}/`)
@@ -141,6 +151,7 @@ function App() {
     if (currentPath === AUTH_GROUP_NEW_PATH || currentPath.startsWith(AUTH_GROUP_DETAIL_PREFIX)) return AUTH_GROUP_LIST_PATH
     if (currentPath.startsWith(SCHEDULE_LOG_DETAIL_PREFIX)) return SCHEDULE_LOG_LIST_PATH
     if (currentPath.startsWith(CURRENT_USER_DETAIL_PREFIX)) return CURRENT_USER_LIST_PATH
+    if (currentPath.startsWith(COMPLAINT_DETAIL_PREFIX)) return COMPLAINT_LIST_PATH
     return currentPath
   }, [currentPath])
 
@@ -952,6 +963,17 @@ function App() {
         <CurrentUserDetailPage
           userNumb={currentUserDetailKey}
           adminAuthCode={admin?.authCode ?? ''}
+          onMovePath={movePath}
+          onError={setError}
+        />
+      )}
+      {isComplaintListPage && <ComplaintListPage onMovePath={movePath} onError={setError} />}
+      {isComplaintDetailPage && (
+        <ComplaintDetailPage
+          key={complaintDetailKey}
+          cmplNumb={complaintDetailKey}
+          adminNumb={admin.admnNumb}
+          adminAuthCode={admin.authCode}
           onMovePath={movePath}
           onError={setError}
         />
