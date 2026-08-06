@@ -447,6 +447,13 @@ tbody tr:last-child > td {
   white-space: nowrap;
 }
 
+.col-tree-toggle {
+  width: 64px;
+  min-width: 64px;
+  max-width: 64px;
+  text-align: center;
+}
+
 .col-action button {
   height: 30px;
   padding: 0 10px;
@@ -469,6 +476,58 @@ tbody tr:last-child > td {
   height: 18px;
   display: block;
   pointer-events: none;
+}
+
+.col-tree-toggle .icon-toggle-button {
+  width: 32px;
+  min-width: 32px;
+  height: 32px;
+  padding: 0;
+  border-radius: 50%;
+}
+
+.col-tree-toggle .icon-toggle-button svg {
+  display: block;
+  width: 18px;
+  height: 18px;
+  pointer-events: none;
+}
+
+.tree-toggle-placeholder {
+  display: inline-block;
+  width: 32px;
+  height: 32px;
+}
+
+.code-tree-table table {
+  min-width: 1160px;
+}
+
+.code-master-row > td {
+  background: #fff;
+}
+
+.code-detail-tree-row > td {
+  background: #f9fbfc;
+}
+
+.code-detail-tree-row:hover > td {
+  background: #eef5f8;
+}
+
+.tree-code-cell {
+  position: relative;
+  white-space: nowrap;
+}
+
+.code-detail-tree-row .tree-code-cell::before {
+  position: absolute;
+  top: 50%;
+  left: 8px;
+  width: 8px;
+  height: 1px;
+  background: #9cabb6;
+  content: '';
 }
 
 .empty {
@@ -746,6 +805,11 @@ tbody tr:last-child > td {
   min-width: 240px;
 }
 
+.code-edit-table .col-parent-code {
+  width: 200px;
+  min-width: 200px;
+}
+
 .menu-edit-table .col-datetime,
 .code-edit-table .col-datetime {
   width: 184px;
@@ -767,6 +831,22 @@ tbody tr:last-child > td {
 
 .code-edit-table .col-code input[readonly] {
   background: var(--readonly);
+}
+
+.code-drill-button {
+  width: 100%;
+  min-width: 0;
+  height: 34px;
+  padding: 0 10px;
+  border-color: #8797a3;
+  color: #31434f;
+  background: #fff;
+  text-align: left;
+}
+
+.code-drill-button:hover {
+  border-color: #566a78;
+  background: #f3f7f9;
 }
 
 .code-edit-table td:nth-child(3) input {

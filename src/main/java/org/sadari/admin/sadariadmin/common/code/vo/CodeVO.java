@@ -13,6 +13,7 @@ import java.time.LocalDateTime;
  * DATE              AUTHOR             NOTE
  * -----------------------------------------------------------
  * 2026-07-08        SeungHyeon.Kang    최초 생성
+ * 2026-08-05        OpenAI.Codex       상위 세부코드 관계 추가
  */
 @Data
 public class CodeVO {
@@ -28,6 +29,9 @@ public class CodeVO {
 
     /** 코드 설명 */
     private String codeExpl;
+
+    // 같은 공통코드 안의 상위 세부코드
+    private String upprCode;
 
     /** 사용 여부 */
     private String opt1Code;

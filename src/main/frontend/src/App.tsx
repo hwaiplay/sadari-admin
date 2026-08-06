@@ -62,6 +62,7 @@ function App() {
   const [masterEditForm, setMasterEditForm] = useState<CodeMaster | null>(null)
   const [detailCodes, setDetailCodes] = useState<Code[]>([])
   const [detailEditForms, setDetailEditForms] = useState<DetailCodeForm[]>([])
+  const [selectedDetailCode, setSelectedDetailCode] = useState('')
   const [showMasterForm, setShowMasterForm] = useState(false)
   const [masterForm, setMasterForm] = useState<CodeMaster>({ commCode: '', codeName: '', codeExpl: '', useeYsno: DEFAULT_USEE_YSNO, regiAdmn: null, regiAdmnName: null, regiDate: null, updtAdmn: null, updtAdmnName: null, updtDate: null })
   const [duplicateCheckedCode, setDuplicateCheckedCode] = useState('')
@@ -92,9 +93,14 @@ function App() {
   }, [currentPath])
 
   const codeDetailKey = useMemo(() => {
-    if (!currentPath.startsWith(CODE_DETAIL_PREFIX)) return ''
-    const [, , , , , commCode] = currentPath.split('/')
-    return commCode ?? ''
+    // 코드 상세 경로가 아니면 조회 키를 만들지 않는다
+    if (!currentPath.startsWith(`${CODE_DETAIL_PREFIX}/`)) return null
+    // 공통코드와 선택한 세부코드를 안전하게 분리한다
+    const pathSegments = currentPath.slice(CODE_DETAIL_PREFIX.length + 1).split('/')
+    const commCode = pathSegments[0] ? decodeURIComponent(pathSegments[0]) : ''
+    const comdCode = pathSegments[1] ? decodeURIComponent(pathSegments[1]) : ''
+    // 공통코드가 있을 때만 상세 조회 키를 반환한다
+    return commCode ? { commCode, comdCode } : null
   }, [currentPath])
 
   const alimTempDetailKey = useMemo(() => {
@@ -125,7 +131,7 @@ function App() {
   const isMenuNewPage = currentPath === MENU_NEW_PATH || currentPath.startsWith(`${MENU_NEW_PATH}/`)
   const isMenuDetailPage = detailKey !== null
   const isCodeListPage = currentPath === CODE_LIST_PATH
-  const isCodeDetailPage = Boolean(codeDetailKey)
+  const isCodeDetailPage = codeDetailKey !== null
   const isAlimTempListPage = currentPath === ALIM_TEMP_LIST_PATH
   const isAlimTempNewPage = currentPath === ALIM_TEMP_NEW_PATH
   const isAlimTempDetailPage = alimTempDetailKey !== null
@@ -311,22 +317,26 @@ function App() {
     setMasterEditForm(null)
     setDetailCodes([])
     setDetailEditForms([])
+    setSelectedDetailCode('')
     setDetailForms([])
   }
 
   /**
-   * 코드관리 상세 화면 열기
-   * @Author SeungHyeon.Kang
-   * @param commCode
-   * @return
+   * 공통코드와 선택한 세부코드 기준의 상세 화면 데이터를 조회한다
+   *
+   * @author SeungHyeon.Kang
+   * @param commCode 조회할 공통코드
+   * @param comdCode 상세 기준으로 사용할 세부코드
+   * @return 상세 데이터 조회 완료 Promise
    */
-  const openCodeDetailPage = async (commCode: string) => {
+  const openCodeDetailPage = async (commCode: string, comdCode = '') => {
     setError(null)
     const [master, details] = await Promise.all([getCodeMaster(commCode), getDetailCodes(commCode), loadUseeYsnoCodeList()])
     setSelectedMaster(master)
     setMasterEditForm(master)
     setDetailCodes(details)
     setDetailEditForms(details.map(toDetailCodeForm))
+    setSelectedDetailCode(comdCode)
     setDetailForms([])
   }
 
@@ -386,7 +396,7 @@ function App() {
     else if (isMenuNewPage) void openMenuNewPage(parentMenuNumb)
     else if (detailKey) void openMenuDetailPage(detailKey.menuNumb, detailKey.subxNumb)
     else if (isCodeListPage) void openCodeListPage()
-    else if (isCodeDetailPage) void openCodeDetailPage(codeDetailKey)
+    else if (codeDetailKey) void openCodeDetailPage(codeDetailKey.commCode, codeDetailKey.comdCode)
     else if (isAlimTempListPage) void openAlimTempListPage()
     else if (isAlimTempNewPage) void openAlimTempNewPage()
     else if (alimTempDetailKey) void openAlimTempDetailPage(alimTempDetailKey.alimSitu, alimTempDetailKey.tempCode)
@@ -548,7 +558,7 @@ function App() {
       await Promise.all(detailEditForms.map((form) => updateDetailCode(selectedMaster.commCode, form.comdCode, toDetailPayload(form))))
       await Promise.all(detailForms.map((form) => createDetailCode(selectedMaster.commCode, toDetailPayload(form))))
       alert(masterResult.message)
-      await openCodeDetailPage(selectedMaster.commCode)
+      await openCodeDetailPage(selectedMaster.commCode, selectedDetailCode)
     } catch (err: unknown) {
       setError(err instanceof Error ? err.message : '코드 상세 저장 중 오류가 발생했습니다.')
     } finally {
@@ -614,28 +624,27 @@ function App() {
   }
 
   /**
-   * 공통코드 선택
-   * @Author SeungHyeon.Kang
-   * @param master
-   * @return
+   * 선택한 공통코드의 최상위 상세 경로로 이동한다
+   *
+   * @author SeungHyeon.Kang
+   * @param master 상세를 표시할 공통코드
+   * @return 반환값이 없다
    */
   const selectCodeMaster = (master: CodeMaster) => {
-    movePath(`${CODE_DETAIL_PREFIX}/${master.commCode}`)
+    movePath(`${CODE_DETAIL_PREFIX}/${encodeURIComponent(master.commCode)}`)
   }
 
   /**
-   * 선택된 공통코드의 세부코드 로드
-   * @Author SeungHyeon.Kang
-   * @param master
-   * @return
+   * 세부코드를 자식 목록의 상세 기준으로 선택한다
+   *
+   * @author OpenAI.Codex
+   * @param commCode 세부코드가 속한 공통코드
+   * @param comdCode 선택한 세부코드
+   * @return 반환값이 없다
    */
-  const loadSelectedCodeDetails = async (master: CodeMaster) => {
-    setSelectedMaster(master)
-    setMasterEditForm(master)
-    setDetailForms([])
-    const details = await getDetailCodes(master.commCode)
-    setDetailCodes(details)
-    setDetailEditForms(details.map(toDetailCodeForm))
+  const selectDetailCode = (commCode: string, comdCode: string): void => {
+    // 선택한 세부코드가 새 상세 경로의 부모가 되도록 이동한다
+    movePath(`${CODE_DETAIL_PREFIX}/${encodeURIComponent(commCode)}/${encodeURIComponent(comdCode)}`)
   }
 
   /**
@@ -690,11 +699,12 @@ function App() {
   }
 
   /**
-   * 세부코드 입력 폼 추가
-   * @Author SeungHyeon.Kang
-   * @return
+   * 현재 선택한 세부코드를 부모로 지정한 신규 입력 폼을 추가한다
+   *
+   * @author SeungHyeon.Kang
+   * @return 반환값이 없다
    */
-  const addDetailInput = () => setDetailForms([...detailForms, emptyDetailForm()])
+  const addDetailInput = () => setDetailForms([...detailForms, emptyDetailForm(selectedDetailCode)])
 
   /**
    * 저장 전 세부코드 입력 폼 삭제
@@ -719,30 +729,6 @@ function App() {
   }
 
   /**
-   * 공통코드 수정 저장
-   * @Author SeungHyeon.Kang
-   * @return
-   */
-  const saveMasterEditForm = async () => {
-    if (!masterEditForm) return
-    setSaving(true)
-    setError(null)
-    try {
-      const result = await updateCodeMaster(masterEditForm.commCode, masterEditForm)
-      alert(result.message)
-      setSelectedMaster(result.data)
-      setMasterEditForm(result.data)
-      const pageData = await getCodeMasters(codePageData.pageNumber, codeAppliedSearch)
-      setCodePageData(pageData)
-      setCodeMasters(pageData.items)
-    } catch (err: unknown) {
-      setError(err instanceof Error ? err.message : '공통코드 수정 중 오류가 발생했습니다.')
-    } finally {
-      setSaving(false)
-    }
-  }
-
-  /**
    * 기존 세부코드 입력값 변경
    * @Author SeungHyeon.Kang
    * @param index
@@ -755,15 +741,17 @@ function App() {
   }
 
   /**
-   * 세부코드 저장 요청값 변환
-   * @Author SeungHyeon.Kang
-   * @param form
-   * @return
+   * 세부코드 입력 폼을 공백 정리와 상위코드 정규화가 끝난 API 요청값으로 변환한다
+   *
+   * @author SeungHyeon.Kang
+   * @param form 변환할 세부코드 입력 폼
+   * @return 세부코드 저장 API 요청값
    */
   const toDetailPayload = (form: DetailCodeForm): DetailCodePayload => ({
     comdCode: form.comdCode.trim(),
     comdName: form.comdName.trim(),
     codeExpl: form.codeExpl.trim(),
+    upprCode: form.upprCode.trim() || null,
     opt1Code: form.opt1Code.trim(),
     opt1Name: form.opt1Name.trim(),
     opt2Code: form.opt2Code.trim(),
@@ -795,51 +783,6 @@ function App() {
       return false
     }
     return true
-  }
-
-  /**
-   * 신규 세부코드 일괄 저장
-   * @Author SeungHyeon.Kang
-   * @return
-   */
-  const saveAllDetailCodes = async () => {
-    if (!selectedMaster || detailForms.length === 0 || !validateNewDetailForms()) return
-    setSaving(true)
-    setError(null)
-    try {
-      const results = await Promise.all(detailForms.map((form) => createDetailCode(selectedMaster.commCode, toDetailPayload({ ...form, comdCode: form.comdCode.trim() }))))
-      alert(results[results.length - 1]?.message ?? '저장했습니다.')
-      await loadSelectedCodeDetails(selectedMaster)
-      setDetailForms([])
-    } catch (err: unknown) {
-      setError(err instanceof Error ? err.message : '세부코드 등록 중 오류가 발생했습니다.')
-    } finally {
-      setSaving(false)
-    }
-  }
-
-  /**
-   * 기존 세부코드 일괄 수정
-   * @Author SeungHyeon.Kang
-   * @return
-   */
-  const saveAllDetailEditCodes = async () => {
-    if (!selectedMaster) return
-    if (detailEditForms.some((form) => !form.comdName.trim())) {
-      setError('세부코드명을 입력해 주세요.')
-      return
-    }
-    setSaving(true)
-    setError(null)
-    try {
-      const results = await Promise.all(detailEditForms.map((form) => updateDetailCode(selectedMaster.commCode, form.comdCode, toDetailPayload(form))))
-      alert(results[results.length - 1]?.message ?? '수정했습니다.')
-      await loadSelectedCodeDetails(selectedMaster)
-    } catch (err: unknown) {
-      setError(err instanceof Error ? err.message : '세부코드 수정 중 오류가 발생했습니다.')
-    } finally {
-      setSaving(false)
-    }
   }
 
   /**
@@ -979,12 +922,25 @@ function App() {
         />
       )}
       {isPopupContentPage && <PopupContentManagePage currentPath={currentPath} onMovePath={movePath} onError={setError} />}
-      {isCodeListPage && <CodeListPage codeMasters={codeMasters} pageData={codePageData} useeYsnoCodes={useeYsnoCodes} onSearch={(pageNumber, search) => void openCodeListPage(pageNumber, search)} onSelect={selectCodeMaster} onOpenRegister={() => setShowMasterForm(true)} />}
+      {isCodeListPage && (
+        <CodeListPage
+          codeMasters={codeMasters}
+          pageData={codePageData}
+          useeYsnoCodes={useeYsnoCodes}
+          onSearch={(pageNumber, search) => void openCodeListPage(pageNumber, search)}
+          onSelect={selectCodeMaster}
+          onSelectDetail={(detail) => selectDetailCode(detail.commCode, detail.comdCode)}
+          onLoadDetails={getDetailCodes}
+          onOpenRegister={() => setShowMasterForm(true)}
+          onError={setError}
+        />
+      )}
       {isCodeDetailPage && (
         <CodeDetailPage
           selectedMaster={selectedMaster}
           pageTitle={`${activeMenuName || '코드관리'} 상세`}
           masterEditForm={masterEditForm}
+          selectedDetailCode={selectedDetailCode}
           detailCodes={detailCodes}
           detailEditForms={detailEditForms}
           detailForms={detailForms}
@@ -992,13 +948,11 @@ function App() {
           saving={saving}
           onMovePath={movePath}
           onChangeMasterForm={setMasterEditForm}
-          onSaveMasterForm={() => void saveMasterEditForm()}
           onAddDetailInput={addDetailInput}
           onRemoveDetailInput={removeDetailInput}
           onChangeDetailEditForm={changeDetailEditForm}
           onChangeDetailForm={changeDetailForm}
-          onSaveAllDetailEditCodes={() => void saveAllDetailEditCodes()}
-          onSaveAllDetailCodes={() => void saveAllDetailCodes()}
+          onSelectDetail={(detail) => selectDetailCode(detail.commCode, detail.comdCode)}
           onSaveAll={() => void saveAllCodeDetail()}
         />
       )}

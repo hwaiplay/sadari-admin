@@ -20,12 +20,14 @@ export const emptyMenuForm = (parentMenuNumb = ''): MenuForm => ({
 /**
  * 빈 세부코드 입력 폼 생성
  * @Author SeungHyeon.Kang
- * @return
+ * @param upprCode 새 세부코드가 속할 상위 세부코드
+ * @return 세부코드 등록 입력 폼
  */
-export const emptyDetailForm = (): DetailCodeForm => ({
+export const emptyDetailForm = (upprCode = ''): DetailCodeForm => ({
   comdCode: '',
   comdName: '',
   codeExpl: '',
+  upprCode,
   opt1Code: '',
   opt1Name: '',
   opt2Code: '',
@@ -48,6 +50,7 @@ export const toDetailCodeForm = (code: {
   comdCode: string
   comdName: string
   codeExpl: string | null
+  upprCode: string | null
   opt1Code?: string | null
   opt1Name?: string | null
   opt2Code?: string | null
@@ -62,6 +65,7 @@ export const toDetailCodeForm = (code: {
   comdCode: code.comdCode,
   comdName: code.comdName,
   codeExpl: code.codeExpl ?? '',
+  upprCode: code.upprCode ?? '',
   opt1Code: code.opt1Code ?? '',
   opt1Name: code.opt1Name ?? '',
   opt2Code: code.opt2Code ?? '',

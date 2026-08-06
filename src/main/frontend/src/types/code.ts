@@ -3,6 +3,7 @@ export type Code = {
   comdCode: string
   comdName: string
   codeExpl: string | null
+  upprCode: string | null
   opt1Code?: string | null
   opt1Name?: string | null
   opt2Code?: string | null
@@ -40,6 +41,7 @@ export type DetailCodeForm = {
   comdCode: string
   comdName: string
   codeExpl: string
+  upprCode: string
   opt1Code: string
   opt1Name: string
   opt2Code: string
@@ -56,6 +58,7 @@ export type DetailCodePayload = {
   comdCode: string
   comdName: string
   codeExpl: string
+  upprCode: string | null
   opt1Code: string
   opt1Name: string
   opt2Code: string

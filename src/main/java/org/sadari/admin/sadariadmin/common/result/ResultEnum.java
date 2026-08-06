@@ -15,6 +15,7 @@ import org.sadari.admin.sadariadmin.common.util.MessageUtil;
  * 2026-07-30        SeungHyeon.Kang    현재 사용자 조회 오류 추가
  * 2026-07-30        SeungHyeon.Kang    회원 이용 정지 관리 오류 추가
  * 2026-08-05        SeungHyeon.Kang    신고 조회와 처리 오류 추가
+ * 2026-08-05        OpenAI.Codex       세부코드 계층 검증 오류 추가
  */
 @Getter
 public enum ResultEnum {
@@ -72,6 +73,15 @@ public enum ResultEnum {
 
     /** 세부코드 없음 */
     CODE_DETAIL_NOT_FOUND(2004, "code.detail.not-found"),
+
+    /** 상위 세부코드 오류 */
+    CODE_DETAIL_PARENT_INVALID(2009, "code.detail.parent.invalid"),
+
+    /** 세부코드 순환 참조 */
+    CODE_DETAIL_CYCLE(2009, "code.detail.cycle"),
+
+    /** 하위 세부코드 존재 */
+    CODE_DETAIL_HAS_CHILDREN(2009, "code.detail.has-children"),
 
     /** 알림 템플릿 중복 */
     ALIM_TEMP_DUPLICATE(2009, "alim-temp.duplicate"),

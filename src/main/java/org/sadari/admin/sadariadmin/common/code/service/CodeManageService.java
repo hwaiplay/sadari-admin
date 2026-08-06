@@ -27,6 +27,7 @@ import java.util.List;
  * -----------------------------------------------------------
  * 2026-07-08        SeungHyeon.Kang    최초 생성
  * 2026-07-31        SeungHyeon.Kang    공통코드 목록 검색 조건 추가
+ * 2026-08-05        OpenAI.Codex       세부코드 상위 관계와 순환 검증 추가
  */
 @Service
 @Transactional(readOnly = true)
@@ -177,6 +178,10 @@ public class CodeManageService {
             throw new BusinessException(HttpStatus.BAD_REQUEST, ResultEnum.CODE_DETAIL_DUPLICATE);
         }
 
+        // 같은 공통코드 안에서만 부모를 지정하고 신규 코드의 자기 참조를 차단한다
+        code.setUpprCode(normalizeUpprCode(code.getUpprCode()));
+        // 등록할 세부코드의 상위 관계를 검증한다
+        validateParentCode(commCode, code.getComdCode(), code.getUpprCode(), false);
         code.setCommCode(commCode);
         if (StringUtil.isEmpty(code.getUseeYsno())) {
             code.setUseeYsno(Constant.YES);
@@ -215,6 +220,10 @@ public class CodeManageService {
             throw new BusinessException(HttpStatus.NOT_FOUND, ResultEnum.CODE_DETAIL_NOT_FOUND);
         }
 
+        // 수정할 세부코드의 빈 상위코드는 최상위 관계로 정규화한다
+        code.setUpprCode(normalizeUpprCode(code.getUpprCode()));
+        // 기존 하위코드를 새 부모로 지정해 순환 구조가 생기지 않도록 검증한다
+        validateParentCode(commCode, comdCode, code.getUpprCode(), true);
         code.setCommCode(commCode);
         code.setComdCode(comdCode);
         if (StringUtil.isEmpty(code.getUseeYsno())) {
@@ -238,6 +247,64 @@ public class CodeManageService {
      */
     @Transactional
     public void delComdCode(String commCode, String comdCode) {
+        // 하위코드가 남아 있으면 계층이 끊어지므로 부모 세부코드 삭제를 차단한다
+        if (codeMapper.getChildCodeCnt(commCode, comdCode) > 0) {
+            // "하위 세부코드가 있는 코드는 삭제할 수 없습니다."
+            throw new BusinessException(HttpStatus.BAD_REQUEST, ResultEnum.CODE_DETAIL_HAS_CHILDREN);
+        }
+
         codeMapper.delComdCode(commCode, comdCode);
+    }
+
+    /**
+     * 화면에서 비어 있게 전달한 상위 세부코드를 최상위 관계로 정규화한다
+     *
+     * @author OpenAI.Codex
+     * @param upprCode 정규화할 상위 세부코드
+     * @return 공백을 제거한 상위 세부코드 또는 최상위를 나타내는 null
+     */
+    private String normalizeUpprCode(String upprCode) {
+        // 공백 상위코드는 최상위 세부코드로 저장한다
+        if (StringUtil.isEmpty(upprCode)) {
+            // 최상위 관계를 나타내는 null을 반환한다
+            return null;
+        }
+
+        // 코드 비교와 FK 저장에 같은 값을 사용하도록 앞뒤 공백을 제거해 반환한다
+        return upprCode.trim();
+    }
+
+    /**
+     * 세부코드의 부모가 같은 공통코드에 존재하고 순환 관계를 만들지 않는지 검증한다
+     *
+     * @author OpenAI.Codex
+     * @param commCode 세부코드가 속한 공통코드
+     * @param comdCode 저장할 세부코드
+     * @param upprCode 지정한 상위 세부코드
+     * @param checkDescendants 기존 하위 계층까지 검사할지 여부
+     */
+    private void validateParentCode(String commCode, String comdCode, String upprCode, boolean checkDescendants) {
+        // 최상위 세부코드는 부모 관계 검증이 필요하지 않다
+        if (StringUtil.isEmpty(upprCode)) {
+            return;
+        }
+
+        // 자기 자신을 상위코드로 지정하면 즉시 순환하므로 저장을 차단한다
+        if (comdCode.equals(upprCode)) {
+            // "세부코드 계층을 순환 구조로 만들 수 없습니다."
+            throw new BusinessException(HttpStatus.BAD_REQUEST, ResultEnum.CODE_DETAIL_CYCLE);
+        }
+
+        // 다른 공통코드의 세부코드나 존재하지 않는 코드는 부모로 사용할 수 없다
+        if (codeMapper.getComdCodeCnt(commCode, upprCode) == 0) {
+            // "상위 세부코드가 올바르지 않습니다."
+            throw new BusinessException(HttpStatus.BAD_REQUEST, ResultEnum.CODE_DETAIL_PARENT_INVALID);
+        }
+
+        // 수정 시 현재 코드의 하위 계층을 부모로 지정하면 재귀 탐색이 순환하므로 차단한다
+        if (checkDescendants && codeMapper.getDescendantCodeCnt(commCode, comdCode, upprCode) > 0) {
+            // "세부코드 계층을 순환 구조로 만들 수 없습니다."
+            throw new BusinessException(HttpStatus.BAD_REQUEST, ResultEnum.CODE_DETAIL_CYCLE);
+        }
     }
 }

@@ -1,6 +1,6 @@
 import {Fragment, useState} from 'react'
 import type {Code, CodeMaster, DetailCodeForm} from '../../types/code'
-import {CODE_LIST_PATH} from '../../constants/routes'
+import {CODE_DETAIL_PREFIX, CODE_LIST_PATH} from '../../constants/routes'
 import {formatDate} from '../../utils/code'
 import {AuditInfoTable} from '../../components/AuditInfoTable'
 import {useMenuPermission} from '../../contexts/useMenuPermission'
@@ -9,6 +9,7 @@ type CodeDetailPageProps = {
     selectedMaster: CodeMaster | null
     pageTitle: string
     masterEditForm: CodeMaster | null
+    selectedDetailCode: string
     detailCodes: Code[]
     detailEditForms: DetailCodeForm[]
     detailForms: DetailCodeForm[]
@@ -16,41 +17,26 @@ type CodeDetailPageProps = {
     saving: boolean
     onMovePath: (path: string) => void
     onChangeMasterForm: (form: CodeMaster) => void
-    onSaveMasterForm: () => void
     onAddDetailInput: () => void
     onRemoveDetailInput: (index: number) => void
     onChangeDetailEditForm: (index: number, field: keyof DetailCodeForm, value: string) => void
     onChangeDetailForm: (index: number, field: keyof DetailCodeForm, value: string) => void
-    onSaveAllDetailEditCodes: () => void
-    onSaveAllDetailCodes: () => void
+    onSelectDetail: (detail: Code) => void
     onSaveAll: () => void
 }
 
 /**
- * 코드관리 상세 화면
- * @Author SeungHyeon.Kang
- * @param selectedMaster
- * @param pageTitle
- * @param masterEditForm
- * @param detailCodes
- * @param detailEditForms
- * @param detailForms
- * @param useeYsnoCodes
- * @param saving
- * @param onMovePath
- * @param onChangeMasterForm
- * @param onSaveMasterForm
- * @param onAddDetailInput
- * @param onChangeDetailEditForm
- * @param onChangeDetailForm
- * @param onSaveAllDetailEditCodes
- * @param onSaveAllDetailCodes
- * @return
+ * 공통코드 또는 선택한 세부코드의 상세와 직계 자식 관리 화면을 구성한다
+ *
+ * @author SeungHyeon.Kang
+ * @param props 공통코드·세부코드 상세 데이터와 저장 및 이동 동작
+ * @return 현재 계층의 상세와 직계 자식 편집 화면
  */
 export function CodeDetailPage({
                                    selectedMaster,
                                    pageTitle,
                                    masterEditForm,
+                                   selectedDetailCode,
                                    detailCodes,
                                    detailEditForms,
                                    detailForms,
@@ -62,6 +48,7 @@ export function CodeDetailPage({
                                    onRemoveDetailInput,
                                    onChangeDetailEditForm,
                                    onChangeDetailForm,
+                                   onSelectDetail,
                                    onSaveAll
                                }: CodeDetailPageProps) {
     const permission = useMenuPermission()
@@ -69,6 +56,18 @@ export function CodeDetailPage({
     const [openedNewRows, setOpenedNewRows] = useState<Set<number>>(new Set())
 
     if (!selectedMaster || !masterEditForm) return null
+
+    const selectedDetailIndex = detailCodes.findIndex((detail) => detail.comdCode === selectedDetailCode)
+    const selectedDetail = selectedDetailIndex >= 0 ? detailCodes[selectedDetailIndex] : null
+    const selectedDetailForm = selectedDetailIndex >= 0 ? detailEditForms[selectedDetailIndex] : null
+    const childRows = detailCodes
+        .map((detail, index) => ({detail, form: detailEditForms[index], index}))
+        .filter((row) => (row.detail.upprCode ?? '') === selectedDetailCode && row.form)
+    const parentPath = selectedDetail
+        ? selectedDetail.upprCode
+            ? `${CODE_DETAIL_PREFIX}/${encodeURIComponent(selectedMaster.commCode)}/${encodeURIComponent(selectedDetail.upprCode)}`
+            : `${CODE_DETAIL_PREFIX}/${encodeURIComponent(selectedMaster.commCode)}`
+        : CODE_LIST_PATH
 
     const toggleEditRow = (comdCode: string) => {
         const nextRows = new Set(openedEditRows)
@@ -108,54 +107,102 @@ export function CodeDetailPage({
                 </div>
             </section>
 
+            {/* 현재 계층 기준 코드의 상세 편집 영역 */}
             <section className="detail-panel">
-                <div className="detail-title">
-                    <div>
-                        <h2>공통코드</h2>
-                        <p>공통코드는 코드값을 제외한 항목만 수정할 수 있습니다.</p>
-                    </div>
-                </div>
-                <section className="table-wrap code-edit-table">
-                    <table>
-                        <thead>
-                        <tr>
-                            <th className="col-code">공통코드</th>
-                            <th className="col-code-name">공통코드명</th>
-                            <th>설명</th>
-                            <th className="col-usee">사용여부</th>
-                        </tr>
-                        </thead>
-                        <tbody>
-                        <tr className="editable-row">
-                            <td className="col-code"><input value={masterEditForm.commCode} readOnly/></td>
-                            <td className="col-code-name"><input value={masterEditForm.codeName} onChange={(event) => onChangeMasterForm({
-                                ...masterEditForm,
-                                codeName: event.target.value
-                            })}/></td>
-                            <td><input value={masterEditForm.codeExpl ?? ''} onChange={(event) => onChangeMasterForm({
-                                ...masterEditForm,
-                                codeExpl: event.target.value
-                            })}/></td>
-                            <td className="col-usee">
-                                <select value={masterEditForm.useeYsno ?? 'Y'} onChange={(event) => onChangeMasterForm({
-                                    ...masterEditForm,
-                                    useeYsno: event.target.value
-                                })}>
-                                    {useeYsnoCodes.map((code) => <option key={code.comdCode}
-                                                                         value={code.comdCode}>{code.opt1Name ?? code.comdName}</option>)}
-                                </select>
-                            </td>
-                        </tr>
-                        </tbody>
-                    </table>
-                </section>
+                {selectedDetail && selectedDetailForm ? (
+                    <>
+                        <div className="detail-title">
+                            <div>
+                                <h2>세부코드 상세</h2>
+                                <p>선택한 세부코드를 기준으로 바로 아래 자식 코드를 관리합니다.</p>
+                            </div>
+                        </div>
+                        <section className="table-wrap code-edit-table">
+                            <table>
+                                <thead>
+                                <tr>
+                                    <th className="col-code">세부코드</th>
+                                    <th className="col-code-name">세부코드명</th>
+                                    <th>설명</th>
+                                    <th className="col-parent-code">상위 세부코드</th>
+                                    <th className="col-sort">정렬</th>
+                                    <th className="col-usee">사용여부</th>
+                                </tr>
+                                </thead>
+                                <tbody>
+                                <tr className="editable-row">
+                                    <td className="col-code"><input value={selectedDetailForm.comdCode} readOnly/></td>
+                                    <td className="col-code-name"><input value={selectedDetailForm.comdName}
+                                               onChange={(event) => onChangeDetailEditForm(selectedDetailIndex, 'comdName', event.target.value)}/></td>
+                                    <td><input value={selectedDetailForm.codeExpl}
+                                               onChange={(event) => onChangeDetailEditForm(selectedDetailIndex, 'codeExpl', event.target.value)}/></td>
+                                    <td className="col-parent-code"><input value={selectedDetailForm.upprCode}
+                                               onChange={(event) => onChangeDetailEditForm(selectedDetailIndex, 'upprCode', event.target.value)}/></td>
+                                    <td className="col-sort"><input type="number" min="1" value={selectedDetailForm.sortOrdr}
+                                               onChange={(event) => onChangeDetailEditForm(selectedDetailIndex, 'sortOrdr', event.target.value)}/></td>
+                                    <td className="col-usee">
+                                        <select value={selectedDetailForm.useeYsno}
+                                                onChange={(event) => onChangeDetailEditForm(selectedDetailIndex, 'useeYsno', event.target.value)}>
+                                            {useeYsnoCodes.map((code) => <option key={code.comdCode}
+                                                                                 value={code.comdCode}>{code.opt1Name ?? code.comdName}</option>)}
+                                        </select>
+                                    </td>
+                                </tr>
+                                </tbody>
+                            </table>
+                        </section>
+                    </>
+                ) : (
+                    <>
+                        <div className="detail-title">
+                            <div>
+                                <h2>공통코드</h2>
+                                <p>공통코드는 코드값을 제외한 항목만 수정할 수 있습니다.</p>
+                            </div>
+                        </div>
+                        <section className="table-wrap code-edit-table">
+                            <table>
+                                <thead>
+                                <tr>
+                                    <th className="col-code">공통코드</th>
+                                    <th className="col-code-name">공통코드명</th>
+                                    <th>설명</th>
+                                    <th className="col-usee">사용여부</th>
+                                </tr>
+                                </thead>
+                                <tbody>
+                                <tr className="editable-row">
+                                    <td className="col-code"><input value={masterEditForm.commCode} readOnly/></td>
+                                    <td className="col-code-name"><input value={masterEditForm.codeName} onChange={(event) => onChangeMasterForm({
+                                        ...masterEditForm,
+                                        codeName: event.target.value
+                                    })}/></td>
+                                    <td><input value={masterEditForm.codeExpl ?? ''} onChange={(event) => onChangeMasterForm({
+                                        ...masterEditForm,
+                                        codeExpl: event.target.value
+                                    })}/></td>
+                                    <td className="col-usee">
+                                        <select value={masterEditForm.useeYsno ?? 'Y'} onChange={(event) => onChangeMasterForm({
+                                            ...masterEditForm,
+                                            useeYsno: event.target.value
+                                        })}>
+                                            {useeYsnoCodes.map((code) => <option key={code.comdCode}
+                                                                                 value={code.comdCode}>{code.opt1Name ?? code.comdName}</option>)}
+                                        </select>
+                                    </td>
+                                </tr>
+                                </tbody>
+                            </table>
+                        </section>
+                    </>
+                )}
             </section>
 
             <section className="detail-panel">
                 <div className="detail-title">
                     <div>
-                        <h2>세부코드</h2>
-                        <p>기존 세부코드는 코드값을 제외한 항목을 수정할 수 있습니다.</p>
+                        <h2>{selectedDetail ? '하위 세부코드' : '세부코드'}</h2>
+                        <p>현재 계층 바로 아래의 세부코드를 수정하거나 코드값을 눌러 더 깊은 자식을 관리합니다.</p>
                     </div>
                 </div>
                 <section className="table-wrap code-edit-table">
@@ -173,14 +220,16 @@ export function CodeDetailPage({
                         </tr>
                         </thead>
                         <tbody>
-                        {detailCodes.map((detail, index) => {
-                            const form = detailEditForms[index]
+                        {childRows.map(({detail, form, index}) => {
                             if (!form) return null
                             const expanded = openedEditRows.has(detail.comdCode)
                             return (
                                 <Fragment key={detail.comdCode}>
                                     <tr className="editable-row">
-                                        <td className="col-code"><input value={form.comdCode} readOnly/></td>
+                                        <td className="col-code">
+                                            <button type="button" className="code-drill-button"
+                                                    onClick={() => onSelectDetail(detail)}>{form.comdCode}</button>
+                                        </td>
                                         <td className="col-code-name"><input value={form.comdName}
                                                    onChange={(event) => onChangeDetailEditForm(index, 'comdName', event.target.value)}
                                                    /></td>
@@ -304,7 +353,7 @@ export function CodeDetailPage({
             />
             <div className="detail-footer">
                 <div className="detail-footer-left">
-                    <button type="button" className="subtle-button" onClick={() => onMovePath(CODE_LIST_PATH)}>목록</button>
+                    <button type="button" className="subtle-button" onClick={() => onMovePath(parentPath)}>{selectedDetail ? '상위' : '목록'}</button>
                 </div>
                 <div className="detail-footer-right">
                     {permission.writYsno === 'Y' && <button type="button" disabled={saving} onClick={onSaveAll}>{saving ? '저장 중' : '수정'}</button>}
@@ -315,10 +364,11 @@ export function CodeDetailPage({
 }
 
 /**
- * 확장 영역 펼치기 접기 아이콘
- * @Author SeungHyeon.Kang
- * @param expanded
- * @return
+ * 확장 영역의 펼침 또는 접힘 상태 아이콘을 표시한다
+ *
+ * @author SeungHyeon.Kang
+ * @param expanded 현재 확장 영역이 펼쳐졌는지 여부
+ * @return 펼침 상태에 맞는 화살표 아이콘
  */
 function ExpandToggleIcon({expanded}: { expanded: boolean }) {
     return (
@@ -346,14 +396,11 @@ type ExtensionRowProps = {
 }
 
 /**
- * 세부코드 확장 항목 행
- * @Author SeungHyeon.Kang
- * @param form
- * @param index
- * @param disabled
- * @param colSpan
- * @param onChange
- * @return
+ * 세부코드의 네 개 확장 속성 편집 행을 구성한다
+ *
+ * @author SeungHyeon.Kang
+ * @param props 세부코드 확장 폼과 변경 동작
+ * @return 세부코드 확장 속성 편집 행
  */
 function ExtensionRow({form, index, disabled, colSpan, onChange}: ExtensionRowProps) {
     return (

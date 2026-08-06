@@ -152,6 +152,7 @@
              , COMD_CODE
              , COMD_NAME
              , CODE_EXPL
+             , UPPR_CODE
              , OPT1_CODE
              , OPT1_NAME
              , OPT2_CODE
@@ -171,7 +172,7 @@
              , SORT_ORDR
           FROM TB_CODEXD
          WHERE COMM_CODE = #{commCode}
-      ORDER BY COALESCE(SORT_ORDR, 9999), COMD_CODE
+      ORDER BY COALESCE(UPPR_CODE, ''), COALESCE(SORT_ORDR, 9999), COMD_CODE
     </select>
 
     <!-- 세부코드 상세를 조회한다 -->
@@ -182,6 +183,7 @@
              , COMD_CODE
              , COMD_NAME
              , CODE_EXPL
+             , UPPR_CODE
              , OPT1_CODE
              , OPT1_NAME
              , OPT2_CODE
@@ -202,6 +204,37 @@
           FROM TB_CODEXD
          WHERE COMM_CODE = #{commCode}
            AND COMD_CODE = #{comdCode}
+    </select>
+
+    <!-- 세부코드를 삭제하기 전에 직계 하위코드가 존재하는지 조회한다 -->
+    <select id="getChildCodeCnt" resultType="int">
+        SELECT /* getChildCodeCnt */
+               COUNT(1)
+          FROM TB_CODEXD
+         WHERE COMM_CODE = #{commCode}
+           AND UPPR_CODE = #{comdCode}
+    </select>
+
+    <!-- 상위코드 변경이 기존 하위 계층을 다시 참조하는지 재귀적으로 조회한다 -->
+    <select id="getDescendantCodeCnt" resultType="int">
+        WITH RECURSIVE DESCENDANT AS (
+            SELECT /* getDescendantCodeCnt */
+                   COMM_CODE
+                 , COMD_CODE
+              FROM TB_CODEXD
+             WHERE COMM_CODE = #{commCode}
+               AND UPPR_CODE = #{comdCode}
+             UNION ALL
+            SELECT CHILD.COMM_CODE
+                 , CHILD.COMD_CODE
+              FROM TB_CODEXD CHILD
+        INNER JOIN DESCENDANT PARENT
+                ON PARENT.COMM_CODE = CHILD.COMM_CODE
+               AND PARENT.COMD_CODE = CHILD.UPPR_CODE
+        )
+        SELECT COUNT(1)
+          FROM DESCENDANT
+         WHERE COMD_CODE = #{candidateCode}
     </select>
 
     <!-- 세부코드 중복 검사용 개수를 조회한다 -->
@@ -221,6 +254,7 @@
                   , COMD_CODE
                   , COMD_NAME
                   , CODE_EXPL
+                  , UPPR_CODE
                   , OPT1_CODE
                   , OPT1_NAME
                   , OPT2_CODE
@@ -239,6 +273,7 @@
                   , #{comdCode}
                   , #{comdName}
                   , #{codeExpl,jdbcType=VARCHAR}
+                  , #{upprCode,jdbcType=VARCHAR}
                   , #{opt1Code,jdbcType=VARCHAR}
                   , #{opt1Name,jdbcType=VARCHAR}
                   , #{opt2Code,jdbcType=VARCHAR}
@@ -262,6 +297,7 @@
                TB_CODEXD
            SET COMD_NAME = #{comdName}
              , CODE_EXPL = #{codeExpl,jdbcType=VARCHAR}
+             , UPPR_CODE = #{upprCode,jdbcType=VARCHAR}
              , OPT1_CODE = #{opt1Code,jdbcType=VARCHAR}
              , OPT1_NAME = #{opt1Name,jdbcType=VARCHAR}
              , OPT2_CODE = #{opt2Code,jdbcType=VARCHAR}
