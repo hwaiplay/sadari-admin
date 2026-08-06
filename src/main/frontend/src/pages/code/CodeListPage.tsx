@@ -5,6 +5,8 @@ import { formatDate, getUseeYsnoCodeName } from '../../utils/code'
 import { useMenuPermission } from '../../contexts/useMenuPermission'
 import { Pagination } from '../../components/Pagination'
 import type { PageData } from '../../types/common'
+import { CODE_LIST_PATH } from '../../constants/routes'
+import { getListPageSnapshot } from '../../utils/search'
 
 type CodeListPageProps = {
   codeMasters: CodeMaster[]
@@ -50,8 +52,10 @@ export function CodeListPage({
 }: CodeListPageProps) {
   // 현재 관리 메뉴의 쓰기 권한을 조회한다
   const permission = useMenuPermission()
-  const [search, setSearch] = useState<CodeMasterSearch>({ ...DEFAULT_SEARCH })
-  const [appliedSearch, setAppliedSearch] = useState<CodeMasterSearch>({ ...DEFAULT_SEARCH })
+  // 상세 화면 이전에 사용한 코드 검색 조건을 목록 입력값으로 복원한다
+  const initialSnapshot = getListPageSnapshot(CODE_LIST_PATH, DEFAULT_SEARCH)
+  const [search, setSearch] = useState<CodeMasterSearch>(initialSnapshot.search)
+  const [appliedSearch, setAppliedSearch] = useState<CodeMasterSearch>(initialSnapshot.search)
   const [expandedMasters, setExpandedMasters] = useState<Set<string>>(new Set())
   const [expandedDetails, setExpandedDetails] = useState<Set<string>>(new Set())
   const [detailsByMaster, setDetailsByMaster] = useState<Record<string, Code[]>>({})
@@ -203,11 +207,13 @@ export function CodeListPage({
       {/* 공통코드 검색 조건 영역 */}
       <form className="list-search" onSubmit={handleSearch}>
         <label>
-          <span>코드·코드명</span>
+          {/* "코드·코드명·세부코드" */}
+          <span>코드·코드명·세부코드</span>
+          {/* "공통코드, 코드명, 세부코드 또는 세부코드명" */}
           <input
             value={search.keyword}
             maxLength={100}
-            placeholder="공통코드 또는 공통코드명"
+            placeholder="공통코드, 코드명, 세부코드 또는 세부코드명"
             onChange={(event) => setSearch({ ...search, keyword: event.target.value })}
           />
         </label>

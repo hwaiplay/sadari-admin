@@ -17,6 +17,7 @@ import {AuditInfoTable} from '../../components/AuditInfoTable'
 import {useMenuPermission} from '../../contexts/useMenuPermission'
 import {Pagination} from '../../components/Pagination'
 import type {PageData} from '../../types/common'
+import {getListPageSnapshot, setListPageSnapshot} from '../../utils/search'
 
 type UserMenuManagePageProps = {
     currentPath: string
@@ -85,11 +86,14 @@ export function UserMenuManagePage({currentPath, onMovePath, onError}: UserMenuM
                 setChildForms([])
                 setSubMenuEditForms([])
                 if (isList) {
-                    const result = await getUserMenus(1, DEFAULT_SEARCH)
+                    // 상세 이동 전에 사용한 사용자 메뉴 목록 조회 상태를 확인한다
+                    const snapshot = getListPageSnapshot(USER_MENU_LIST_PATH, DEFAULT_SEARCH)
+                    // 저장된 사용자 메뉴 페이지를 같은 검색 조건으로 다시 조회한다
+                    const result = await getUserMenus(snapshot.pageNumber, snapshot.search)
                     setPageData(result)
                     setRows(result.items)
-                    setSearch(DEFAULT_SEARCH)
-                    setAppliedSearch(DEFAULT_SEARCH)
+                    setSearch(snapshot.search)
+                    setAppliedSearch(snapshot.search)
                     setDetail(null)
                     return
                 }
@@ -126,6 +130,8 @@ export function UserMenuManagePage({currentPath, onMovePath, onError}: UserMenuM
         setPageData(result)
         setRows(result.items)
         setAppliedSearch(targetSearch)
+        // 상세 화면에서 돌아올 때 현재 사용자 메뉴 조회 상태를 복원하도록 저장한다
+        setListPageSnapshot(USER_MENU_LIST_PATH, result.pageNumber, targetSearch)
     }
 
     /**

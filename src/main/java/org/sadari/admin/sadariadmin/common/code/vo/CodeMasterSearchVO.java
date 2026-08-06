@@ -11,6 +11,7 @@ import lombok.Data;
  * DATE              AUTHOR             NOTE
  * -----------------------------------------------------------
  * 2026-07-31        SeungHyeon.Kang    최초 생성
+ * 2026-08-06        OpenAI.Codex       세부코드 검색 범위 추가
  */
 @Data
 public class CodeMasterSearchVO {
@@ -18,7 +19,7 @@ public class CodeMasterSearchVO {
     // 요청 페이지 번호
     private Integer page = 1;
 
-    // 공통코드 또는 공통코드명 검색어
+    // 공통코드와 코드명 및 세부코드와 세부코드명 검색어
     private String keyword;
 
     // 사용 여부

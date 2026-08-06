@@ -4,11 +4,12 @@ import { getCodeList } from '../../api/codeApi'
 import { getComplaints } from '../../api/complaintApi'
 import { Pagination } from '../../components/Pagination'
 import { CMPL_RSON, CMPL_STAT, CMPL_TAGT } from '../../constants/codes'
-import { COMPLAINT_DETAIL_PREFIX } from '../../constants/routes'
+import { COMPLAINT_DETAIL_PREFIX, COMPLAINT_LIST_PATH } from '../../constants/routes'
 import type { Code } from '../../types/code'
 import type { PageData } from '../../types/common'
 import type { Complaint, ComplaintSearch } from '../../types/complaint'
 import { formatDate } from '../../utils/code'
+import { getListPageSnapshot, setListPageSnapshot } from '../../utils/search'
 
 type ComplaintListPageProps = {
   onMovePath: (path: string) => void
@@ -65,7 +66,10 @@ export function ComplaintListPage({ onMovePath, onError }: ComplaintListPageProp
     // 조회 실패 시 기존 검색값을 유지하고 공통 오류를 표시한다
     try {
       // 서버 신고 목록 페이지를 현재 화면에 반영한다
-      setPageData(await getComplaints(pageNumber, targetSearch))
+      const result = await getComplaints(pageNumber, targetSearch)
+      setPageData(result)
+      // 상세 화면에서 돌아올 때 현재 신고 조회 상태를 복원하도록 저장한다
+      setListPageSnapshot(COMPLAINT_LIST_PATH, result.pageNumber, targetSearch)
       // 이전 신고 목록 조회 오류를 제거한다
       onError(null)
     } catch (error: unknown) {
@@ -80,12 +84,14 @@ export function ComplaintListPage({ onMovePath, onError }: ComplaintListPageProp
   // 첫 진입 시 기본 접수 신고 목록과 세 종류의 신고 공통코드를 조회한다
   useEffect(() => {
     let active = true
+    // 상세 이동 전에 사용한 신고 목록 조회 상태를 확인한다
+    const snapshot = getListPageSnapshot(COMPLAINT_LIST_PATH, DEFAULT_SEARCH)
     // 신고 검색 셀렉트와 기본 접수 목록 데이터를 병렬로 조회한다
     Promise.all([
       getCodeList(CMPL_TAGT),
       getCodeList(CMPL_RSON),
       getCodeList(CMPL_STAT),
-      getComplaints(1, DEFAULT_SEARCH),
+      getComplaints(snapshot.pageNumber, snapshot.search),
     ])
       .then(([targets, reasons, statuses, complaints]) => {
         // 화면이 유지되는 동안에만 신고 목록과 검색 코드를 반영한다
@@ -98,6 +104,9 @@ export function ComplaintListPage({ onMovePath, onError }: ComplaintListPageProp
           setStatusCodes(statuses.filter((code) => code.useeYsno !== 'N'))
           // 기본 접수 신고 목록을 화면에 설정한다
           setPageData(complaints)
+          // 복원된 신고 검색 조건을 입력과 페이지 이동 조건에 함께 설정한다
+          setSearch(snapshot.search)
+          setAppliedSearch(snapshot.search)
           // 이전 신고 목록 오류를 제거한다
           onError(null)
           // 신고 목록 로딩을 종료한다

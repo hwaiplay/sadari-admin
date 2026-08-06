@@ -13,6 +13,7 @@ import { formatDate, getUseeYsnoCodeName } from '../../utils/code'
 import { useMenuPermission } from '../../contexts/useMenuPermission'
 import { Pagination } from '../../components/Pagination'
 import type { PageData } from '../../types/common'
+import { getListPageSnapshot, setListPageSnapshot } from '../../utils/search'
 
 type AuthGroupManagePageProps = {
   currentPath: string
@@ -78,9 +79,14 @@ export function AuthGroupManagePage({ currentPath, onMovePath, onError }: AuthGr
         const codes = await getCodeList(COMM_YSNO)
         setUseeCodes(codes)
         if (isList) {
-          const result = await getAuthGroups(1, DEFAULT_SEARCH)
+          // 상세 이동 전에 사용한 권한그룹 목록 조회 상태를 확인한다
+          const snapshot = getListPageSnapshot(AUTH_GROUP_LIST_PATH, DEFAULT_SEARCH)
+          // 저장된 권한그룹 페이지를 같은 검색 조건으로 다시 조회한다
+          const result = await getAuthGroups(snapshot.pageNumber, snapshot.search)
           setPageData(result)
           setGroups(result.items)
+          setSearch(snapshot.search)
+          setAppliedSearch(snapshot.search)
           return
         }
         if (isNew) {
@@ -110,6 +116,9 @@ export function AuthGroupManagePage({ currentPath, onMovePath, onError }: AuthGr
     const result = await getAuthGroups(pageNumber, targetSearch)
     setPageData(result)
     setGroups(result.items)
+    setAppliedSearch(targetSearch)
+    // 상세 화면에서 돌아올 때 현재 권한그룹 조회 상태를 복원하도록 저장한다
+    setListPageSnapshot(AUTH_GROUP_LIST_PATH, result.pageNumber, targetSearch)
   }
 
   /**

@@ -4,11 +4,12 @@ import { getCodeList } from '../../api/codeApi'
 import { getCurrentUsers } from '../../api/currentUserApi'
 import { Pagination } from '../../components/Pagination'
 import { USER_PROV, USER_STAT } from '../../constants/codes'
-import { CURRENT_USER_DETAIL_PREFIX } from '../../constants/routes'
+import { CURRENT_USER_DETAIL_PREFIX, CURRENT_USER_LIST_PATH } from '../../constants/routes'
 import type { Code } from '../../types/code'
 import type { PageData } from '../../types/common'
 import type { CurrentUser, CurrentUserSearch } from '../../types/currentUser'
 import { formatDate } from '../../utils/code'
+import { getListPageSnapshot, setListPageSnapshot } from '../../utils/search'
 
 type CurrentUserListPageProps = {
   onMovePath: (path: string) => void
@@ -64,7 +65,10 @@ export function CurrentUserListPage({ onMovePath, onError }: CurrentUserListPage
     setLoading(true)
     try {
       // 서버 검색 결과를 현재 페이지 상태에 반영한다.
-      setPageData(await getCurrentUsers(pageNumber, targetSearch))
+      const result = await getCurrentUsers(pageNumber, targetSearch)
+      setPageData(result)
+      // 상세 화면에서 돌아올 때 현재 사용자 조회 상태를 복원하도록 저장한다.
+      setListPageSnapshot(CURRENT_USER_LIST_PATH, result.pageNumber, targetSearch)
       // 이전 오류 메시지를 초기화한다.
       onError(null)
     } catch (error: unknown) {
@@ -79,14 +83,18 @@ export function CurrentUserListPage({ onMovePath, onError }: CurrentUserListPage
   // 첫 진입 시 기본 활성 사용자 목록과 상태 공통코드를 함께 조회한다.
   useEffect(() => {
     let active = true
+    // 상세 이동 전에 사용한 현재 사용자 목록 조회 상태를 확인한다.
+    const snapshot = getListPageSnapshot(CURRENT_USER_LIST_PATH, DEFAULT_SEARCH)
     // 화면에서 사용할 회원 상태명과 기본 목록을 병렬로 조회한다.
-    Promise.all([getCodeList(USER_STAT), getCodeList(USER_PROV), getCurrentUsers(1, DEFAULT_SEARCH)])
+    Promise.all([getCodeList(USER_STAT), getCodeList(USER_PROV), getCurrentUsers(snapshot.pageNumber, snapshot.search)])
       .then(([codes, providers, users]) => {
         // 화면이 유지되는 동안에만 조회 결과를 반영한다.
         if (active) {
           setStatusCodes(codes)
           setProviderCodes(providers)
           setPageData(users)
+          setSearch(snapshot.search)
+          setAppliedSearch(snapshot.search)
           onError(null)
           setLoading(false)
         }

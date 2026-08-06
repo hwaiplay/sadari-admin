@@ -1,12 +1,13 @@
 import { useState } from 'react'
 import type { FormEvent } from 'react'
-import { MENU_DETAIL_PREFIX, MENU_NEW_PATH } from '../../constants/routes'
+import { MENU_DETAIL_PREFIX, MENU_LIST_PATH, MENU_NEW_PATH } from '../../constants/routes'
 import type { Code } from '../../types/code'
 import type { Menu, MenuSearch } from '../../types/menu'
 import { formatDate, getUseeYsnoCodeName } from '../../utils/code'
 import { useMenuPermission } from '../../contexts/useMenuPermission'
 import { Pagination } from '../../components/Pagination'
 import type { PageData } from '../../types/common'
+import { getListPageSnapshot } from '../../utils/search'
 
 type MenuListPageProps = {
   menuRows: Menu[]
@@ -40,8 +41,10 @@ export function MenuListPage({
   onDelete,
 }: MenuListPageProps) {
   const permission = useMenuPermission()
-  const [search, setSearch] = useState<MenuSearch>({ ...DEFAULT_SEARCH })
-  const [appliedSearch, setAppliedSearch] = useState<MenuSearch>({ ...DEFAULT_SEARCH })
+  // 상세 화면 이전에 사용한 메뉴 검색 조건을 목록 입력값으로 복원한다
+  const initialSnapshot = getListPageSnapshot(MENU_LIST_PATH, DEFAULT_SEARCH)
+  const [search, setSearch] = useState<MenuSearch>(initialSnapshot.search)
+  const [appliedSearch, setAppliedSearch] = useState<MenuSearch>(initialSnapshot.search)
 
   /**
    * 입력한 메뉴 조건으로 첫 페이지를 검색한다

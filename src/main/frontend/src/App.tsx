@@ -32,6 +32,7 @@ import type { Code, CodeMaster, CodeMasterSearch, DetailCodeForm, DetailCodePayl
 import type { Menu, MenuForm, MenuSearch } from './types/menu'
 import type { PageData } from './types/common'
 import { emptyDetailForm, emptyMenuForm, toDetailCodeForm, toMenuForm } from './utils/forms'
+import { getListPageSnapshot, setListPageSnapshot } from './utils/search'
 
 const emptyPageData = <T,>(): PageData<T> => ({ items: [], totalCount: 0, pageNumber: 1, pageSize: 20, totalPages: 0 })
 
@@ -266,6 +267,8 @@ function App() {
     const [pageData] = await Promise.all([getMenuMngList(pageNumber, search), loadUseeYsnoCodeList()])
     setMenuPageData(pageData)
     setMenuRows(pageData.items)
+    // 상세 화면에서 돌아올 때 현재 메뉴 검색 결과를 복원하도록 조회 상태를 저장한다
+    setListPageSnapshot(MENU_LIST_PATH, pageData.pageNumber, search)
   }
 
   /**
@@ -313,6 +316,8 @@ function App() {
     setCodePageData(pageData)
     setCodeMasters(pageData.items)
     setCodeAppliedSearch(search)
+    // 상세 화면에서 돌아올 때 현재 코드 검색 결과를 복원하도록 조회 상태를 저장한다
+    setListPageSnapshot(CODE_LIST_PATH, pageData.pageNumber, search)
     setSelectedMaster(null)
     setMasterEditForm(null)
     setDetailCodes([])
@@ -357,6 +362,8 @@ function App() {
     ])
     setAlimPageData(pageData)
     setAlimTemps(pageData.items)
+    // 상세 화면에서 돌아올 때 현재 알림 템플릿 검색 결과를 복원하도록 조회 상태를 저장한다
+    setListPageSnapshot(ALIM_TEMP_LIST_PATH, pageData.pageNumber, search)
     setAlimTempDetail(null)
   }
 
@@ -392,13 +399,39 @@ function App() {
    * @return
    */
   const loadCurrentAdminPage = useEffectEvent(() => {
-    if (isMenuListPage) void openMenuListPage()
+    // 메뉴 목록은 마지막으로 조회한 페이지와 검색 조건으로 복원한다
+    if (isMenuListPage) {
+      // 저장된 메뉴 목록 조회 상태를 확인한다
+      const snapshot = getListPageSnapshot(MENU_LIST_PATH, DEFAULT_MENU_SEARCH)
+      // 저장된 메뉴 페이지를 같은 검색 조건으로 다시 조회한다
+      void openMenuListPage(snapshot.pageNumber, snapshot.search)
+    }
+
+    // 메뉴 등록 경로에서는 신규 입력값을 준비한다
     else if (isMenuNewPage) void openMenuNewPage(parentMenuNumb)
+    // 메뉴 상세 경로에서는 선택한 메뉴 정보를 조회한다
     else if (detailKey) void openMenuDetailPage(detailKey.menuNumb, detailKey.subxNumb)
-    else if (isCodeListPage) void openCodeListPage()
+    // 코드 목록은 마지막으로 조회한 페이지와 검색 조건으로 복원한다
+    else if (isCodeListPage) {
+      // 저장된 코드 목록 조회 상태를 확인한다
+      const snapshot = getListPageSnapshot(CODE_LIST_PATH, DEFAULT_CODE_SEARCH)
+      // 저장된 코드 페이지를 같은 검색 조건으로 다시 조회한다
+      void openCodeListPage(snapshot.pageNumber, snapshot.search)
+    }
+
+    // 코드 상세 경로에서는 선택한 공통코드와 세부코드 정보를 조회한다
     else if (codeDetailKey) void openCodeDetailPage(codeDetailKey.commCode, codeDetailKey.comdCode)
-    else if (isAlimTempListPage) void openAlimTempListPage()
+    // 알림 템플릿 목록은 마지막으로 조회한 페이지와 검색 조건으로 복원한다
+    else if (isAlimTempListPage) {
+      // 저장된 알림 템플릿 목록 조회 상태를 확인한다
+      const snapshot = getListPageSnapshot(ALIM_TEMP_LIST_PATH, DEFAULT_ALIM_SEARCH)
+      // 저장된 알림 템플릿 페이지를 같은 검색 조건으로 다시 조회한다
+      void openAlimTempListPage(snapshot.pageNumber, snapshot.search)
+    }
+
+    // 알림 템플릿 등록 경로에서는 신규 입력값을 준비한다
     else if (isAlimTempNewPage) void openAlimTempNewPage()
+    // 알림 템플릿 상세 경로에서는 선택한 템플릿 정보를 조회한다
     else if (alimTempDetailKey) void openAlimTempDetailPage(alimTempDetailKey.alimSitu, alimTempDetailKey.tempCode)
   })
 

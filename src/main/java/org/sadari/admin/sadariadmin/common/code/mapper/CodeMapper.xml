@@ -16,6 +16,15 @@
            AND (
                    UPPER(C.COMM_CODE) LIKE #{keywordLike}
                 OR UPPER(C.CODE_NAME) LIKE #{keywordLike}
+                OR EXISTS (
+                       SELECT 1
+                         FROM TB_CODEXD D
+                        WHERE D.COMM_CODE = C.COMM_CODE
+                          AND (
+                                  UPPER(D.COMD_CODE) LIKE #{keywordLike}
+                               OR UPPER(D.COMD_NAME) LIKE #{keywordLike}
+                              )
+                   )
                )
         </if>
         <if test="useeYsno != null and useeYsno != ''">

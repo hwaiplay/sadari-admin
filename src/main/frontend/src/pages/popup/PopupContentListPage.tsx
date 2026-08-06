@@ -2,12 +2,13 @@ import { useState } from 'react'
 import type { FormEvent, KeyboardEvent, MouseEvent } from 'react'
 import { Pagination } from '../../components/Pagination'
 import { useMenuPermission } from '../../contexts/useMenuPermission'
-import { POPUP_CONTENT_DETAIL_PREFIX, POPUP_CONTENT_NEW_PATH } from '../../constants/routes'
+import { POPUP_CONTENT_DETAIL_PREFIX, POPUP_CONTENT_LIST_PATH, POPUP_CONTENT_NEW_PATH } from '../../constants/routes'
 import type { Code } from '../../types/code'
 import type { PageData } from '../../types/common'
 import type { PopupContent, PopupContentSearch } from '../../types/popupContent'
 import { formatDate } from '../../utils/code'
 import { getPopupContentAreaCount } from '../../utils/popupContent'
+import { getListPageSnapshot } from '../../utils/search'
 
 type PopupContentListPageProps = {
   popupContents: PopupContent[]
@@ -42,8 +43,10 @@ export function PopupContentListPage({
 }: PopupContentListPageProps) {
   // 현재 메뉴의 등록과 수정 가능 여부를 확인한다
   const permission = useMenuPermission()
-  const [search, setSearch] = useState<PopupContentSearch>(DEFAULT_SEARCH)
-  const [appliedSearch, setAppliedSearch] = useState<PopupContentSearch>(DEFAULT_SEARCH)
+  // 상세 화면 이전에 사용한 팝업 검색 조건을 목록 입력값으로 복원한다
+  const initialSnapshot = getListPageSnapshot(POPUP_CONTENT_LIST_PATH, DEFAULT_SEARCH)
+  const [search, setSearch] = useState<PopupContentSearch>(initialSnapshot.search)
+  const [appliedSearch, setAppliedSearch] = useState<PopupContentSearch>(initialSnapshot.search)
 
   /**
    * 팝업 콘텐츠 검색 조건을 첫 페이지부터 적용한다

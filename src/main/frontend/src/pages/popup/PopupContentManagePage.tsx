@@ -17,6 +17,7 @@ import type { Code } from '../../types/code'
 import type { PageData } from '../../types/common'
 import type { PopupContent, PopupContentForm, PopupContentSearch } from '../../types/popupContent'
 import { emptyPopupContentForm, popupLinesToJson, toPopupContentForm } from '../../utils/popupContent'
+import { getListPageSnapshot, setListPageSnapshot } from '../../utils/search'
 import { PopupContentDetailPage } from './PopupContentDetailPage'
 import { PopupContentListPage } from './PopupContentListPage'
 
@@ -94,6 +95,8 @@ export function PopupContentManagePage({
       ])
       // 검증된 목록과 페이지 정보를 화면 상태에 반영한다
       setPopupPageData(pageData)
+      // 상세 화면에서 돌아올 때 현재 팝업 목록 조회 상태를 복원하도록 저장한다
+      setListPageSnapshot(POPUP_CONTENT_LIST_PATH, pageData.pageNumber, search)
       // 검색 선택 항목을 화면 구분 공통코드로 구성한다
       setPopupSituCodes(situCodes)
       // 목록 화면에서는 이전에 조회한 상세 감사정보를 제거한다
@@ -177,8 +180,10 @@ export function PopupContentManagePage({
     const loadTimer = window.setTimeout(() => {
       // 현재 경로에 맞는 팝업 관리 데이터를 중복 없이 한 번만 조회한다
       if (isListPage) {
-        // 목록 경로의 첫 페이지 데이터를 조회한다
-        void loadPopupContentList()
+        // 상세 이동 전에 사용한 팝업 목록 조회 상태를 확인한다
+        const snapshot = getListPageSnapshot(POPUP_CONTENT_LIST_PATH, DEFAULT_SEARCH)
+        // 저장된 팝업 페이지를 같은 검색 조건으로 다시 조회한다
+        void loadPopupContentList(snapshot.pageNumber, snapshot.search)
         // 다른 팝업 화면 조회가 이어지지 않도록 예약 작업을 종료한다
         return
       }

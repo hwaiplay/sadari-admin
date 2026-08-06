@@ -3,13 +3,14 @@ import type { FormEvent, KeyboardEvent, MouseEvent } from 'react'
 import { getCodeList } from '../../api/codeApi'
 import { getScheduleLogs } from '../../api/scheduleLogApi'
 import { SCHD_CODE } from '../../constants/codes'
-import { SCHEDULE_LOG_DETAIL_PREFIX } from '../../constants/routes'
+import { SCHEDULE_LOG_DETAIL_PREFIX, SCHEDULE_LOG_LIST_PATH } from '../../constants/routes'
 import type { Code } from '../../types/code'
 import type { ScheduleLog, ScheduleLogSearch } from '../../types/scheduleLog'
 import { formatDate } from '../../utils/code'
 import { formatExecutionTime, getScheduleStatusClassName } from '../../utils/scheduleLog'
 import { Pagination } from '../../components/Pagination'
 import type { PageData } from '../../types/common'
+import { getListPageSnapshot, setListPageSnapshot } from '../../utils/search'
 
 type ScheduleLogListPageProps = {
   onMovePath: (path: string) => void
@@ -102,9 +103,11 @@ export function ScheduleLogListPage({ onMovePath, onError }: ScheduleLogListPage
   // 화면 진입 시 API 완료 결과만 상태에 반영하여 Effect의 동기 상태 변경을 방지한다
   useEffect(() => {
     let active = true
+    // 상세 이동 전에 사용한 스케줄러 로그 목록 조회 상태를 확인한다
+    const snapshot = getListPageSnapshot(SCHEDULE_LOG_LIST_PATH, DEFAULT_SEARCH)
 
     // 최신 스케줄러 실행 결과를 서버에서 조회한다
-    Promise.all([getScheduleLogs(1, DEFAULT_SEARCH), getCodeList(SCHD_CODE)])
+    Promise.all([getScheduleLogs(snapshot.pageNumber, snapshot.search), getCodeList(SCHD_CODE)])
       .then(([result, codes]) => {
         // 화면이 유지되는 동안 도착한 응답만 상태에 반영한다
         if (active) {
@@ -112,6 +115,8 @@ export function ScheduleLogListPage({ onMovePath, onError }: ScheduleLogListPage
           setPageData(result)
           setScheduleLogs(result.items)
           setScheduleCodes(codes)
+          setSearch(snapshot.search)
+          setAppliedSearch(snapshot.search)
           setLoading(false)
         }
       })
@@ -143,6 +148,8 @@ export function ScheduleLogListPage({ onMovePath, onError }: ScheduleLogListPage
       setPageData(result)
       setScheduleLogs(result.items)
       setAppliedSearch(targetSearch)
+      // 상세 화면에서 돌아올 때 현재 스케줄러 로그 조회 상태를 복원하도록 저장한다
+      setListPageSnapshot(SCHEDULE_LOG_LIST_PATH, result.pageNumber, targetSearch)
       onError(null)
     } catch (error: unknown) {
       onError(error instanceof Error ? error.message : '스케줄러 로그 목록을 불러오지 못했습니다.')

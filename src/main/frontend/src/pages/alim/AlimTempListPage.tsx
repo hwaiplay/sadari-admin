@@ -1,12 +1,13 @@
 import { useState } from 'react'
 import type { FormEvent } from 'react'
-import { ALIM_TEMP_DETAIL_PREFIX, ALIM_TEMP_NEW_PATH } from '../../constants/routes'
+import { ALIM_TEMP_DETAIL_PREFIX, ALIM_TEMP_LIST_PATH, ALIM_TEMP_NEW_PATH } from '../../constants/routes'
 import type { AlimTemp, AlimTempSearch } from '../../types/alim'
 import type { Code } from '../../types/code'
 import { formatDate, getUseeYsnoCodeName } from '../../utils/code'
 import { useMenuPermission } from '../../contexts/useMenuPermission'
 import { Pagination } from '../../components/Pagination'
 import type { PageData } from '../../types/common'
+import { getListPageSnapshot } from '../../utils/search'
 
 type AlimTempListPageProps = {
   alimTemps: AlimTemp[]
@@ -40,8 +41,10 @@ export function AlimTempListPage({
   onMovePath,
 }: AlimTempListPageProps) {
   const permission = useMenuPermission()
-  const [search, setSearch] = useState<AlimTempSearch>({ ...DEFAULT_SEARCH })
-  const [appliedSearch, setAppliedSearch] = useState<AlimTempSearch>({ ...DEFAULT_SEARCH })
+  // 상세 화면 이전에 사용한 알림 템플릿 검색 조건을 목록 입력값으로 복원한다
+  const initialSnapshot = getListPageSnapshot(ALIM_TEMP_LIST_PATH, DEFAULT_SEARCH)
+  const [search, setSearch] = useState<AlimTempSearch>(initialSnapshot.search)
+  const [appliedSearch, setAppliedSearch] = useState<AlimTempSearch>(initialSnapshot.search)
 
   /**
    * 입력한 알림 템플릿 조건으로 첫 페이지를 검색한다
