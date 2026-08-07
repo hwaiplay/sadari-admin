@@ -6,6 +6,7 @@ import {
   releaseComplaintTargetSuspension,
   updateComplaint,
 } from '../../api/complaintApi'
+import { ImagePreviewButton } from '../../components/ImagePreviewButton'
 import { UserSuspensionPanel } from '../../components/UserSuspensionPanel'
 import { COMPLAINT_LIST_PATH } from '../../constants/routes'
 import { useMenuPermission } from '../../contexts/useMenuPermission'
@@ -311,6 +312,28 @@ export function ComplaintDetailPage({
                 <td>{complaint.procAdmnName ?? '-'}</td>
               </tr>
               <tr>
+                <th>신고자 사진</th>
+                <td colSpan={5}>
+                  {/* 신고자 프로필 사진과 배경화면 보기 버튼 영역 */}
+                  <div className="image-preview-actions">
+                    {/* "프로필 사진 보기" */}
+                    <ImagePreviewButton
+                      imagePath={complaint.reporterProfPath}
+                      buttonLabel="프로필 사진 보기"
+                      dialogTitle={`${complaint.reporterNick ?? '탈퇴한 사용자'} 프로필 사진`}
+                      emptyLabel="프로필 미등록"
+                    />
+                    {/* "배경화면 보기" */}
+                    <ImagePreviewButton
+                      imagePath={complaint.reporterBgimPath}
+                      buttonLabel="배경화면 보기"
+                      dialogTitle={`${complaint.reporterNick ?? '탈퇴한 사용자'} 배경화면`}
+                      emptyLabel="배경 미등록"
+                    />
+                  </div>
+                </td>
+              </tr>
+              <tr>
                 <th>대상 유형</th>
                 <td>{complaint.tagtTypeName ?? complaint.tagtType}</td>
                 <th>대상번호</th>
@@ -346,6 +369,28 @@ export function ComplaintDetailPage({
                   <td>{detail.targetUser.userNick}</td>
                   <th>회원 상태</th>
                   <td>{detail.targetUser.userStatName ?? detail.targetUser.userStat}</td>
+                </tr>
+                <tr>
+                  <th>사용자 사진</th>
+                  <td colSpan={5}>
+                    {/* 신고 대상 프로필 사진과 배경화면 보기 버튼 영역 */}
+                    <div className="image-preview-actions">
+                      {/* "프로필 사진 보기" */}
+                      <ImagePreviewButton
+                        imagePath={detail.targetUser.profPath}
+                        buttonLabel="프로필 사진 보기"
+                        dialogTitle={`${detail.targetUser.userNick} 프로필 사진`}
+                        emptyLabel="프로필 미등록"
+                      />
+                      {/* "배경화면 보기" */}
+                      <ImagePreviewButton
+                        imagePath={detail.targetUser.bgimPath}
+                        buttonLabel="배경화면 보기"
+                        dialogTitle={`${detail.targetUser.userNick} 배경화면`}
+                        emptyLabel="배경 미등록"
+                      />
+                    </div>
+                  </td>
                 </tr>
               </tbody>
             </table>

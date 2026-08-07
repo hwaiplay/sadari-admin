@@ -45,7 +45,7 @@
 
     <!-- 신고 목록과 상세에서 공통으로 조회할 컬럼이다 -->
     <sql id="complaintColumns">
-          C.CMPL_NUMB
+        C.CMPL_NUMB
         , C.USER_NUMB
         , R.USER_NICK AS REPORTER_NICK
         , C.TAGT_TYPE
@@ -67,7 +67,7 @@
 
     <!-- 페이징 인라인 뷰에서 반환할 신고 컬럼이다 -->
     <sql id="complaintPageColumns">
-          P.CMPL_NUMB
+        P.CMPL_NUMB
         , P.USER_NUMB
         , P.REPORTER_NICK
         , P.TAGT_TYPE
@@ -147,9 +147,15 @@
         <include refid="complaintCodeBindings"/>
         SELECT /* getComplaintDtl */
                <include refid="complaintColumns"/>
+             , RPF.FILE_PATH AS REPORTER_PROF_PATH
+             , RBF.FILE_PATH AS REPORTER_BGIM_PATH
           FROM TH_CMPLNT C
      LEFT JOIN TM_USERXM R
             ON R.USER_NUMB = C.USER_NUMB
+     LEFT JOIN TM_FILEXM RPF
+            ON RPF.FILE_NUMB = R.PROF_NUMB
+     LEFT JOIN TM_FILEXM RBF
+            ON RBF.FILE_NUMB = R.BGIM_NUMB
      LEFT JOIN TM_USERXM T
             ON T.USER_NUMB = C.TAGT_NUMB
            AND C.TAGT_TYPE = #{cmplUser}

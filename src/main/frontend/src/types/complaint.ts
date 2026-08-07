@@ -15,6 +15,8 @@ export type Complaint = {
   cmplNumb: number
   userNumb: number | null
   reporterNick: string | null
+  reporterProfPath: string | null
+  reporterBgimPath: string | null
   tagtType: string
   tagtTypeName: string | null
   tagtNumb: number

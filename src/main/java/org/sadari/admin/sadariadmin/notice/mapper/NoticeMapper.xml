@@ -1,0 +1,250 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "https://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="org.sadari.admin.sadariadmin.notice.mapper.NoticeMapper">
+    <!-- 목록과 건수 조회에 같은 제목 검색 조건을 적용한다 -->
+    <sql id="noticeSearchConditions">
+        <if test="keyword != null and keyword != ''">
+            <bind name="keywordLike" value="'%' + keyword.toUpperCase() + '%'"/>
+           AND UPPER(N.NOTI_TITL) LIKE #{keywordLike}
+        </if>
+    </sql>
+
+    <!-- 공지번호별 최신 버전 한 행과 현재 배포 여부를 조회한다 -->
+    <select id="getNoticeList" resultType="org.sadari.admin.sadariadmin.notice.vo.NoticeVO">
+        SELECT /* getNoticeList */
+               N.NOTI_NUMB
+             , N.VERS_NUMB
+             , N.CATE_CODE
+             , C.COMD_NAME AS CATE_NAME
+             , N.TOPX_YSNO
+             , N.NOTI_TITL
+             , D.DPLY_YSNO
+             , N.REGI_ADMN
+             , FN_GET_ADMIN_NAME(N.REGI_ADMN) AS REGI_ADMN_NAME
+             , N.REGI_DATE
+             , N.UPDT_ADMN
+             , FN_GET_ADMIN_NAME(N.UPDT_ADMN) AS UPDT_ADMN_NAME
+             , N.UPDT_DATE
+             , N.DPLY_ADMN
+             , FN_GET_ADMIN_NAME(N.DPLY_ADMN) AS DPLY_ADMN_NAME
+             , N.DPLY_DATE
+          FROM CT_NOTICE N
+    INNER JOIN (  SELECT NOTI_NUMB
+                       , MAX(VERS_NUMB) AS VERS_NUMB
+                    FROM CT_NOTICE
+                GROUP BY NOTI_NUMB
+               ) L
+            ON L.NOTI_NUMB = N.NOTI_NUMB
+           AND L.VERS_NUMB = N.VERS_NUMB
+     LEFT JOIN (  SELECT NOTI_NUMB
+                       , MAX(DPLY_YSNO) AS DPLY_YSNO
+                    FROM CT_NOTICE
+                GROUP BY NOTI_NUMB
+               ) D
+            ON D.NOTI_NUMB = N.NOTI_NUMB
+     LEFT JOIN TB_CODEXD C
+            ON C.COMM_CODE = N.CATE_CGRP
+           AND C.COMD_CODE = N.CATE_CODE
+         WHERE 1 = 1
+               <include refid="noticeSearchConditions"/>
+      ORDER BY N.TOPX_YSNO DESC
+             , N.NOTI_NUMB DESC
+         LIMIT #{startRow}, #{endRow}
+    </select>
+
+    <!-- 검색 조건에 맞는 공지번호별 최신 버전 전체 건수를 조회한다 -->
+    <select id="getNoticeListCnt" resultType="int">
+        SELECT /* getNoticeListCnt */
+               COUNT(1)
+          FROM CT_NOTICE N
+    INNER JOIN (  SELECT NOTI_NUMB
+                       , MAX(VERS_NUMB) AS VERS_NUMB
+                    FROM CT_NOTICE
+                GROUP BY NOTI_NUMB
+               ) L
+            ON L.NOTI_NUMB = N.NOTI_NUMB
+           AND L.VERS_NUMB = N.VERS_NUMB
+         WHERE 1 = 1
+               <include refid="noticeSearchConditions"/>
+    </select>
+
+    <!-- 공지사항 복합키로 버전 상세를 조회한다 -->
+    <select id="getNoticeDtl" resultType="org.sadari.admin.sadariadmin.notice.vo.NoticeVO">
+        SELECT /* getNoticeDtl */
+               N.NOTI_NUMB
+             , N.VERS_NUMB
+             , N.CATE_CGRP
+             , N.CATE_CODE
+             , C.COMD_NAME AS CATE_NAME
+             , N.NOTI_TITL
+             , N.NOTI_CNTN
+             , N.TOPX_YSNO
+             , N.DPLY_YSNO
+             , N.REGI_ADMN
+             , FN_GET_ADMIN_NAME(N.REGI_ADMN) AS REGI_ADMN_NAME
+             , N.REGI_DATE
+             , N.UPDT_ADMN
+             , FN_GET_ADMIN_NAME(N.UPDT_ADMN) AS UPDT_ADMN_NAME
+             , N.UPDT_DATE
+             , N.DPLY_ADMN
+             , FN_GET_ADMIN_NAME(N.DPLY_ADMN) AS DPLY_ADMN_NAME
+             , N.DPLY_DATE
+          FROM CT_NOTICE N
+     LEFT JOIN TB_CODEXD C
+            ON C.COMM_CODE = N.CATE_CGRP
+           AND C.COMD_CODE = N.CATE_CODE
+         WHERE N.NOTI_NUMB = #{notiNumb}
+           AND N.VERS_NUMB = #{versNumb}
+    </select>
+
+    <!-- 같은 공지사항의 모든 버전을 최신 버전부터 조회한다 -->
+    <select id="getNoticeVersionList" resultType="org.sadari.admin.sadariadmin.notice.vo.NoticeVO">
+        SELECT /* getNoticeVersionList */
+               N.NOTI_NUMB
+             , N.VERS_NUMB
+             , N.CATE_CODE
+             , C.COMD_NAME AS CATE_NAME
+             , N.TOPX_YSNO
+             , N.NOTI_TITL
+             , N.DPLY_YSNO
+             , N.REGI_ADMN
+             , FN_GET_ADMIN_NAME(N.REGI_ADMN) AS REGI_ADMN_NAME
+             , N.REGI_DATE
+             , N.UPDT_ADMN
+             , FN_GET_ADMIN_NAME(N.UPDT_ADMN) AS UPDT_ADMN_NAME
+             , N.UPDT_DATE
+             , N.DPLY_ADMN
+             , FN_GET_ADMIN_NAME(N.DPLY_ADMN) AS DPLY_ADMN_NAME
+             , N.DPLY_DATE
+          FROM CT_NOTICE N
+     LEFT JOIN TB_CODEXD C
+            ON C.COMM_CODE = N.CATE_CGRP
+           AND C.COMD_CODE = N.CATE_CODE
+         WHERE N.NOTI_NUMB = #{notiNumb}
+      ORDER BY N.VERS_NUMB DESC
+    </select>
+
+    <!-- 공지 삭제 전에 모든 버전의 본문을 조회한다 -->
+    <select id="getNoticeContentList" resultType="string">
+        SELECT /* getNoticeContentList */
+               NOTI_CNTN
+          FROM CT_NOTICE
+         WHERE NOTI_NUMB = #{notiNumb}
+    </select>
+
+    <!-- 사용 중인 공지사항 카테고리 상세코드인지 확인한다 -->
+    <select id="getNoticeCategoryCnt" resultType="int">
+        SELECT /* getNoticeCategoryCnt */
+               COUNT(1)
+          FROM TB_CODEXD
+         WHERE COMM_CODE = #{cateCgrp}
+           AND COMD_CODE = #{cateCode}
+           AND USEE_YSNO = #{useeYsno}
+    </select>
+
+    <!-- 최초 버전에서 공지사항 등록 관리자와 등록 일시를 조회한다 -->
+    <select id="getNoticeOriginalAudit" resultType="org.sadari.admin.sadariadmin.notice.vo.NoticeVO">
+        SELECT /* getNoticeOriginalAudit */
+               REGI_ADMN
+             , REGI_DATE
+          FROM CT_NOTICE
+         WHERE NOTI_NUMB = #{notiNumb}
+           AND VERS_NUMB = 1
+    </select>
+
+    <!-- 같은 공지의 최신 버전을 잠가 MAX + 1 버전 생성을 직렬화한다 -->
+    <select id="getLatestVersionForUpdate" resultType="int">
+        SELECT /* getLatestVersionForUpdate */
+               VERS_NUMB
+          FROM CT_NOTICE
+         WHERE NOTI_NUMB = #{notiNumb}
+      ORDER BY VERS_NUMB DESC
+         LIMIT 1
+           FOR UPDATE
+    </select>
+
+    <!-- 신규 공지 또는 기존 공지의 새 버전을 등록한다 -->
+    <insert id="setNotice" useGeneratedKeys="true" keyProperty="notiNumb" keyColumn="NOTI_NUMB">
+        INSERT /* setNotice */
+          INTO CT_NOTICE (
+               NOTI_NUMB
+             , VERS_NUMB
+             , CATE_CGRP
+             , CATE_CODE
+             , NOTI_TITL
+             , NOTI_CNTN
+             , TOPX_YSNO
+             , DPLY_YSNO
+             , REGI_ADMN
+             , REGI_DATE
+             , UPDT_ADMN
+             , UPDT_DATE
+        ) VALUES (
+               #{notiNumb,jdbcType=BIGINT}
+             , #{versNumb}
+             , #{cateCgrp}
+             , #{cateCode}
+             , #{notiTitl}
+             , #{notiCntn}
+             , #{topxYsno}
+             , #{dplyYsno}
+             , #{regiAdmn}
+             , COALESCE(#{regiDate,jdbcType=TIMESTAMP}, CURRENT_TIMESTAMP)
+             , #{updtAdmn,jdbcType=BIGINT}
+             , CASE WHEN #{updtAdmn,jdbcType=BIGINT} IS NULL THEN NULL ELSE CURRENT_TIMESTAMP END
+        )
+    </insert>
+
+    <!-- 현재 배포 중이 아닌 공지 버전의 편집 내용을 같은 버전에 반영한다 -->
+    <update id="uptNotice">
+        UPDATE /* uptNotice */
+               CT_NOTICE
+           SET CATE_CGRP = #{cateCgrp}
+             , CATE_CODE = #{cateCode}
+             , NOTI_TITL = #{notiTitl}
+             , NOTI_CNTN = #{notiCntn}
+             , TOPX_YSNO = #{topxYsno}
+             , UPDT_ADMN = #{updtAdmn}
+             , UPDT_DATE = CURRENT_TIMESTAMP
+         WHERE NOTI_NUMB = #{notiNumb}
+           AND VERS_NUMB = #{versNumb}
+           AND DPLY_YSNO = #{dplyYsno}
+    </update>
+
+    <!-- 같은 주키의 이전 배포 버전을 배포 해제한다 -->
+    <update id="uptNoticeDeployOff">
+        UPDATE /* uptNoticeDeployOff */
+               CT_NOTICE
+           SET DPLY_YSNO = #{no}
+         WHERE NOTI_NUMB = #{notiNumb}
+           AND DPLY_YSNO = #{yes}
+    </update>
+
+    <!-- 선택한 공지 버전을 현재 배포본으로 전환한다 -->
+    <update id="uptNoticeDeployOn">
+        UPDATE /* uptNoticeDeployOn */
+               CT_NOTICE
+           SET DPLY_YSNO = #{yes}
+             , DPLY_DATE = CURRENT_TIMESTAMP
+             , DPLY_ADMN = #{dplyAdmn}
+         WHERE NOTI_NUMB = #{notiNumb}
+           AND VERS_NUMB = #{versNumb}
+    </update>
+
+    <!-- 새 배포본을 모든 사용자에게 다시 미읽음으로 표시한다 -->
+    <delete id="delNoticeView">
+        DELETE /* delNoticeView */
+          FROM TB_USVIEW
+         WHERE VIEW_TYPE = #{viewType}
+           AND TAGT_NUMB = #{tagtNumb}
+    </delete>
+
+    <!-- 공지사항 주키에 속한 모든 버전을 삭제한다 -->
+    <delete id="delNotice">
+        DELETE /* delNotice */
+          FROM CT_NOTICE
+         WHERE NOTI_NUMB = #{notiNumb}
+    </delete>
+</mapper>

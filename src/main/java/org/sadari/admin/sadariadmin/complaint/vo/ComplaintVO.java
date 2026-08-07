@@ -13,6 +13,7 @@ import java.time.LocalDateTime;
  * DATE              AUTHOR             NOTE
  * -----------------------------------------------------------
  * 2026-08-05        SeungHyeon.Kang    최초 생성
+ * 2026-08-07        SeungHyeon.Kang    신고자 프로필과 배경 이미지 경로 추가
  */
 @Data
 public class ComplaintVO {
@@ -25,6 +26,12 @@ public class ComplaintVO {
 
     // 신고자 닉네임
     private String reporterNick;
+
+    // 신고자 프로필 이미지 경로
+    private String reporterProfPath;
+
+    // 신고자 배경 이미지 경로
+    private String reporterBgimPath;
 
     // 신고 대상 유형 세부코드
     private String tagtType;

@@ -7,6 +7,10 @@ type AuditInfoTableProps = {
     updtAdmn: string | number | null | undefined
     updtAdmnName?: string | null
     updtDate: string | null | undefined
+    dplyAdmn?: string | number | null
+    dplyAdmnName?: string | null
+    dplyDate?: string | null
+    showDeployInfo?: boolean
 }
 
 /**
@@ -18,6 +22,10 @@ type AuditInfoTableProps = {
  * @param updtAdmn
  * @param updtAdmnName
  * @param updtDate
+ * @param dplyAdmn
+ * @param dplyAdmnName
+ * @param dplyDate
+ * @param showDeployInfo
  * @return
  */
 export function AuditInfoTable({
@@ -26,12 +34,18 @@ export function AuditInfoTable({
                                    regiDate,
                                    updtAdmn,
                                    updtAdmnName,
-                                   updtDate
+                                   updtDate,
+                                   dplyAdmn,
+                                   dplyAdmnName,
+                                   dplyDate,
+                                   showDeployInfo = false
                                }: AuditInfoTableProps) {
     const regiName = regiAdmnName ?? regiAdmn ?? ''
     const updtName = updtAdmnName ?? updtAdmn ?? ''
     const regiText = regiName ? `${regiName}(${formatDate(regiDate ?? null)})` : ''
     const updtText = updtName ? `${updtName}(${formatDate(updtDate ?? null)})` : ''
+    const dplyName = dplyAdmnName ?? dplyAdmn ?? ''
+    const dplyText = dplyName ? `${dplyName}(${formatDate(dplyDate ?? null)})` : ''
 
     return (
         <section className="table-wrap audit-info-table">
@@ -45,6 +59,12 @@ export function AuditInfoTable({
                     <th>수정</th>
                     <td className="readonly-cell">{updtText}</td>
                 </tr>
+                {showDeployInfo && (
+                    <tr>
+                        <th>배포</th>
+                        <td className="readonly-cell">{dplyText}</td>
+                    </tr>
+                )}
                 </tbody>
             </table>
         </section>

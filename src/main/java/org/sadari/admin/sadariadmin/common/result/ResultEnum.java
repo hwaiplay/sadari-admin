@@ -101,6 +101,15 @@ public enum ResultEnum {
     /** 팝업 콘텐츠 길이 초과 */
     POPUP_CONTENT_TOO_LONG(2009, "popup-content.too-long"),
 
+    /** 공지사항 없음 */
+    NOTICE_NOT_FOUND(2004, "notice.not-found"),
+
+    /** 공지사항 입력 형식 오류 */
+    NOTICE_INVALID(2009, "notice.invalid"),
+
+    /** 공지사항 이미지 형식 오류 */
+    NOTICE_IMAGE_INVALID(2009, "notice.image.invalid"),
+
     /** 현재 사용자 없음 */
     CURRENT_USER_NOT_FOUND(2004, "current-user.not-found"),
 

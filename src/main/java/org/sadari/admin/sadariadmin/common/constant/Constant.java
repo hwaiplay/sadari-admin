@@ -17,6 +17,7 @@ package org.sadari.admin.sadariadmin.common.constant;
  * 2026-07-30        SeungHyeon.Kang    사용자 서버 상태 반영 결과 상수 추가
  * 2026-07-30        SeungHyeon.Kang    로그인 제공자 공통코드 상수 추가
  * 2026-08-05        SeungHyeon.Kang    신고 관리 공통코드와 API 경로 추가
+ * 2026-08-07        SeungHyeon.Kang    관리자 업로드 이미지 조회 경로 추가
  */
 public final class Constant {
 
@@ -43,6 +44,12 @@ public final class Constant {
 
     /** 팝업 사용 화면 구분 공통코드 */
     public static final String POPU_SITU = "POPU_SITU";
+
+    /** 공지사항 카테고리 공통코드 */
+    public static final String NOTI_CATE = "NOTI_CATE";
+
+    /** 사용자 조회 이력의 공지사항 대상 유형 */
+    public static final String VIEW_TYPE_NOTICE = "NOTICE";
 
     /** 스케줄러 구분 공통코드 */
     public static final String SCHD_CODE = "SCHD_CODE";
@@ -203,6 +210,9 @@ public final class Constant {
     /** 팝업 콘텐츠 관리 API URL 접두어 */
     public static final String API_POPUP_CONTENT_PREFIX = "/api/popup-contents";
 
+    /** 공지사항 관리 API URL 접두어 */
+    public static final String API_NOTICE_PREFIX = "/api/notices";
+
     /** 권한그룹 관리 API URL 접두어 */
     public static final String API_AUTH_GROUP_PREFIX = "/api/auth-groups";
 
@@ -223,6 +233,9 @@ public final class Constant {
 
     /** 신고 관리 API URL 패턴 */
     public static final String API_COMPLAINTS_PATTERN = "/api/complaints/**";
+
+    /** 관리자 업로드 이미지 조회 URL 패턴 */
+    public static final String API_UPLOADS_PATTERN = "/uploads/**";
 
     /**
      * 공통 상수 생성 방지

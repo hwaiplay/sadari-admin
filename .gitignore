@@ -42,6 +42,8 @@ out/
 *.yaml
 *.env
 *.env.*
+!src/main/resources/application.yml
+!.env.example
 
 ### Logs ###
 *.log

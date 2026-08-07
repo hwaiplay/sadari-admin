@@ -34,10 +34,10 @@
         , C.CONT_THIR
         , C.CONT_FOUR
         , C.REGI_ADMN
-        , COALESCE(RA.ADMN_NAME, C.REGI_ADMN) AS REGI_ADMN_NAME
+        , FN_GET_ADMIN_NAME(C.REGI_ADMN) AS REGI_ADMN_NAME
         , C.REGI_DATE
         , C.UPDT_ADMN
-        , COALESCE(UA.ADMN_NAME, C.UPDT_ADMN) AS UPDT_ADMN_NAME
+        , FN_GET_ADMIN_NAME(C.UPDT_ADMN) AS UPDT_ADMN_NAME
         , C.UPDT_DATE
     </sql>
 
@@ -88,10 +88,6 @@
                          LEFT JOIN TB_CODEXD D
                                 ON D.COMM_CODE = #{popupSituCode}
                                AND D.COMD_CODE = C.POPU_SITU
-                         LEFT JOIN TM_ADMINX RA
-                                ON CAST(RA.ADMN_NUMB AS CHAR) = C.REGI_ADMN
-                         LEFT JOIN TM_ADMINX UA
-                                ON CAST(UA.ADMN_NUMB AS CHAR) = C.UPDT_ADMN
                              WHERE 1 = 1
                                    <include refid="popupContentSearchConditions"/>
                           ORDER BY C.POPU_SITU
@@ -121,10 +117,6 @@
      LEFT JOIN TB_CODEXD D
             ON D.COMM_CODE = #{popupSituCode}
            AND D.COMD_CODE = C.POPU_SITU
-     LEFT JOIN TM_ADMINX RA
-            ON CAST(RA.ADMN_NUMB AS CHAR) = C.REGI_ADMN
-     LEFT JOIN TM_ADMINX UA
-            ON CAST(UA.ADMN_NUMB AS CHAR) = C.UPDT_ADMN
          WHERE C.POPU_SITU = #{popuSitu}
            AND C.POPU_CODE = #{popuCode}
     </select>

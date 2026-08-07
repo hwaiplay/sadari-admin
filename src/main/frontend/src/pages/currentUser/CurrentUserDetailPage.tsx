@@ -8,6 +8,7 @@ import {
   releaseCurrentUserSuspension,
 } from '../../api/currentUserApi'
 import { Pagination } from '../../components/Pagination'
+import { ImagePreviewButton } from '../../components/ImagePreviewButton'
 import { UserSuspensionPanel } from '../../components/UserSuspensionPanel'
 import { CURRENT_USER_LIST_PATH } from '../../constants/routes'
 import type { PageData } from '../../types/common'
@@ -284,9 +285,25 @@ export function CurrentUserDetailPage({
                 <th>삭제 예정일</th>
                 <td>{formatDate(currentUser.deltDate) || '-'}</td>
                 <th>프로필 이미지</th>
-                <td>{currentUser.profPath ? '등록' : '미등록'}</td>
+                <td>
+                  {/* "프로필 사진 보기" */}
+                  <ImagePreviewButton
+                    imagePath={currentUser.profPath}
+                    buttonLabel="프로필 사진 보기"
+                    dialogTitle={`${currentUser.userNick} 프로필 사진`}
+                    emptyLabel="미등록"
+                  />
+                </td>
                 <th>배경 이미지</th>
-                <td>{currentUser.bgimPath ? '등록' : '미등록'}</td>
+                <td>
+                  {/* "배경화면 보기" */}
+                  <ImagePreviewButton
+                    imagePath={currentUser.bgimPath}
+                    buttonLabel="배경화면 보기"
+                    dialogTitle={`${currentUser.userNick} 배경화면`}
+                    emptyLabel="미등록"
+                  />
+                </td>
               </tr>
               <tr>
                 <th>한줄 소개</th>
