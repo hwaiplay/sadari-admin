@@ -36,6 +36,7 @@ function PinIcon() {
 export function NoticeManagePage({ currentPath, onMovePath, onError }: NoticeManagePageProps) {
   const [pageData, setPageData] = useState<PageData<Notice>>(EMPTY_PAGE)
   const [keyword, setKeyword] = useState('')
+  const [searchCategoryCode, setSearchCategoryCode] = useState('')
   const [detail, setDetail] = useState<Notice | null>(null)
   const [versions, setVersions] = useState<Notice[]>([])
   const [form, setForm] = useState<NoticeForm>(EMPTY_FORM)
@@ -54,18 +55,18 @@ export function NoticeManagePage({ currentPath, onMovePath, onError }: NoticeMan
   const isListPage = currentPath === NOTICE_LIST_PATH
   const isNewPage = currentPath === NOTICE_NEW_PATH
 
-  /** 검색 조건으로 공지 버전 목록을 조회한다. */
-  const loadList = useCallback(async (page = 1, searchKeyword = keyword): Promise<void> => {
+  /** 현재 배포 버전을 우선하는 공지 목록을 검색 조건으로 조회한다. */
+  const loadList = useCallback(async (page = 1, searchKeyword = keyword, searchCateCode = searchCategoryCode): Promise<void> => {
     setLoading(true)
     onError(null)
     try {
-      setPageData(await getNoticeList(page, searchKeyword.trim()))
+      setPageData(await getNoticeList(page, searchKeyword.trim(), searchCateCode))
     } catch (error: unknown) {
       onError(error instanceof Error ? error.message : '공지사항 목록을 조회하지 못했습니다.')
     } finally {
       setLoading(false)
     }
-  }, [keyword, onError])
+  }, [keyword, onError, searchCategoryCode])
 
   /** 복합키에 해당하는 공지 버전을 조회한다. */
   const loadDetail = useCallback(async (notiNumb: number, versNumb: number): Promise<void> => {
@@ -112,7 +113,7 @@ export function NoticeManagePage({ currentPath, onMovePath, onError }: NoticeMan
   useEffect(() => {
     const timer = window.setTimeout(() => {
       if (isListPage) {
-        void loadList(1, '')
+        void loadList(1, '', '')
       } else if (isNewPage) {
         setDetail(null)
         setVersions([])
@@ -235,10 +236,17 @@ export function NoticeManagePage({ currentPath, onMovePath, onError }: NoticeMan
     return (
       <section className="notice-page">
         <div className="content-header">
-          <div><h1>공지사항</h1><p>공지별 최신 내용과 현재 배포 상태를 관리합니다.</p></div>
+          <div><h1>공지사항</h1><p>공지별 현재 배포본을 우선하고 배포 전 공지는 최신 초안으로 관리합니다.</p></div>
         </div>
         <form className="list-search" onSubmit={(event) => { event.preventDefault(); void loadList(1) }}>
           <label><span>제목 검색</span><input value={keyword} onChange={(event) => setKeyword(event.target.value)} /></label>
+          <label>
+            <span>카테고리</span>
+            <select value={searchCategoryCode} onChange={(event) => setSearchCategoryCode(event.target.value)}>
+              <option value="">전체</option>
+              {categoryCodes.map((code) => <option key={code.comdCode} value={code.comdCode}>{code.comdName}</option>)}
+            </select>
+          </label>
           <div className="list-search-actions"><button type="submit">검색</button></div>
         </form>
         <div className="table-wrap notice-list-table">
@@ -285,7 +293,7 @@ export function NoticeManagePage({ currentPath, onMovePath, onError }: NoticeMan
                   {!isNewPage && detail && (
                     <tr>
                       <th>공지번호</th><td className="readonly-cell">{detail.notiNumb}</td>
-                      <th>버전</th><td className="readonly-cell">v{detail.versNumb}</td>
+                      <th>버전</th><td className="readonly-cell">{detail.versNumb}</td>
                       <th>상단 고정</th>
                       <td className="notice-top-fixed-cell">
                         <input className="notice-top-fixed-checkbox" type="checkbox" aria-label="상단 고정" checked={form.topxYsno === 'Y'} onChange={(event) => setForm({ ...form, topxYsno: event.target.checked ? 'Y' : 'N' })} />
@@ -331,7 +339,7 @@ export function NoticeManagePage({ currentPath, onMovePath, onError }: NoticeMan
                         <tr className="notice-version-row" key={version.versNumb} tabIndex={0}
                             aria-current={version.versNumb === detail.versNumb}
                             onClick={() => onMovePath(`${NOTICE_DETAIL_PREFIX}/${version.notiNumb}/${version.versNumb}`)}>
-                          <td><span className="table-link-button">v{version.versNumb}</span></td><td>{version.cateName}</td><td>{version.notiTitl}</td>
+                          <td><span className="table-link-button">{version.versNumb}</span></td><td>{version.cateName}</td><td>{version.notiTitl}</td>
                           <td>{version.topxYsno === 'Y' ? 'Y' : 'N'}</td><td>{version.dplyYsno === 'Y' ? '배포 중' : '미배포'}</td>
                           <td>{version.updtAdmnName ?? version.updtAdmn ?? version.regiAdmnName ?? version.regiAdmn}</td><td>{(version.updtDate ?? version.regiDate)?.replace('T', ' ')}</td>
                         </tr>

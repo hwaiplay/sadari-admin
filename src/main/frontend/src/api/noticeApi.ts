@@ -2,8 +2,8 @@ import { fetchJson, fetchResult } from './client'
 import type { PageData } from '../types/common'
 import type { Notice, NoticeForm } from '../types/notice'
 
-export const getNoticeList = (page: number, keyword: string) => {
-  const params = new URLSearchParams({ page: String(page), keyword })
+export const getNoticeList = (page: number, keyword: string, cateCode: string) => {
+  const params = new URLSearchParams({ page: String(page), keyword, cateCode })
   return fetchJson<PageData<Notice>>(`/api/notices?${params.toString()}`)
 }
 

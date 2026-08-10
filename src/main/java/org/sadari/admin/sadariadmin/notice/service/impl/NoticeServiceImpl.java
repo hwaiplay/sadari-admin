@@ -40,6 +40,7 @@ import org.springframework.transaction.annotation.Transactional;
  * 2026-08-07        SeungHyeon.Kang    최초 생성
  * 2026-08-07        SeungHyeon.Kang    버전 이력 조회와 종속 데이터 및 파일 삭제 추가
  * 2026-08-08        SeungHyeon.Kang    현재 배포 상태 기준 공지 수정 방식 분리
+ * 2026-08-08        SeungHyeon.Kang    관리자 목록의 현재 배포 버전 우선 조회 적용
  */
 @Service
 @Transactional(readOnly = true)
@@ -74,6 +75,8 @@ public class NoticeServiceImpl implements NoticeService {
         PageRequest pageRequest = new PageRequest(search.getPage());
         search.setStartRow(pageRequest.getStartRow() - 1);
         search.setEndRow(PageRequest.PAGE_SIZE);
+        // 요청값과 무관하게 서버 공통코드로 현재 배포 버전 선택 기준을 설정한다.
+        search.setDplyYsno(YES);
         return PageData.of(noticeMapper.getNoticeList(search), noticeMapper.getNoticeListCnt(search), pageRequest);
     }
 

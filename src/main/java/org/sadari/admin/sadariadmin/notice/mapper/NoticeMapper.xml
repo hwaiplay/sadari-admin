@@ -9,9 +9,12 @@
             <bind name="keywordLike" value="'%' + keyword.toUpperCase() + '%'"/>
            AND UPPER(N.NOTI_TITL) LIKE #{keywordLike}
         </if>
+        <if test="cateCode != null and cateCode != ''">
+           AND N.CATE_CODE = #{cateCode}
+        </if>
     </sql>
 
-    <!-- 공지번호별 최신 버전 한 행과 현재 배포 여부를 조회한다 -->
+    <!-- 공지번호별 현재 배포 버전을 우선하고 배포 이력이 없으면 최신 버전을 조회한다 -->
     <select id="getNoticeList" resultType="org.sadari.admin.sadariadmin.notice.vo.NoticeVO">
         SELECT /* getNoticeList */
                N.NOTI_NUMB
@@ -20,7 +23,7 @@
              , C.COMD_NAME AS CATE_NAME
              , N.TOPX_YSNO
              , N.NOTI_TITL
-             , D.DPLY_YSNO
+             , N.DPLY_YSNO
              , N.REGI_ADMN
              , FN_GET_ADMIN_NAME(N.REGI_ADMN) AS REGI_ADMN_NAME
              , N.REGI_DATE
@@ -32,18 +35,15 @@
              , N.DPLY_DATE
           FROM CT_NOTICE N
     INNER JOIN (  SELECT NOTI_NUMB
-                       , MAX(VERS_NUMB) AS VERS_NUMB
+                       , COALESCE(MAX(CASE WHEN DPLY_YSNO = #{dplyYsno}
+                                                THEN VERS_NUMB
+                                           END)
+                                , MAX(VERS_NUMB)) AS VERS_NUMB
                     FROM CT_NOTICE
                 GROUP BY NOTI_NUMB
                ) L
             ON L.NOTI_NUMB = N.NOTI_NUMB
            AND L.VERS_NUMB = N.VERS_NUMB
-     LEFT JOIN (  SELECT NOTI_NUMB
-                       , MAX(DPLY_YSNO) AS DPLY_YSNO
-                    FROM CT_NOTICE
-                GROUP BY NOTI_NUMB
-               ) D
-            ON D.NOTI_NUMB = N.NOTI_NUMB
      LEFT JOIN TB_CODEXD C
             ON C.COMM_CODE = N.CATE_CGRP
            AND C.COMD_CODE = N.CATE_CODE
@@ -54,13 +54,16 @@
          LIMIT #{startRow}, #{endRow}
     </select>
 
-    <!-- 검색 조건에 맞는 공지번호별 최신 버전 전체 건수를 조회한다 -->
+    <!-- 검색 조건에 맞는 공지번호별 배포 우선 버전 전체 건수를 조회한다 -->
     <select id="getNoticeListCnt" resultType="int">
         SELECT /* getNoticeListCnt */
                COUNT(1)
           FROM CT_NOTICE N
     INNER JOIN (  SELECT NOTI_NUMB
-                       , MAX(VERS_NUMB) AS VERS_NUMB
+                       , COALESCE(MAX(CASE WHEN DPLY_YSNO = #{dplyYsno}
+                                                THEN VERS_NUMB
+                                           END)
+                                , MAX(VERS_NUMB)) AS VERS_NUMB
                     FROM CT_NOTICE
                 GROUP BY NOTI_NUMB
                ) L

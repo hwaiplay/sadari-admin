@@ -13,15 +13,22 @@ import java.time.LocalDateTime;
  * DATE              AUTHOR             NOTE
  * -----------------------------------------------------------
  * 2026-07-27        SeungHyeon.Kang    최초 생성
+ * 2026-08-10        SeungHyeon.Kang    3단계 인접 목록 메뉴 구조 적용
  */
 @Data
 public class UserMenuVO {
 
     /** 메뉴 번호 */
-    private String menuNumb;
+    private Long menuNumb;
 
-    /** 하위 메뉴 번호 */
-    private String subxNumb;
+    /** 상위 메뉴 번호 */
+    private Long parnNumb;
+
+    /** 상위 메뉴명 */
+    private String parnName;
+
+    /** 메뉴 단계 */
+    private Integer menuLevl;
 
     /** 메뉴명 */
     private String menuName;

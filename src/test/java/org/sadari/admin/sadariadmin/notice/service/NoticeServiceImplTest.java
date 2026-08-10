@@ -19,6 +19,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import org.sadari.admin.sadariadmin.admin.vo.AdminSessionVO;
 import org.sadari.admin.sadariadmin.notice.mapper.NoticeMapper;
 import org.sadari.admin.sadariadmin.notice.service.impl.NoticeServiceImpl;
+import org.sadari.admin.sadariadmin.notice.vo.NoticeSearchVO;
 import org.sadari.admin.sadariadmin.notice.vo.NoticeVO;
 
 /**
@@ -32,6 +33,7 @@ import org.sadari.admin.sadariadmin.notice.vo.NoticeVO;
  * 2026-08-07        SeungHyeon.Kang    최초 생성
  * 2026-08-07        SeungHyeon.Kang    공지 전체 삭제 범위 검증 추가
  * 2026-08-08        SeungHyeon.Kang    현재 배포 상태별 버전 저장 검증 추가
+ * 2026-08-08        SeungHyeon.Kang    관리자 목록의 배포 버전 선택 기준 검증 추가
  */
 @ExtendWith(MockitoExtension.class)
 class NoticeServiceImplTest {
@@ -53,6 +55,18 @@ class NoticeServiceImplTest {
         noticeService = new NoticeServiceImpl(noticeMapper, noticeImageService);
         admin = new AdminSessionVO();
         admin.setAdmnNumb(3L);
+    }
+
+    /** 관리자 목록 조회에 현재 배포 여부 기준값을 서버 상수로 설정한다. */
+    @Test
+    void getNoticeListSetsCurrentDeployVersionCriteria() {
+        NoticeSearchVO search = new NoticeSearchVO();
+        when(noticeMapper.getNoticeList(search)).thenReturn(List.of());
+        when(noticeMapper.getNoticeListCnt(search)).thenReturn(0);
+
+        noticeService.getNoticeList(search, admin);
+
+        assertEquals("Y", search.getDplyYsno());
     }
 
     /** 현재 배포 중인 공지는 최신 버전의 MAX + 1로 저장하고 외부 이미지를 제거한다. */

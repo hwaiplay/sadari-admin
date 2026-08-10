@@ -16,6 +16,7 @@ import org.sadari.admin.sadariadmin.common.util.MessageUtil;
  * 2026-07-30        SeungHyeon.Kang    회원 이용 정지 관리 오류 추가
  * 2026-08-05        SeungHyeon.Kang    신고 조회와 처리 오류 추가
  * 2026-08-05        OpenAI.Codex       세부코드 계층 검증 오류 추가
+ * 2026-08-10        SeungHyeon.Kang    사용자 메뉴 계층 검증 오류 추가
  */
 @Getter
 public enum ResultEnum {
@@ -64,6 +65,18 @@ public enum ResultEnum {
 
     /** 메뉴 없음 */
     MENU_NOT_FOUND(2004, "menu.not-found"),
+
+    /** 사용자 메뉴 상위 메뉴 오류 */
+    USER_MENU_PARENT_INVALID(2009, "user-menu.parent.invalid"),
+
+    /** 사용자 메뉴 순환 참조 */
+    USER_MENU_CYCLE(2009, "user-menu.cycle"),
+
+    /** 사용자 메뉴 최대 단계 초과 */
+    USER_MENU_MAX_DEPTH(2009, "user-menu.max-depth"),
+
+    /** 사용자 메뉴 하위 메뉴 존재 */
+    USER_MENU_HAS_CHILDREN(2009, "user-menu.has-children"),
 
     /** 공통코드 중복 */
     CODE_MASTER_DUPLICATE(2009, "code.master.duplicate"),

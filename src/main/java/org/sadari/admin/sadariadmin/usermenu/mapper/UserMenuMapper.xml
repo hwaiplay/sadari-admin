@@ -3,18 +3,18 @@
         PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
         "https://mybatis.org/dtd/mybatis-3-mapper.dtd">
 <mapper namespace="org.sadari.admin.sadariadmin.usermenu.mapper.UserMenuMapper">
-    <!-- 사용자 메뉴 여부 코드명 조회에 사용하는 공통코드를 바인딩한다 -->
+
+    <!-- 사용자 메뉴 여부 코드명 조회에 사용하는 공통코드를 바인딩한다. -->
     <sql id="codeNameBindings">
         <bind name="commYsno" value="@org.sadari.admin.sadariadmin.common.constant.Constant@COMM_YSNO"/>
         <bind name="useeYsnoCode" value="@org.sadari.admin.sadariadmin.common.constant.Constant@USEE_YSNO_CODE"/>
     </sql>
 
-    <!-- 사용자 메뉴 목록과 건수에 동일하게 적용할 검색 조건이다 -->
+    <!-- 사용자 메뉴 목록과 건수에 동일하게 적용할 검색 조건이다. -->
     <sql id="userMenuSearchConditions">
         <if test="keyword != null and keyword != ''">
             <bind name="keywordLike" value="'%' + keyword.toUpperCase() + '%'"/>
-           AND (
-                   UPPER(M.MENU_NAME) LIKE #{keywordLike}
+           AND (   UPPER(M.MENU_NAME) LIKE #{keywordLike}
                 OR UPPER(M.MENU_URLX) LIKE #{keywordLike}
                )
         </if>
@@ -24,141 +24,178 @@
         <if test="useeYsno != null and useeYsno != ''">
            AND M.USEE_YSNO = #{useeYsno}
         </if>
+        <if test="menuLevl != null">
+           AND M.MENU_LEVL = #{menuLevl}
+        </if>
     </sql>
 
-    <!-- 사용자 메뉴 공통 조회 컬럼 목록 -->
+    <!-- 사용자 메뉴를 루트부터 같은 부모의 정렬 순서대로 배치하는 트리 경로다. -->
+    <sql id="userMenuTree">
+        WITH RECURSIVE MENU_TREE AS (
+            SELECT M.MENU_NUMB
+                 , CAST(CONCAT(LPAD(CAST(COALESCE(M.SORT_ORDR, 9999) AS CHAR), 50, '0')
+                               , '-'
+                               , LPAD(CAST(M.MENU_NUMB AS CHAR), 20, '0')) AS CHAR(1000)) AS TREE_PATH
+              FROM TM_URMENU M
+             WHERE M.PARN_NUMB IS NULL
+            UNION ALL
+            SELECT CHILD.MENU_NUMB
+                 , CONCAT(PARENT.TREE_PATH
+                         , '/'
+                         , LPAD(CAST(COALESCE(CHILD.SORT_ORDR, 9999) AS CHAR), 50, '0')
+                         , '-'
+                         , LPAD(CAST(CHILD.MENU_NUMB AS CHAR), 20, '0')) AS TREE_PATH
+              FROM TM_URMENU CHILD
+              JOIN MENU_TREE PARENT
+                ON PARENT.MENU_NUMB = CHILD.PARN_NUMB
+        )
+    </sql>
+
+    <!-- 사용자 메뉴 공통 조회 컬럼 목록이다. -->
     <sql id="userMenuColumns">
-          MENU_NUMB
-        , SUBX_NUMB
-        , MENU_NAME
-        , MENU_URLX
-        , SORT_ORDR
-        , SHOW_YSNO
-        , FN_GET_CODE_NAME(#{commYsno}, SHOW_YSNO, #{useeYsnoCode}) AS SHOW_YSNO_NAME
-        , USEE_YSNO
-        , FN_GET_CODE_NAME(#{commYsno}, USEE_YSNO, #{useeYsnoCode}) AS USEE_YSNO_NAME
-        , REGI_ADMN
-        , FN_GET_ADMIN_NAME(REGI_ADMN) AS REGI_ADMN_NAME
-        , REGI_DATE
-        , UPDT_ADMN
-        , FN_GET_ADMIN_NAME(UPDT_ADMN) AS UPDT_ADMN_NAME
-        , UPDT_DATE
+          M.MENU_NUMB
+        , M.PARN_NUMB
+        , P.MENU_NAME AS PARN_NAME
+        , M.MENU_LEVL
+        , M.MENU_NAME
+        , M.MENU_URLX
+        , M.SORT_ORDR
+        , M.SHOW_YSNO
+        , FN_GET_CODE_NAME(#{commYsno}, M.SHOW_YSNO, #{useeYsnoCode}) AS SHOW_YSNO_NAME
+        , M.USEE_YSNO
+        , FN_GET_CODE_NAME(#{commYsno}, M.USEE_YSNO, #{useeYsnoCode}) AS USEE_YSNO_NAME
+        , M.REGI_ADMN
+        , FN_GET_ADMIN_NAME(M.REGI_ADMN) AS REGI_ADMN_NAME
+        , M.REGI_DATE
+        , M.UPDT_ADMN
+        , FN_GET_ADMIN_NAME(M.UPDT_ADMN) AS UPDT_ADMN_NAME
+        , M.UPDT_DATE
     </sql>
 
-    <!-- 페이징 인라인 뷰의 사용자 메뉴 컬럼 목록 -->
-    <sql id="userMenuPageColumns">
-          P.MENU_NUMB
-        , P.SUBX_NUMB
-        , P.MENU_NAME
-        , P.MENU_URLX
-        , P.SORT_ORDR
-        , P.SHOW_YSNO
-        , P.SHOW_YSNO_NAME
-        , P.USEE_YSNO
-        , P.USEE_YSNO_NAME
-        , P.REGI_ADMN
-        , P.REGI_ADMN_NAME
-        , P.REGI_DATE
-        , P.UPDT_ADMN
-        , P.UPDT_ADMN_NAME
-        , P.UPDT_DATE
-    </sql>
-
-    <!-- 사용자 메뉴관리 화면에 표시할 상위 메뉴 목록을 조회한다 -->
+    <!-- 사용자 메뉴관리 화면에 표시할 전체 단계 메뉴 목록을 조회한다. -->
     <select id="getUserMenuList" parameterType="org.sadari.admin.sadariadmin.usermenu.vo.UserMenuSearchVO"
             resultType="org.sadari.admin.sadariadmin.usermenu.vo.UserMenuVO">
-        <bind name="topMenuSubxNumb" value="@org.sadari.admin.sadariadmin.common.constant.Constant@TOP_MENU_SUBX_NUMB"/>
         <include refid="codeNameBindings"/>
+        <include refid="userMenuTree"/>
         SELECT /* getUserMenuList */
-               <include refid="userMenuPageColumns"/>
-          FROM (  SELECT R.MENU_NUMB
-                       , R.SUBX_NUMB
-                       , R.MENU_NAME
-                       , R.MENU_URLX
-                       , R.SORT_ORDR
-                       , R.SHOW_YSNO
-                       , R.SHOW_YSNO_NAME
-                       , R.USEE_YSNO
-                       , R.USEE_YSNO_NAME
-                       , R.REGI_ADMN
-                       , R.REGI_ADMN_NAME
-                       , R.REGI_DATE
-                       , R.UPDT_ADMN
-                       , R.UPDT_ADMN_NAME
-                       , R.UPDT_DATE
-                       , ROW_NUMBER() OVER (
-                             ORDER BY COALESCE(R.SORT_ORDR, 9999)
-                                    , CAST(R.MENU_NUMB AS UNSIGNED)
-                         ) AS ROW_NUMB
-                    FROM (  SELECT <include refid="userMenuColumns"/>
-                              FROM TM_URMENU M
-                             WHERE M.SUBX_NUMB = #{topMenuSubxNumb}
-                                   <include refid="userMenuSearchConditions"/>
-                          ORDER BY COALESCE(M.SORT_ORDR, 9999)
-                                 , CAST(M.MENU_NUMB AS UNSIGNED)
-                         ) R
-               ) P
-         WHERE P.ROW_NUMB BETWEEN #{startRow} AND #{endRow}
-      ORDER BY P.ROW_NUMB
+               PAGE.MENU_NUMB
+             , PAGE.PARN_NUMB
+             , PAGE.PARN_NAME
+             , PAGE.MENU_LEVL
+             , PAGE.MENU_NAME
+             , PAGE.MENU_URLX
+             , PAGE.SORT_ORDR
+             , PAGE.SHOW_YSNO
+             , PAGE.SHOW_YSNO_NAME
+             , PAGE.USEE_YSNO
+             , PAGE.USEE_YSNO_NAME
+             , PAGE.REGI_ADMN
+             , PAGE.REGI_ADMN_NAME
+             , PAGE.REGI_DATE
+             , PAGE.UPDT_ADMN
+             , PAGE.UPDT_ADMN_NAME
+             , PAGE.UPDT_DATE
+          FROM (  SELECT <include refid="userMenuColumns"/>
+                       , ROW_NUMBER() OVER (ORDER BY TREE.TREE_PATH) AS ROW_NUMB
+                    FROM MENU_TREE TREE
+                    JOIN TM_URMENU M
+                      ON M.MENU_NUMB = TREE.MENU_NUMB
+               LEFT JOIN TM_URMENU P
+                      ON P.MENU_NUMB = M.PARN_NUMB
+                   WHERE 1 = 1
+                         <include refid="userMenuSearchConditions"/>
+               ) PAGE
+         WHERE PAGE.ROW_NUMB BETWEEN #{startRow} AND #{endRow}
+      ORDER BY PAGE.ROW_NUMB
     </select>
 
-    <!-- 사용자 상위 메뉴 전체 건수를 조회한다 -->
+    <!-- 사용자 메뉴 전체 건수를 조회한다. -->
     <select id="getUserMenuCount" parameterType="org.sadari.admin.sadariadmin.usermenu.vo.UserMenuSearchVO"
             resultType="int">
-        <bind name="topMenuSubxNumb" value="@org.sadari.admin.sadariadmin.common.constant.Constant@TOP_MENU_SUBX_NUMB"/>
         SELECT /* getUserMenuCount */
                COUNT(1)
           FROM TM_URMENU M
-         WHERE M.SUBX_NUMB = #{topMenuSubxNumb}
+         WHERE 1 = 1
                <include refid="userMenuSearchConditions"/>
     </select>
 
-    <!-- 메뉴 번호와 하위 메뉴 번호로 사용자 메뉴 상세를 조회한다 -->
+    <!-- 메뉴 번호로 사용자 메뉴 상세를 조회한다. -->
     <select id="getUserMenuDtl" resultType="org.sadari.admin.sadariadmin.usermenu.vo.UserMenuVO">
         <include refid="codeNameBindings"/>
         SELECT /* getUserMenuDtl */
                <include refid="userMenuColumns"/>
-          FROM TM_URMENU
-         WHERE MENU_NUMB = #{menuNumb}
-           AND SUBX_NUMB = #{subxNumb}
+          FROM TM_URMENU M
+     LEFT JOIN TM_URMENU P
+            ON P.MENU_NUMB = M.PARN_NUMB
+         WHERE M.MENU_NUMB = #{menuNumb}
     </select>
 
-    <!-- 특정 상위 메뉴의 사용자 하위 메뉴 목록을 조회한다 -->
-    <select id="getUserSubMenuList" resultType="org.sadari.admin.sadariadmin.usermenu.vo.UserMenuVO">
-        <bind name="topMenuSubxNumb" value="@org.sadari.admin.sadariadmin.common.constant.Constant@TOP_MENU_SUBX_NUMB"/>
+    <!-- 3단계 메뉴가 아닌 사용자 메뉴를 상위 메뉴 후보로 조회한다. -->
+    <select id="getUserMenuParentList" resultType="org.sadari.admin.sadariadmin.usermenu.vo.UserMenuVO">
         <include refid="codeNameBindings"/>
-        SELECT /* getUserSubMenuList */
+        <include refid="userMenuTree"/>
+        SELECT /* getUserMenuParentList */
                <include refid="userMenuColumns"/>
-          FROM TM_URMENU
-         WHERE MENU_NUMB = #{menuNumb}
-           AND SUBX_NUMB != #{topMenuSubxNumb}
-      ORDER BY COALESCE(SORT_ORDR, 9999)
-             , CAST(SUBX_NUMB AS UNSIGNED)
+          FROM MENU_TREE TREE
+          JOIN TM_URMENU M
+            ON M.MENU_NUMB = TREE.MENU_NUMB
+     LEFT JOIN TM_URMENU P
+            ON P.MENU_NUMB = M.PARN_NUMB
+         WHERE M.MENU_LEVL &lt; 3
+      ORDER BY TREE.TREE_PATH
     </select>
 
-    <!-- 신규 사용자 상위 메뉴 번호를 조회한다 -->
-    <select id="getUserMenuNumb" resultType="string">
-        <bind name="topMenuSubxNumb" value="@org.sadari.admin.sadariadmin.common.constant.Constant@TOP_MENU_SUBX_NUMB"/>
-        SELECT /* getUserMenuNumb */
-               CAST(COALESCE(MAX(CAST(MENU_NUMB AS UNSIGNED)), 0) + 1 AS CHAR)
+    <!-- 사용자 메뉴의 직계 하위 메뉴 건수를 조회한다. -->
+    <select id="getUserMenuChildCount" resultType="int">
+        SELECT /* getUserMenuChildCount */
+               COUNT(1)
           FROM TM_URMENU
-         WHERE SUBX_NUMB = #{topMenuSubxNumb}
+         WHERE PARN_NUMB = #{menuNumb}
     </select>
 
-    <!-- 특정 사용자 상위 메뉴 아래의 신규 하위 메뉴 번호를 조회한다 -->
-    <select id="getUserSubxNumb" resultType="string">
-        SELECT /* getUserSubxNumb */
-               CAST(COALESCE(MAX(CAST(SUBX_NUMB AS UNSIGNED)), -1) + 1 AS CHAR)
-          FROM TM_URMENU
-         WHERE MENU_NUMB = #{menuNumb}
+    <!-- 사용자 메뉴에서 가장 깊은 하위 메뉴까지의 단계 차이를 조회한다. -->
+    <select id="getUserMenuDescendantDepth" resultType="int">
+        WITH RECURSIVE DESCENDANT_MENU AS (
+            SELECT MENU_NUMB
+                 , 1 AS TREE_DEPT
+              FROM TM_URMENU
+             WHERE PARN_NUMB = #{menuNumb}
+            UNION ALL
+            SELECT CHILD.MENU_NUMB
+                 , PARENT.TREE_DEPT + 1 AS TREE_DEPT
+              FROM TM_URMENU CHILD
+              JOIN DESCENDANT_MENU PARENT
+                ON PARENT.MENU_NUMB = CHILD.PARN_NUMB
+        )
+        SELECT /* getUserMenuDescendantDepth */
+               COALESCE(MAX(TREE_DEPT), 0)
+          FROM DESCENDANT_MENU
     </select>
 
-    <!-- 사용자 메뉴 정보를 등록한다 -->
-    <insert id="setUserMenu">
+    <!-- 지정한 후보 메뉴가 현재 메뉴의 하위 트리에 포함되는지 조회한다. -->
+    <select id="getUserMenuDescendantCount" resultType="int">
+        WITH RECURSIVE DESCENDANT_MENU AS (
+            SELECT MENU_NUMB
+              FROM TM_URMENU
+             WHERE PARN_NUMB = #{menuNumb}
+            UNION ALL
+            SELECT CHILD.MENU_NUMB
+              FROM TM_URMENU CHILD
+              JOIN DESCENDANT_MENU PARENT
+                ON PARENT.MENU_NUMB = CHILD.PARN_NUMB
+        )
+        SELECT /* getUserMenuDescendantCount */
+               COUNT(1)
+          FROM DESCENDANT_MENU
+         WHERE MENU_NUMB = #{candidateNumb}
+    </select>
+
+    <!-- 사용자 메뉴 정보를 등록한다. -->
+    <insert id="setUserMenu" useGeneratedKeys="true" keyProperty="menuNumb">
         /* setUserMenu */
         INSERT INTO TM_URMENU (
-                    MENU_NUMB
-                  , SUBX_NUMB
+                    PARN_NUMB
+                  , MENU_LEVL
                   , MENU_NAME
                   , MENU_URLX
                   , SORT_ORDR
@@ -168,8 +205,8 @@
                   , REGI_DATE
                   , UPDT_ADMN
                   , UPDT_DATE
-        ) VALUES (  #{menuNumb}
-                  , #{subxNumb}
+        ) VALUES (  #{parnNumb,jdbcType=BIGINT}
+                  , #{menuLevl}
                   , #{menuName}
                   , #{menuUrlx}
                   , #{sortOrdr,jdbcType=NUMERIC}
@@ -182,11 +219,13 @@
         )
     </insert>
 
-    <!-- 사용자 메뉴 상세 정보를 수정한다 -->
+    <!-- 사용자 메뉴 상세 정보를 수정한다. -->
     <update id="uptUserMenu">
         UPDATE /* uptUserMenu */
                TM_URMENU
-           SET MENU_NAME = #{menuName}
+           SET PARN_NUMB = #{parnNumb,jdbcType=BIGINT}
+             , MENU_LEVL = #{menuLevl}
+             , MENU_NAME = #{menuName}
              , MENU_URLX = #{menuUrlx}
              , SORT_ORDR = #{sortOrdr,jdbcType=NUMERIC}
              , SHOW_YSNO = #{showYsno}
@@ -194,14 +233,12 @@
              , UPDT_ADMN = #{updtAdmn}
              , UPDT_DATE = CURRENT_TIMESTAMP
          WHERE MENU_NUMB = #{menuNumb}
-           AND SUBX_NUMB = #{subxNumb}
     </update>
 
-    <!-- 메뉴 번호와 하위 메뉴 번호로 사용자 메뉴를 삭제한다 -->
+    <!-- 메뉴 번호로 사용자 메뉴를 삭제한다. -->
     <delete id="delUserMenu">
         DELETE /* delUserMenu */
           FROM TM_URMENU
          WHERE MENU_NUMB = #{menuNumb}
-           AND SUBX_NUMB = #{subxNumb}
     </delete>
 </mapper>

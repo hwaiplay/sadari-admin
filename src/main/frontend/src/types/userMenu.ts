@@ -1,6 +1,8 @@
 export type UserMenu = {
-  menuNumb: string
-  subxNumb: string
+  menuNumb: number
+  parnNumb: number | null
+  parnName?: string | null
+  menuLevl: number
   menuName: string
   menuUrlx: string
   sortOrdr: number | null
@@ -18,7 +20,7 @@ export type UserMenu = {
 
 export type UserMenuForm = {
   menuNumb: string
-  subxNumb: string
+  parnNumb: string
   menuName: string
   menuUrlx: string
   sortOrdr: string
@@ -29,4 +31,5 @@ export type UserMenuSearch = {
   keyword: string
   showYsno: string
   useeYsno: string
+  menuLevl: string
 }
