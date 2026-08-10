@@ -130,6 +130,19 @@
          WHERE M.MENU_NUMB = #{menuNumb}
     </select>
 
+    <!-- 선택한 사용자 메뉴 바로 아래의 메뉴 목록을 정렬 순서대로 조회한다. -->
+    <select id="getUserMenuChildList" resultType="org.sadari.admin.sadariadmin.usermenu.vo.UserMenuVO">
+        <include refid="codeNameBindings"/>
+        SELECT /* getUserMenuChildList */
+               <include refid="userMenuColumns"/>
+          FROM TM_URMENU M
+     LEFT JOIN TM_URMENU P
+            ON P.MENU_NUMB = M.PARN_NUMB
+         WHERE M.PARN_NUMB = #{menuNumb}
+      ORDER BY COALESCE(M.SORT_ORDR, 9999)
+             , M.MENU_NUMB
+    </select>
+
     <!-- 3단계 메뉴가 아닌 사용자 메뉴를 상위 메뉴 후보로 조회한다. -->
     <select id="getUserMenuParentList" resultType="org.sadari.admin.sadariadmin.usermenu.vo.UserMenuVO">
         <include refid="codeNameBindings"/>

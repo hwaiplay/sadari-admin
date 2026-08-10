@@ -17,6 +17,7 @@ import org.sadari.admin.sadariadmin.usermenu.vo.UserMenuVO;
  * 2026-07-27        SeungHyeon.Kang    최초 생성
  * 2026-07-31        SeungHyeon.Kang    사용자 메뉴 목록 검색 조건 추가
  * 2026-08-10        SeungHyeon.Kang    3단계 인접 목록 메뉴 구조 적용
+ * 2026-08-10        SeungHyeon.Kang    사용자 메뉴 직계 하위 목록 조회 추가
  */
 @Mapper
 public interface UserMenuMapper {
@@ -29,6 +30,9 @@ public interface UserMenuMapper {
 
     /** 메뉴 번호로 사용자 메뉴 상세를 조회한다. */
     UserMenuVO getUserMenuDtl(@Param("menuNumb") Long menuNumb);
+
+    /** 사용자 메뉴의 직계 하위 메뉴 목록을 조회한다. */
+    List<UserMenuVO> getUserMenuChildList(@Param("menuNumb") Long menuNumb);
 
     /** 사용자 메뉴의 상위 메뉴 후보 목록을 조회한다. */
     List<UserMenuVO> getUserMenuParentList();

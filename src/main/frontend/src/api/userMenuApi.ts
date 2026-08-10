@@ -16,6 +16,14 @@ export const getUserMenus = (pageNumber: number, search: UserMenuSearch) =>
 export const getUserMenuDetail = (menuNumb: number) =>
   fetchJson<UserMenu>(`/api/user-menus/${menuNumb}`, undefined, '사용자 메뉴 상세 조회에 실패했습니다.')
 
+/** 사용자 메뉴의 직계 하위 메뉴 목록을 조회한다. */
+export const getUserMenuChildren = (menuNumb: number) =>
+  fetchJson<UserMenu[]>(
+    `/api/user-menus/${menuNumb}/children`,
+    undefined,
+    '하위 사용자 메뉴 조회에 실패했습니다.',
+  )
+
 /** 사용자 메뉴의 상위 메뉴 후보 목록을 조회한다. */
 export const getUserMenuParents = () =>
   fetchJson<UserMenu[]>('/api/user-menus/parents', undefined, '상위 사용자 메뉴 조회에 실패했습니다.')

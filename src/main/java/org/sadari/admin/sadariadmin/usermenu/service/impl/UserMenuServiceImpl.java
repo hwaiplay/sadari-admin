@@ -27,6 +27,7 @@ import org.springframework.transaction.annotation.Transactional;
  * 2026-07-27        SeungHyeon.Kang    최초 생성
  * 2026-07-31        SeungHyeon.Kang    사용자 메뉴 목록 검색 조건 추가
  * 2026-08-10        SeungHyeon.Kang    3단계 인접 목록 메뉴 구조 적용
+ * 2026-08-10        SeungHyeon.Kang    사용자 메뉴 직계 하위 목록 조회 추가
  */
 @Service
 @Transactional(readOnly = true)
@@ -64,6 +65,17 @@ public class UserMenuServiceImpl implements UserMenuService {
         checkLogin(admin);
         // 메뉴 번호로 사용자 메뉴 상세를 조회한다
         return getMenu(menuNumb);
+    }
+
+    /** 사용자 메뉴의 직계 하위 메뉴 목록을 조회한다. */
+    @Override
+    public List<UserMenuVO> getUserMenuChildList(Long menuNumb, AdminSessionVO admin) {
+        // 사용자 메뉴 하위 목록 조회 전에 로그인 상태를 확인한다
+        checkLogin(admin);
+        // 조회 기준 사용자 메뉴가 존재하는지 확인한다
+        getMenu(menuNumb);
+        // 같은 부모 아래의 정렬 순서대로 직계 하위 메뉴 목록을 반환한다
+        return userMenuMapper.getUserMenuChildList(menuNumb);
     }
 
     /** 사용자 메뉴의 상위 메뉴 후보 목록을 조회한다. */

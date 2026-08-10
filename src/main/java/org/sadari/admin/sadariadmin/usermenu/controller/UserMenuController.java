@@ -29,6 +29,7 @@ import org.springframework.web.bind.annotation.RestController;
  * 2026-07-27        SeungHyeon.Kang    최초 생성
  * 2026-07-31        SeungHyeon.Kang    사용자 메뉴 목록 검색 조건 추가
  * 2026-08-10        SeungHyeon.Kang    단일 메뉴 번호 기반 API 적용
+ * 2026-08-10        SeungHyeon.Kang    사용자 메뉴 직계 하위 목록 API 추가
  */
 @RestController
 @RequestMapping(Constant.API_USER_MENUS_PREFIX)
@@ -64,6 +65,14 @@ public class UserMenuController {
                                      @AuthenticationPrincipal AdminSessionVO admin) {
         // 메뉴 번호에 해당하는 사용자 메뉴 상세를 반환한다
         return ResultData.success(userMenuService.getUserMenuDtl(menuNumb, admin));
+    }
+
+    /** 사용자 메뉴의 직계 하위 메뉴 목록을 조회한다. */
+    @GetMapping("/{menuNumb}/children")
+    public ResultData getUserMenuChildList(@PathVariable Long menuNumb,
+                                           @AuthenticationPrincipal AdminSessionVO admin) {
+        // 선택한 사용자 메뉴 바로 아래의 메뉴 목록을 반환한다
+        return ResultData.success(userMenuService.getUserMenuChildList(menuNumb, admin));
     }
 
     /** 사용자 메뉴를 등록한다. */

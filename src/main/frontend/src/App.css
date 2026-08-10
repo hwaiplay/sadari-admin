@@ -83,7 +83,8 @@ textarea {
 input:hover,
 select:hover,
 textarea:hover {
-  border-color: #aeb9c4;
+  border-color: var(--border-strong);
+  background-color: var(--table-hover);
 }
 
 input:focus,
@@ -407,7 +408,7 @@ tbody tr {
 
 tbody tr:hover > td,
 .selected-row > td {
-  background: #f5fafc;
+  background: var(--table-hover);
 }
 
 tbody tr:last-child > td {
@@ -501,6 +502,7 @@ tbody tr:last-child > td {
 
 .code-tree-table table {
   min-width: 1160px;
+  table-layout: fixed;
 }
 
 .code-master-row > td {
@@ -857,9 +859,9 @@ tbody tr:last-child > td {
   text-align: left;
 }
 
-.code-drill-button:hover {
-  border-color: #566a78;
-  background: #f3f7f9;
+.code-drill-button:hover:not(:disabled) {
+  border-color: var(--border-strong);
+  background: var(--table-hover);
 }
 
 .code-edit-table td:nth-child(3) input {
@@ -1957,6 +1959,19 @@ tbody tr:last-child > td {
 
 .notice-form .note-editor {
   border-color: var(--border);
+}
+
+.note-editor:hover,
+.note-editor:hover .note-toolbar,
+.note-editor:hover .note-editable,
+.note-editor:hover .note-statusbar,
+.note-editor .note-btn:hover:not(:disabled) {
+  border-color: var(--border);
+  background-color: var(--table-hover);
+}
+
+.note-editor .note-btn:hover:not(:disabled) {
+  color: var(--text-h);
 }
 
 .notice-form .note-editable {

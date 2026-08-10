@@ -7,6 +7,7 @@ import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
+import java.util.List;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -28,6 +29,7 @@ import org.sadari.admin.sadariadmin.usermenu.vo.UserMenuVO;
  * DATE              AUTHOR             NOTE
  * -----------------------------------------------------------
  * 2026-08-10        SeungHyeon.Kang    최초 생성
+ * 2026-08-10        SeungHyeon.Kang    직계 하위 메뉴 목록 조회 검증 추가
  */
 @ExtendWith(MockitoExtension.class)
 class UserMenuServiceImplTest {
@@ -119,6 +121,27 @@ class UserMenuServiceImplTest {
         assertThrows(BusinessException.class, () -> userMenuService.delUserMenu(10L, admin));
         // 하위 메뉴가 있는 사용자 메뉴가 삭제되지 않았는지 확인한다
         verify(userMenuMapper, never()).delUserMenu(10L);
+    }
+
+    /** 사용자 메뉴 상세에서 직계 하위 메뉴 목록을 반환하는지 확인한다. */
+    @Test
+    void getUserMenuChildListReturnsDirectChildren() {
+        // 조회 기준 사용자 메뉴를 생성한다
+        UserMenuVO parentMenu = getMenu(10L, 1);
+        // 조회 기준 바로 아래의 사용자 메뉴를 생성한다
+        UserMenuVO childMenu = getMenu(20L, 2);
+        // 조회 기준 사용자 메뉴 상세 조회 결과를 설정한다
+        when(userMenuMapper.getUserMenuDtl(10L)).thenReturn(parentMenu);
+        // 직계 하위 사용자 메뉴 목록 조회 결과를 설정한다
+        when(userMenuMapper.getUserMenuChildList(10L)).thenReturn(List.of(childMenu));
+
+        // 선택한 사용자 메뉴의 직계 하위 목록을 조회한다
+        List<UserMenuVO> childList = userMenuService.getUserMenuChildList(10L, admin);
+
+        // 직계 하위 메뉴만 반환됐는지 검증한다
+        assertEquals(List.of(childMenu), childList);
+        // 직계 하위 메뉴 조회 Mapper가 호출됐는지 검증한다
+        verify(userMenuMapper).getUserMenuChildList(10L);
     }
 
     /** 사용자 메뉴 테스트 데이터를 생성한다. */
