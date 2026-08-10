@@ -123,6 +123,12 @@ public enum ResultEnum {
     /** 공지사항 이미지 형식 오류 */
     NOTICE_IMAGE_INVALID(2009, "notice.image.invalid"),
 
+    /** 서비스 정보 없음 */
+    SERVICE_INFO_NOT_FOUND(2004, "service-info.not-found"),
+
+    /** 서비스 정보 입력 형식 또는 카테고리 중복 오류 */
+    SERVICE_INFO_INVALID(2009, "service-info.invalid"),
+
     /** 현재 사용자 없음 */
     CURRENT_USER_NOT_FOUND(2004, "current-user.not-found"),
 

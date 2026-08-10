@@ -1,0 +1,215 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "https://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="org.sadari.admin.sadariadmin.serviceinfo.mapper.ServiceInfoMapper">
+    <sql id="serviceInfoSearchConditions">
+        <if test="keyword != null and keyword != ''">
+            <bind name="keywordLike" value="'%' + keyword.toUpperCase() + '%'"/>
+           AND UPPER(S.SVCI_TITL) LIKE #{keywordLike}
+        </if>
+        <if test="cateCode != null and cateCode != ''">
+           AND S.CATE_CODE = #{cateCode}
+        </if>
+    </sql>
+
+    <!-- 카테고리별 현재 배포 버전을 우선하고 배포 이력이 없으면 최신 초안을 조회한다 -->
+    <select id="getServiceInfoList" resultType="org.sadari.admin.sadariadmin.serviceinfo.vo.ServiceInfoVO">
+        SELECT /* getServiceInfoList */
+               S.CATE_CGRP
+             , S.CATE_CODE
+             , C.COMD_NAME AS CATE_NAME
+             , S.VERS_NUMB
+             , S.SVCI_TITL
+             , S.DPLY_YSNO
+             , S.REGI_ADMN
+             , FN_GET_ADMIN_NAME(S.REGI_ADMN) AS REGI_ADMN_NAME
+             , S.REGI_DATE
+             , S.UPDT_ADMN
+             , FN_GET_ADMIN_NAME(S.UPDT_ADMN) AS UPDT_ADMN_NAME
+             , S.UPDT_DATE
+             , S.DPLY_ADMN
+             , FN_GET_ADMIN_NAME(S.DPLY_ADMN) AS DPLY_ADMN_NAME
+             , S.DPLY_DATE
+          FROM CT_SVINFO S
+    INNER JOIN (  SELECT CATE_CGRP
+                       , CATE_CODE
+                       , COALESCE(MAX(CASE WHEN DPLY_YSNO = #{dplyYsno} THEN VERS_NUMB END)
+                                , MAX(VERS_NUMB)) AS VERS_NUMB
+                    FROM CT_SVINFO
+                GROUP BY CATE_CGRP
+                       , CATE_CODE
+               ) L
+            ON L.CATE_CGRP = S.CATE_CGRP
+           AND L.CATE_CODE = S.CATE_CODE
+           AND L.VERS_NUMB = S.VERS_NUMB
+     LEFT JOIN TB_CODEXD C
+            ON C.COMM_CODE = S.CATE_CGRP
+           AND C.COMD_CODE = S.CATE_CODE
+         WHERE 1 = 1
+               <include refid="serviceInfoSearchConditions"/>
+      ORDER BY C.SORT_ORDR
+             , S.CATE_CODE
+         LIMIT #{startRow}, #{endRow}
+    </select>
+
+    <select id="getServiceInfoListCnt" resultType="int">
+        SELECT /* getServiceInfoListCnt */
+               COUNT(1)
+          FROM CT_SVINFO S
+    INNER JOIN (  SELECT CATE_CGRP
+                       , CATE_CODE
+                       , COALESCE(MAX(CASE WHEN DPLY_YSNO = #{dplyYsno} THEN VERS_NUMB END)
+                                , MAX(VERS_NUMB)) AS VERS_NUMB
+                    FROM CT_SVINFO
+                GROUP BY CATE_CGRP
+                       , CATE_CODE
+               ) L
+            ON L.CATE_CGRP = S.CATE_CGRP
+           AND L.CATE_CODE = S.CATE_CODE
+           AND L.VERS_NUMB = S.VERS_NUMB
+         WHERE 1 = 1
+               <include refid="serviceInfoSearchConditions"/>
+    </select>
+
+    <select id="getServiceInfoDtl" resultType="org.sadari.admin.sadariadmin.serviceinfo.vo.ServiceInfoVO">
+        SELECT /* getServiceInfoDtl */
+               S.CATE_CGRP
+             , S.CATE_CODE
+             , C.COMD_NAME AS CATE_NAME
+             , S.VERS_NUMB
+             , S.SVCI_TITL
+             , S.SVCI_CNTN
+             , S.DPLY_YSNO
+             , S.REGI_ADMN
+             , FN_GET_ADMIN_NAME(S.REGI_ADMN) AS REGI_ADMN_NAME
+             , S.REGI_DATE
+             , S.UPDT_ADMN
+             , FN_GET_ADMIN_NAME(S.UPDT_ADMN) AS UPDT_ADMN_NAME
+             , S.UPDT_DATE
+             , S.DPLY_ADMN
+             , FN_GET_ADMIN_NAME(S.DPLY_ADMN) AS DPLY_ADMN_NAME
+             , S.DPLY_DATE
+          FROM CT_SVINFO S
+     LEFT JOIN TB_CODEXD C
+            ON C.COMM_CODE = S.CATE_CGRP
+           AND C.COMD_CODE = S.CATE_CODE
+         WHERE S.CATE_CGRP = #{cateCgrp}
+           AND S.CATE_CODE = #{cateCode}
+           AND S.VERS_NUMB = #{versNumb}
+    </select>
+
+    <select id="getServiceInfoVersionList" resultType="org.sadari.admin.sadariadmin.serviceinfo.vo.ServiceInfoVO">
+        SELECT /* getServiceInfoVersionList */
+               S.CATE_CGRP
+             , S.CATE_CODE
+             , C.COMD_NAME AS CATE_NAME
+             , S.VERS_NUMB
+             , S.SVCI_TITL
+             , S.DPLY_YSNO
+             , S.REGI_ADMN
+             , FN_GET_ADMIN_NAME(S.REGI_ADMN) AS REGI_ADMN_NAME
+             , S.REGI_DATE
+             , S.UPDT_ADMN
+             , FN_GET_ADMIN_NAME(S.UPDT_ADMN) AS UPDT_ADMN_NAME
+             , S.UPDT_DATE
+             , S.DPLY_ADMN
+             , FN_GET_ADMIN_NAME(S.DPLY_ADMN) AS DPLY_ADMN_NAME
+             , S.DPLY_DATE
+          FROM CT_SVINFO S
+     LEFT JOIN TB_CODEXD C
+            ON C.COMM_CODE = S.CATE_CGRP
+           AND C.COMD_CODE = S.CATE_CODE
+         WHERE S.CATE_CGRP = #{cateCgrp}
+           AND S.CATE_CODE = #{cateCode}
+      ORDER BY S.VERS_NUMB DESC
+    </select>
+
+    <select id="getServiceInfoContentList" resultType="string">
+        SELECT /* getServiceInfoContentList */ SVCI_CNTN
+          FROM CT_SVINFO
+         WHERE CATE_CGRP = #{cateCgrp}
+           AND CATE_CODE = #{cateCode}
+    </select>
+
+    <select id="getServiceInfoCategoryCnt" resultType="int">
+        SELECT /* getServiceInfoCategoryCnt */ COUNT(1)
+          FROM TB_CODEXD
+         WHERE COMM_CODE = #{cateCgrp}
+           AND COMD_CODE = #{cateCode}
+           AND USEE_YSNO = #{useeYsno}
+    </select>
+
+    <select id="getServiceInfoCnt" resultType="int">
+        SELECT /* getServiceInfoCnt */ COUNT(1)
+          FROM CT_SVINFO
+         WHERE CATE_CGRP = #{cateCgrp}
+           AND CATE_CODE = #{cateCode}
+    </select>
+
+    <select id="getServiceInfoOriginalAudit" resultType="org.sadari.admin.sadariadmin.serviceinfo.vo.ServiceInfoVO">
+        SELECT /* getServiceInfoOriginalAudit */ REGI_ADMN, REGI_DATE
+          FROM CT_SVINFO
+         WHERE CATE_CGRP = #{cateCgrp}
+           AND CATE_CODE = #{cateCode}
+           AND VERS_NUMB = 1
+    </select>
+
+    <select id="getLatestVersionForUpdate" resultType="int">
+        SELECT /* getLatestVersionForUpdate */ VERS_NUMB
+          FROM CT_SVINFO
+         WHERE CATE_CGRP = #{cateCgrp}
+           AND CATE_CODE = #{cateCode}
+      ORDER BY VERS_NUMB DESC
+         LIMIT 1
+           FOR UPDATE
+    </select>
+
+    <insert id="setServiceInfo">
+        INSERT /* setServiceInfo */
+          INTO CT_SVINFO (
+               CATE_CGRP, CATE_CODE, VERS_NUMB, SVCI_TITL, SVCI_CNTN, DPLY_YSNO
+             , REGI_ADMN, REGI_DATE, UPDT_ADMN, UPDT_DATE
+        ) VALUES (
+               #{cateCgrp}, #{cateCode}, #{versNumb}, #{svciTitl}, #{svciCntn}, #{dplyYsno}
+             , #{regiAdmn}, COALESCE(#{regiDate,jdbcType=TIMESTAMP}, CURRENT_TIMESTAMP)
+             , #{updtAdmn,jdbcType=BIGINT}
+             , CASE WHEN #{updtAdmn,jdbcType=BIGINT} IS NULL THEN NULL ELSE CURRENT_TIMESTAMP END
+        )
+    </insert>
+
+    <update id="uptServiceInfo">
+        UPDATE /* uptServiceInfo */ CT_SVINFO
+           SET SVCI_TITL = #{svciTitl}
+             , SVCI_CNTN = #{svciCntn}
+             , UPDT_ADMN = #{updtAdmn}
+             , UPDT_DATE = CURRENT_TIMESTAMP
+         WHERE CATE_CGRP = #{cateCgrp}
+           AND CATE_CODE = #{cateCode}
+           AND VERS_NUMB = #{versNumb}
+           AND DPLY_YSNO = #{dplyYsno}
+    </update>
+
+    <update id="uptServiceInfoDeployOff">
+        UPDATE /* uptServiceInfoDeployOff */ CT_SVINFO
+           SET DPLY_YSNO = #{no}
+         WHERE CATE_CGRP = #{cateCgrp}
+           AND CATE_CODE = #{cateCode}
+           AND DPLY_YSNO = #{yes}
+    </update>
+
+    <update id="uptServiceInfoDeployOn">
+        UPDATE /* uptServiceInfoDeployOn */ CT_SVINFO
+           SET DPLY_YSNO = #{yes}
+             , DPLY_ADMN = #{dplyAdmn}
+             , DPLY_DATE = CURRENT_TIMESTAMP
+         WHERE CATE_CGRP = #{cateCgrp}
+           AND CATE_CODE = #{cateCode}
+           AND VERS_NUMB = #{versNumb}
+    </update>
+
+    <delete id="delServiceInfo">
+        DELETE /* delServiceInfo */
+          FROM CT_SVINFO
+         WHERE CATE_CGRP = #{cateCgrp}
+           AND CATE_CODE = #{cateCode}
+    </delete>
+</mapper>

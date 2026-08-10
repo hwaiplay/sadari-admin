@@ -144,6 +144,7 @@ export function UserMenuManagePage({ currentPath, onMovePath, onError }: UserMen
   })
   const [detail, setDetail] = useState<UserMenu | null>(null)
   const [childMenus, setChildMenus] = useState<UserMenu[]>([])
+  const [childEditForms, setChildEditForms] = useState<UserMenuForm[]>([])
   const [childForms, setChildForms] = useState<UserMenuForm[]>([])
   const [parentMenus, setParentMenus] = useState<UserMenu[]>([])
   const [form, setForm] = useState<UserMenuForm>(emptyUserMenuForm())
@@ -200,6 +201,7 @@ export function UserMenuManagePage({ currentPath, onMovePath, onError }: UserMen
           setExpandedMenuNumbs(new Set())
           setDetail(null)
           setChildMenus([])
+          setChildEditForms([])
           setChildForms([])
           return
         }
@@ -213,6 +215,7 @@ export function UserMenuManagePage({ currentPath, onMovePath, onError }: UserMen
         if (isNew) {
           setDetail(null)
           setChildMenus([])
+          setChildEditForms([])
           setChildForms([])
           setForm(emptyUserMenuForm())
           return
@@ -226,6 +229,7 @@ export function UserMenuManagePage({ currentPath, onMovePath, onError }: UserMen
           ])
           setDetail(menu)
           setChildMenus(children)
+          setChildEditForms(children.map(toUserMenuForm))
           setChildForms([])
           setForm(toUserMenuForm(menu))
         }
@@ -334,6 +338,28 @@ export function UserMenuManagePage({ currentPath, onMovePath, onError }: UserMen
     }))
   }
 
+  /** 기존 하위 메뉴 입력 행의 단일 값을 변경한다. */
+  const changeChildEditForm = (index: number, field: keyof UserMenuForm, value: string): void => {
+    setChildEditForms((currentForms) => currentForms.map((childForm, childIndex) => {
+      // 선택하지 않은 입력 행은 기존 값을 유지한다.
+      if (childIndex !== index) {
+        return childForm
+      }
+
+      // 햄버거 메뉴 노출 여부에 따라 정렬 입력값을 사용하거나 제거한다.
+      if (field === 'showYsno') {
+        return {
+          ...childForm,
+          showYsno: value,
+          sortOrdr: value === DEFAULT_USEE_YSNO ? childForm.sortOrdr || '1' : '',
+        }
+      }
+
+      // 변경한 단일 입력값을 선택한 기존 하위 메뉴 폼에 반영한다.
+      return { ...childForm, [field]: value }
+    }))
+  }
+
   /** 저장 전 신규 하위 메뉴 입력 행을 삭제한다. */
   const removeChildForm = (index: number): void => {
     // 선택한 입력 행을 제외한 하위 메뉴 폼만 유지한다.
@@ -372,6 +398,12 @@ export function UserMenuManagePage({ currentPath, onMovePath, onError }: UserMen
       return
     }
 
+    // 수정할 기존 하위 메뉴 중 메뉴명이 비어 있으면 저장 요청을 실행하지 않는다.
+    if (childEditForms.some((childForm) => !childForm.menuName.trim())) {
+      alert('하위 메뉴의 메뉴명을 입력해 주세요.')
+      return
+    }
+
     // 중복 저장 요청을 막기 위해 저장 중 상태를 설정한다.
     setSaving(true)
     onError(null)
@@ -385,10 +417,11 @@ export function UserMenuManagePage({ currentPath, onMovePath, onError }: UserMen
         return
       }
 
-      // 상세 화면에서 추가한 모든 하위 메뉴 등록 요청을 구성한다.
+      // 기존 하위 메뉴 수정과 신규 하위 메뉴 등록 요청을 구성한다.
+      const childEditRequests = childEditForms.map((childForm) => saveUserMenuApi(childForm, true))
       const childSaveRequests = childForms.map((childForm) => saveUserMenuApi(childForm, false))
-      // 신규 하위 메뉴를 현재 상세 화면에서 함께 저장한다.
-      await Promise.all(childSaveRequests)
+      // 모든 직계 하위 메뉴를 현재 상세 화면에서 함께 저장한다.
+      await Promise.all([...childEditRequests, ...childSaveRequests])
       // 저장 결과가 반영된 직계 하위 메뉴와 상위 메뉴 후보를 다시 조회한다.
       const [children, parents] = await Promise.all([
         getUserMenuChildren(result.data.menuNumb),
@@ -398,10 +431,13 @@ export function UserMenuManagePage({ currentPath, onMovePath, onError }: UserMen
       setDetail(result.data)
       setForm(toUserMenuForm(result.data))
       setChildMenus(children)
+      setChildEditForms(children.map(toUserMenuForm))
       setParentMenus(parents)
       setChildForms([])
       // 저장한 범위에 맞는 성공 메시지를 현재 상세 화면에서 표시한다.
-      alert(childForms.length > 0 ? '사용자 메뉴와 하위 메뉴가 저장되었습니다.' : result.message)
+      alert(childEditForms.length > 0 || childForms.length > 0
+        ? '사용자 메뉴와 하위 메뉴가 저장되었습니다.'
+        : result.message)
     } catch (error: unknown) {
       // "사용자 메뉴 저장 중 오류가 발생했습니다."
       onError(error instanceof Error ? error.message : '사용자 메뉴 저장 중 오류가 발생했습니다.')
@@ -580,7 +616,7 @@ export function UserMenuManagePage({ currentPath, onMovePath, onError }: UserMen
           <div className="detail-title">
             <div>
               <h2>하위 메뉴</h2>
-              <p>현재 메뉴 바로 아래의 사용자 메뉴를 선택해 상세 정보를 관리합니다.</p>
+              <p>현재 메뉴 바로 아래의 사용자 메뉴를 이 화면에서 함께 수정합니다.</p>
             </div>
             <div className="status">총 {childMenus.length}건</div>
           </div>
@@ -596,32 +632,71 @@ export function UserMenuManagePage({ currentPath, onMovePath, onError }: UserMen
                   <th className="col-sort">정렬</th>
                   <th>수정자</th>
                   <th className="col-datetime">수정일</th>
+                  <th className="col-action">상세</th>
                 </tr>
               </thead>
               <tbody>
                 {childMenus.length === 0 ? (
-                  <tr className="empty-row"><td colSpan={8}>하위 메뉴가 없습니다.</td></tr>
-                ) : childMenus.map((menu) => (
+                  <tr className="empty-row"><td colSpan={9}>하위 메뉴가 없습니다.</td></tr>
+                ) : childEditForms.map((childForm, index) => {
+                  const menu = childMenus[index]
+                  return (
                   /* 직계 하위 사용자 메뉴 개별 항목 영역 */
-                  <tr className="editable-row" key={menu.menuNumb}>
+                  <tr className="editable-row" key={childForm.menuNumb}>
                     <td>
-                      <button
-                        type="button"
-                        className="code-drill-button"
-                        onClick={() => onMovePath(`${USER_MENU_DETAIL_PREFIX}/${menu.menuNumb}`)}
-                      >
-                        {menu.menuName}
-                      </button>
+                      <input
+                        value={childForm.menuName}
+                        onChange={(event) => changeChildEditForm(index, 'menuName', event.target.value)}
+                        required
+                      />
                     </td>
-                    <td>{menu.menuUrlx || '-'}</td>
+                    <td>
+                      <input
+                        value={childForm.menuUrlx}
+                        placeholder="그룹 메뉴는 비워둘 수 있습니다."
+                        onChange={(event) => changeChildEditForm(index, 'menuUrlx', event.target.value)}
+                      />
+                    </td>
                     <td>{menu.menuLevl}뎁스</td>
-                    <td className="col-usee">{getUseeYsnoCodeName(ysnoCodes, menu.showYsno, menu.showYsnoName)}</td>
-                    <td className="col-usee">{getUseeYsnoCodeName(ysnoCodes, menu.useeYsno, menu.useeYsnoName)}</td>
-                    <td className="col-sort">{menu.showYsno === DEFAULT_USEE_YSNO ? menu.sortOrdr : ''}</td>
+                    <td className="col-usee">
+                      <YsnoSelect
+                        value={childForm.showYsno}
+                        codes={ysnoCodes}
+                        onChange={(value) => changeChildEditForm(index, 'showYsno', value)}
+                      />
+                    </td>
+                    <td className="col-usee">
+                      <YsnoSelect
+                        value={childForm.useeYsno}
+                        codes={ysnoCodes}
+                        onChange={(value) => changeChildEditForm(index, 'useeYsno', value)}
+                      />
+                    </td>
+                    <td className="col-sort">
+                      {childForm.showYsno === DEFAULT_USEE_YSNO ? (
+                        <input
+                          type="number"
+                          min="1"
+                          value={childForm.sortOrdr}
+                          onChange={(event) => changeChildEditForm(index, 'sortOrdr', event.target.value)}
+                          required
+                        />
+                      ) : '-'}
+                    </td>
                     <td>{menu.updtAdmnName ?? menu.updtAdmn}</td>
                     <td className="col-datetime">{formatDate(menu.updtDate)}</td>
+                    <td className="col-action">
+                      <button
+                        type="button"
+                        className="subtle-button"
+                        onClick={() => onMovePath(`${USER_MENU_DETAIL_PREFIX}/${menu.menuNumb}`)}
+                      >
+                        상세
+                      </button>
+                    </td>
                   </tr>
-                ))}
+                  )
+                })}
               </tbody>
             </table>
           </section>

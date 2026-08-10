@@ -48,6 +48,9 @@ public final class Constant {
     /** 공지사항 카테고리 공통코드 */
     public static final String NOTI_CATE = "NOTI_CATE";
 
+    /** 서비스 정보 카테고리 공통코드 */
+    public static final String SVIF_CATE = "SVIF_CATE";
+
     /** 사용자 조회 이력의 공지사항 대상 유형 */
     public static final String VIEW_TYPE_NOTICE = "NOTICE";
 
@@ -212,6 +215,9 @@ public final class Constant {
 
     /** 공지사항 관리 API URL 접두어 */
     public static final String API_NOTICE_PREFIX = "/api/notices";
+
+    /** 서비스 정보 관리 API URL 접두어 */
+    public static final String API_SERVICE_INFO_PREFIX = "/api/service-info";
 
     /** 권한그룹 관리 API URL 접두어 */
     public static final String API_AUTH_GROUP_PREFIX = "/api/auth-groups";

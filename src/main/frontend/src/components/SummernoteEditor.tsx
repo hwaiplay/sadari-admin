@@ -9,10 +9,21 @@ type SummernoteEditorProps = {
   disabled: boolean
   onChange: (value: string) => void
   onError: (message: string) => void
+  placeholder?: string
+  uploadImage?: (file: File) => Promise<string>
+  uploadErrorMessage?: string
 }
 
-/** 공지사항 HTML 작성과 공지 전용 이미지 업로드를 연결한다. */
-export function SummernoteEditor({ value, disabled, onChange, onError }: SummernoteEditorProps) {
+/** HTML 작성 화면과 업무별 Summernote 이미지 업로드를 연결한다. */
+export function SummernoteEditor({
+  value,
+  disabled,
+  onChange,
+  onError,
+  placeholder = '공지 내용을 입력해 주세요.',
+  uploadImage = uploadNoticeImage,
+  uploadErrorMessage = '공지 이미지 업로드에 실패했습니다.',
+}: SummernoteEditorProps) {
   const editorRef = useRef<HTMLDivElement | null>(null)
   const initialValueRef = useRef(value)
   const onChangeRef = useRef(onChange)
@@ -28,18 +39,18 @@ export function SummernoteEditor({ value, disabled, onChange, onError }: Summern
     const editor = $(editorRef.current)
     editor.summernote({
       height: 420,
-      placeholder: '공지 내용을 입력해 주세요.',
+      placeholder,
       callbacks: {
         onChange: (contents) => onChangeRef.current(contents),
         onImageUpload: (files) => {
           void (async () => {
             try {
               for (const file of files) {
-                const url = await uploadNoticeImage(file)
+                const url = await uploadImage(file)
                 editor.summernote('insertImage', url)
               }
             } catch (error: unknown) {
-              onErrorRef.current(error instanceof Error ? error.message : '공지 이미지 업로드에 실패했습니다.')
+              onErrorRef.current(error instanceof Error ? error.message : uploadErrorMessage)
             }
           })()
         },
@@ -49,7 +60,7 @@ export function SummernoteEditor({ value, disabled, onChange, onError }: Summern
     return () => {
       editor.summernote('destroy')
     }
-  }, [])
+  }, [placeholder, uploadErrorMessage, uploadImage])
 
   useEffect(() => {
     if (!editorRef.current) return
