@@ -59,7 +59,7 @@ class NoticeServiceImplTest {
 
     /** 관리자 목록 조회에 현재 배포 여부 기준값을 서버 상수로 설정한다. */
     @Test
-    void getNoticeListSetsCurrentDeployVersionCriteria() {
+    void getNoticeListSetsVersion() {
         NoticeSearchVO search = new NoticeSearchVO();
         when(noticeMapper.getNoticeList(search)).thenReturn(List.of());
         when(noticeMapper.getNoticeListCnt(search)).thenReturn(0);
@@ -71,7 +71,7 @@ class NoticeServiceImplTest {
 
     /** 현재 배포 중인 공지는 최신 버전의 MAX + 1로 저장하고 외부 이미지를 제거한다. */
     @Test
-    void uptNoticeVersionCreatesNextVersionWhenCurrentlyDeployed() {
+    void uptNoticeCreatesNextVer() {
         NoticeVO request = new NoticeVO();
         request.setCateCode("GUIDE");
         request.setTopxYsno("Y");
@@ -103,7 +103,7 @@ class NoticeServiceImplTest {
 
     /** 과거 배포일이 있어도 현재 미배포 상태이면 선택한 버전 번호를 유지하여 수정한다. */
     @Test
-    void uptNoticeVersionUpdatesSameVersionWhenNotCurrentlyDeployed() {
+    void uptNoticeKeepsDraftVer() {
         NoticeVO request = new NoticeVO();
         request.setCateCode("GUIDE");
         request.setTopxYsno("N");
@@ -127,7 +127,7 @@ class NoticeServiceImplTest {
 
     /** 공지 삭제 시 모든 버전과 읽음 이력 및 중복 제거한 실제 이미지를 함께 삭제한다. */
     @Test
-    void delNoticeDeletesVersionsViewsAndDistinctImages() throws IOException {
+    void delNoticeAllResources() throws IOException {
         String imagePath = "/uploads/notice/260807/123e4567-e89b-12d3-a456-426614174000.png";
         when(noticeMapper.getNoticeContentList(9L)).thenReturn(List.of(
                 "<p>첫 버전</p><img src=\"" + imagePath + "\">",

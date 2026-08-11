@@ -110,7 +110,7 @@ class ComplaintServiceTests {
      * @author SeungHyeon.Kang
      */
     @Test
-    void suspendComplaintTargetUser() {
+    void setComplaintTargetSusp() {
         // 이용정지 대상 번호가 10번 회원인 사용자 신고를 생성한다
         ComplaintVO complaint = createComplaint(Constant.CMPL_TARGET_USER, Constant.CMPL_STATUS_REVIEWING
                                                 , LocalDateTime.now());
@@ -147,7 +147,7 @@ class ComplaintServiceTests {
      * @author SeungHyeon.Kang
      */
     @Test
-    void rejectNonUserTargetSuspension() {
+    void setSuspRejectsNonUser() {
         // 독후감 대상 번호 10을 가진 콘텐츠 신고를 생성한다
         ComplaintVO complaint = createComplaint("CMPL_BOOK_REPORT", Constant.CMPL_STATUS_REVIEWING
                                                 , LocalDateTime.now());

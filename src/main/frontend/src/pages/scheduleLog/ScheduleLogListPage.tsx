@@ -7,7 +7,7 @@ import { SCHEDULE_LOG_DETAIL_PREFIX, SCHEDULE_LOG_LIST_PATH } from '../../consta
 import type { Code } from '../../types/code'
 import type { ScheduleLog, ScheduleLogSearch } from '../../types/scheduleLog'
 import { formatDate } from '../../utils/code'
-import { formatExecutionTime, getScheduleStatusClassName } from '../../utils/scheduleLog'
+import { formatExecutionTime, getScheduleStatusClass } from '../../utils/scheduleLog'
 import { Pagination } from '../../components/Pagination'
 import type { PageData } from '../../types/common'
 import { getListPageSnapshot, setListPageSnapshot } from '../../utils/search'
@@ -90,7 +90,7 @@ export function ScheduleLogListPage({ onMovePath, onError }: ScheduleLogListPage
       </td>
       <td>{scheduleLog.schdCodeName ?? scheduleLog.schdCode}</td>
       <td>{scheduleLog.methName}</td>
-      <td className="col-schedule-status"><span className={getScheduleStatusClassName(scheduleLog.execStat)}>{scheduleLog.execStat}</span></td>
+      <td className="col-schedule-status"><span className={getScheduleStatusClass(scheduleLog.execStat)}>{scheduleLog.execStat}</span></td>
       <td className="col-date-time">{formatDate(scheduleLog.strtDate)}</td>
       <td className="col-date-time">{formatDate(scheduleLog.fnshDate)}</td>
       <td className="col-count">{scheduleLog.trgtCntt.toLocaleString()}</td>

@@ -101,7 +101,7 @@ public interface ServiceInfoMapper {
      * @param cateCode 서비스 정보 카테고리 코드
      * @return 최초 등록 관리자와 등록 일시
      */
-    ServiceInfoVO getServiceInfoOriginalAudit(@Param("cateCgrp") String cateCgrp
+    ServiceInfoVO getServiceInfoOrigAudit(@Param("cateCgrp") String cateCgrp
                                             , @Param("cateCode") String cateCode);
 
     /**

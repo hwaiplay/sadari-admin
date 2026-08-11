@@ -1,11 +1,11 @@
 import { useEffect, useState } from 'react'
 import {
-  createCurrentUserSuspension,
+  setCurrentUserSuspension,
   getCurrentUser,
-  getCurrentUserLoginHistories,
-  getCurrentUserWithdrawalHistories,
+  getUserLoginHistoryList,
+  getUserWithdrawalList,
   getCurrentUserSuspensions,
-  releaseCurrentUserSuspension,
+  uptCurrentUserSuspRelease,
 } from '../../api/currentUserApi'
 import { Pagination } from '../../components/Pagination'
 import { ImagePreviewButton } from '../../components/ImagePreviewButton'
@@ -69,8 +69,8 @@ export function CurrentUserDetailPage({
     // 상세 화면에 필요한 사용자 정보와 두 종류의 이력을 병렬로 조회한다.
     Promise.all([
       getCurrentUser(userNumb),
-      getCurrentUserLoginHistories(userNumb, 1),
-      getCurrentUserWithdrawalHistories(userNumb, 1),
+      getUserLoginHistoryList(userNumb, 1),
+      getUserWithdrawalList(userNumb, 1),
     ])
       .then(([user, loginPage, withdrawalPage]) => {
         // 화면이 유지되는 동안에만 조회 결과를 반영한다.
@@ -105,7 +105,7 @@ export function CurrentUserDetailPage({
   const loadLoginHistoryPage = async (pageNumber: number): Promise<void> => {
     try {
       // 선택한 페이지의 마스킹 로그인 이력을 반영한다.
-      setLoginHistories(await getCurrentUserLoginHistories(userNumb, pageNumber))
+      setLoginHistories(await getUserLoginHistoryList(userNumb, pageNumber))
       onError(null)
     } catch (error: unknown) {
       // 이력 조회 실패를 공통 오류 영역에 표시한다.
@@ -123,7 +123,7 @@ export function CurrentUserDetailPage({
   const loadWithdrawalHistoryPage = async (pageNumber: number): Promise<void> => {
     try {
       // 선택한 페이지의 비활성화·영구탈퇴 이력을 반영한다.
-      setWithdrawalHistories(await getCurrentUserWithdrawalHistories(userNumb, pageNumber))
+      setWithdrawalHistories(await getUserWithdrawalList(userNumb, pageNumber))
       onError(null)
     } catch (error: unknown) {
       // 이력 조회 실패를 공통 오류 영역에 표시한다.
@@ -154,7 +154,7 @@ export function CurrentUserDetailPage({
     request: CurrentUserSuspensionRequest,
   ): Promise<CurrentUserSuspension> => {
     // 현재 사용자 관리 API에 검증된 이용정지 등록값을 전달한다
-    return createCurrentUserSuspension(userNumb, request)
+    return setCurrentUserSuspension(userNumb, request)
   }
 
   /**
@@ -167,7 +167,7 @@ export function CurrentUserDetailPage({
    */
   const uptUserSuspensionReleased = (spndNumb: number, rlesCntn: string): Promise<void> => {
     // 현재 사용자 관리 API에 해제할 이력 번호와 내부 메모를 전달한다
-    return releaseCurrentUserSuspension(userNumb, spndNumb, rlesCntn)
+    return uptCurrentUserSuspRelease(userNumb, spndNumb, rlesCntn)
   }
 
   /**
@@ -205,7 +205,7 @@ export function CurrentUserDetailPage({
    * @param history 계정 처리 이력
    * @return 계정 처리 이력 행
    */
-  const renderWithdrawalHistoryRow = (history: CurrentUserWithdrawalHistory) => (
+  const renderWithdrawalRow = (history: CurrentUserWithdrawalHistory) => (
     <tr key={history.wthdNumb}>
       <td className="col-history-number">{history.wthdNumb}</td>
       <td>{history.wthdTypeName ?? history.wthdType}</td>
@@ -404,7 +404,7 @@ export function CurrentUserDetailPage({
             <tbody>
               {withdrawalHistories.items.length === 0 ? (
                 <tr className="empty-row"><td colSpan={7}>계정 처리 이력이 없습니다.</td></tr>
-              ) : withdrawalHistories.items.map(renderWithdrawalHistoryRow)}
+              ) : withdrawalHistories.items.map(renderWithdrawalRow)}
             </tbody>
           </table>
         </section>

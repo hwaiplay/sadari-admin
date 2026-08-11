@@ -41,10 +41,10 @@ public interface UserMenuMapper {
     int getUserMenuChildCount(@Param("menuNumb") Long menuNumb);
 
     /** 사용자 메뉴의 가장 깊은 하위 단계 차이를 조회한다. */
-    int getUserMenuDescendantDepth(@Param("menuNumb") Long menuNumb);
+    int getMenuDescendantDepth(@Param("menuNumb") Long menuNumb);
 
     /** 지정한 메뉴가 하위 메뉴 트리에 포함되는지 조회한다. */
-    int getUserMenuDescendantCount(@Param("menuNumb") Long menuNumb,
+    int getMenuDescendantCnt(@Param("menuNumb") Long menuNumb,
                                    @Param("candidateNumb") Long candidateNumb);
 
     /** 사용자 메뉴를 등록한다. */

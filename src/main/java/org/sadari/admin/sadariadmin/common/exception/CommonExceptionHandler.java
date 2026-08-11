@@ -33,7 +33,7 @@ public class CommonExceptionHandler {
      * @return
      */
     @ExceptionHandler(ResponseStatusException.class)
-    public ResponseEntity<ResultData> handleResponseStatusException(ResponseStatusException e) {
+    public ResponseEntity<ResultData> handleResponseException(ResponseStatusException e) {
         HttpStatus status = HttpStatus.resolve(e.getStatusCode().value());
         // 인증 실패 상태 코드는 인증 실패 결과로 변환한다
         if (status == HttpStatus.UNAUTHORIZED) {

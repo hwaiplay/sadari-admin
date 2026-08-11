@@ -184,7 +184,7 @@ export function UserSuspensionPanel({
    * @author SeungHyeon.Kang
    * @return 반환값이 없다
    */
-  const handleRefreshUserStatusSync = async (): Promise<void> => {
+  const handleUserStatusSync = async (): Promise<void> => {
     // 반영 상태 확인 요청의 중복 실행을 막는다
     setRefreshingUserStatusSync(true)
     // 조회 실패 시 기존 화면 상태를 유지하고 공통 오류만 표시한다
@@ -338,7 +338,7 @@ export function UserSuspensionPanel({
    * @param history 표시할 이용정지 이력
    * @return 이용정지 이력 행
    */
-  const renderSuspensionHistoryRow = (history: CurrentUserSuspension) => (
+  const renderSuspensionRow = (history: CurrentUserSuspension) => (
     <tr key={history.spndNumb}>
       <td className="col-history-number">{history.spndNumb}</td>
       <td>{history.spndTypeName ?? history.spndType}</td>
@@ -415,7 +415,7 @@ export function UserSuspensionPanel({
                   type="button"
                   className="subtle-button current-user-sync-refresh"
                   disabled={refreshingUserStatusSync}
-                  onClick={() => void handleRefreshUserStatusSync()}
+                  onClick={() => void handleUserStatusSync()}
                 >
                   {refreshingUserStatusSync ? '확인 중' : '반영 상태 확인'}
                 </button>
@@ -558,7 +558,7 @@ export function UserSuspensionPanel({
             <tbody>
               {suspensionHistories.items.length === 0 ? (
                 <tr className="empty-row"><td colSpan={9}>이용 정지 이력이 없습니다.</td></tr>
-              ) : suspensionHistories.items.map(renderSuspensionHistoryRow)}
+              ) : suspensionHistories.items.map(renderSuspensionRow)}
             </tbody>
           </table>
         </section>

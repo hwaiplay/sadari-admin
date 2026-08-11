@@ -5,7 +5,7 @@
  * @param execStat 스케줄러 실행 상태 코드
  * @return 실행 상태 표시 클래스
  */
-export const getScheduleStatusClassName = (execStat: string): string => {
+export const getScheduleStatusClass = (execStat: string): string => {
   // 정상 종료 상태는 성공 색상으로 구분한다
   if (execStat === 'SUCCESS') {
     return 'schedule-status success'

@@ -60,7 +60,7 @@ public interface ComplaintService {
      * @param admin 로그인 관리자
      * @return 이용정지 이력 페이지
      */
-    PageData<CurrentUserSuspensionVO> getTargetUserSuspensionList(Long cmplNumb, int pageNumber
+    PageData<CurrentUserSuspensionVO> getTargetUserSuspList(Long cmplNumb, int pageNumber
                                                                , AdminSessionVO admin);
 
     /**
@@ -84,6 +84,6 @@ public interface ComplaintService {
      * @param request 해제 메모
      * @param admin 처리 관리자
      */
-    void uptTargetUserSuspensionReleased(Long cmplNumb, Long spndNumb, CurrentUserSuspensionVO request
+    void uptTargetSuspReleased(Long cmplNumb, Long spndNumb, CurrentUserSuspensionVO request
                                         , AdminSessionVO admin);
 }

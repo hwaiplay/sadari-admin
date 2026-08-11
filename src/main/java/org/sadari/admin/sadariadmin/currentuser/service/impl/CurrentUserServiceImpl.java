@@ -162,7 +162,7 @@ public class CurrentUserServiceImpl implements CurrentUserService {
         // 민감한 자유 입력 사유를 제외한 계정 처리 이력 페이지를 생성한다
         return PageData.of(currentUserMapper.getWithdrawalHistoryList(userNumb, pageRequest.getStartRow()
                                                                      , pageRequest.getEndRow())
-                         , currentUserMapper.getWithdrawalHistoryListCount(userNumb), pageRequest);
+                         , currentUserMapper.getWithdrawalHistoryCnt(userNumb), pageRequest);
     }
 
     /**
@@ -187,7 +187,7 @@ public class CurrentUserServiceImpl implements CurrentUserService {
         // 코드명과 관리자 내부 메모를 포함한 정지 이력 페이지를 반환한다
         return PageData.of(currentUserMapper.getSuspensionHistoryList(userNumb, pageRequest.getStartRow()
                                                                     , pageRequest.getEndRow())
-                         , currentUserMapper.getSuspensionHistoryListCount(userNumb), pageRequest);
+                         , currentUserMapper.getSuspensionHistoryCnt(userNumb), pageRequest);
     }
 
     /**
@@ -208,7 +208,7 @@ public class CurrentUserServiceImpl implements CurrentUserService {
         validateSuspension(suspension, admin);
 
         // 같은 회원의 정지 등록과 해제가 교차하지 않도록 회원 행을 먼저 잠근다
-        String currentUserStat = currentUserMapper.getCurrentUserStatusForUpdate(userNumb);
+        String currentUserStat = currentUserMapper.getUserStatusForUpdate(userNumb);
         if (StringUtil.isEmpty(currentUserStat)) {
             throw new BusinessException(HttpStatus.NOT_FOUND, ResultEnum.CURRENT_USER_NOT_FOUND);
         }
@@ -219,8 +219,8 @@ public class CurrentUserServiceImpl implements CurrentUserService {
         // 종료 시각이 지난 이전 기간 정지가 있으면 새 정지 등록 전에 만료시킨다
         expireSuspensionIfNeeded(userNumb, admin.getAdmnNumb());
         // 이전 정지가 만료되며 복구된 최신 상태를 새 정지의 직전 상태로 사용한다
-        currentUserStat = currentUserMapper.getCurrentUserStatusForUpdate(userNumb);
-        if (!StringUtil.isEmpty(currentUserMapper.getActiveSuspensionForUpdate(userNumb))) {
+        currentUserStat = currentUserMapper.getUserStatusForUpdate(userNumb);
+        if (!StringUtil.isEmpty(currentUserMapper.getActiveSuspForUpdate(userNumb))) {
             throw new BusinessException(HttpStatus.CONFLICT, ResultEnum.USER_SUSPENSION_DUPLICATE);
         }
 
@@ -266,12 +266,12 @@ public class CurrentUserServiceImpl implements CurrentUserService {
 
         String releaseContent = StringUtil.isEmpty(request) ? null : trimToNull(request.getRlesCntn());
         validateContentLength(releaseContent);
-        String currentUserStat = currentUserMapper.getCurrentUserStatusForUpdate(userNumb);
+        String currentUserStat = currentUserMapper.getUserStatusForUpdate(userNumb);
         if (StringUtil.isEmpty(currentUserStat)) {
             throw new BusinessException(HttpStatus.NOT_FOUND, ResultEnum.CURRENT_USER_NOT_FOUND);
         }
 
-        CurrentUserSuspensionVO activeSuspension = currentUserMapper.getActiveSuspensionForUpdate(userNumb);
+        CurrentUserSuspensionVO activeSuspension = currentUserMapper.getActiveSuspForUpdate(userNumb);
         if (StringUtil.isEmpty(activeSuspension)
                 || !spndNumb.equals(activeSuspension.getSpndNumb())) {
             throw new BusinessException(HttpStatus.NOT_FOUND, ResultEnum.USER_SUSPENSION_NOT_FOUND);
@@ -285,10 +285,10 @@ public class CurrentUserServiceImpl implements CurrentUserService {
         }
 
         // 영구 탈퇴 대기 등 다른 상태가 이미 우선 적용됐다면 해당 상태를 유지한다
-        if (currentUserMapper.uptCurrentUserStatusAfterSuspension(
+        if (currentUserMapper.uptUserStatusAfterSuspend(
                 userNumb, activeSuspension.getPrevStat()) == 1) {
             // 상태가 실제 복구된 정지 이력을 사용자 서버 반영 대기 상태로 변경한다
-            uptUserSuspensionSyncPending(activeSuspension.getSpndNumb());
+            uptUserSuspSyncPending(activeSuspension.getSpndNumb());
             // 복구된 상태를 사용자 서버가 반영하도록 같은 트랜잭션에 이벤트를 저장한다
             setCurrentUserStatusEvent(userNumb, activeSuspension.getSpndNumb());
         }
@@ -302,7 +302,7 @@ public class CurrentUserServiceImpl implements CurrentUserService {
      * @param adminNumb 만료 확인 관리자 번호
      */
     private void expireSuspensionIfNeeded(Long userNumb, Long adminNumb) {
-        CurrentUserSuspensionVO activeSuspension = currentUserMapper.getActiveSuspensionForUpdate(userNumb);
+        CurrentUserSuspensionVO activeSuspension = currentUserMapper.getActiveSuspForUpdate(userNumb);
         if (StringUtil.isEmpty(activeSuspension)
                 || !Constant.SPND_TYPE_PERIOD.equals(activeSuspension.getSpndType())
                 || activeSuspension.getEndxDate().isAfter(LocalDateTime.now())) {
@@ -315,10 +315,10 @@ public class CurrentUserServiceImpl implements CurrentUserService {
             // 다른 요청이 먼저 만료 처리한 정지는 중복 복구하지 않는다
             return;
         }
-        if (currentUserMapper.uptCurrentUserStatusAfterSuspension(
+        if (currentUserMapper.uptUserStatusAfterSuspend(
                 userNumb, activeSuspension.getPrevStat()) == 1) {
             // 상태가 실제 복구된 정지 이력을 사용자 서버 반영 대기 상태로 변경한다
-            uptUserSuspensionSyncPending(activeSuspension.getSpndNumb());
+            uptUserSuspSyncPending(activeSuspension.getSpndNumb());
             // 만료로 복구된 상태를 사용자 서버가 반영하도록 이벤트를 저장한다
             setCurrentUserStatusEvent(userNumb, activeSuspension.getSpndNumb());
         }
@@ -330,10 +330,10 @@ public class CurrentUserServiceImpl implements CurrentUserService {
      * @author SeungHyeon.Kang
      * @param spndNumb 반영을 기다릴 정지 이력 번호
      */
-    private void uptUserSuspensionSyncPending(Long spndNumb) {
+    private void uptUserSuspSyncPending(Long spndNumb) {
 
         // 실제 상태 변경과 관리자 반영 표시가 어긋나지 않도록 한 건 수정을 보장한다
-        if (currentUserMapper.uptUserSuspensionSyncPending(spndNumb) != 1) {
+        if (currentUserMapper.uptUserSuspSyncPending(spndNumb) != 1) {
             // 반영 대기 상태를 기록하지 못하면 현재 회원 상태 변경도 함께 롤백한다
             throw new IllegalStateException("회원 정지 동기화 대기 상태 변경에 실패했습니다.");
         }

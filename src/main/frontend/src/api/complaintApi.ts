@@ -11,7 +11,7 @@ import type { CurrentUserSuspension, CurrentUserSuspensionRequest } from '../typ
  * @param search 신고 검색 조건
  * @return 신고 검색 쿼리 문자열
  */
-const createComplaintSearchParams = (pageNumber: number, search: ComplaintSearch): URLSearchParams => {
+const setComplaintSearchParams = (pageNumber: number, search: ComplaintSearch): URLSearchParams => {
   // 모든 신고 목록 요청에 현재 페이지 번호를 포함한다
   const params = new URLSearchParams({ page: String(pageNumber) })
   // 비어 있지 않은 검색 조건만 서버에 전달해 동적 SQL 조건을 단순하게 유지한다
@@ -37,7 +37,7 @@ const createComplaintSearchParams = (pageNumber: number, search: ComplaintSearch
 export const getComplaints = (pageNumber: number, search: ComplaintSearch): Promise<PageData<Complaint>> => {
   // 검색 조건을 URL에 포함해 신고 목록 API를 호출한다
   return fetchJson<PageData<Complaint>>(
-    `/api/complaints?${createComplaintSearchParams(pageNumber, search).toString()}`,
+    `/api/complaints?${setComplaintSearchParams(pageNumber, search).toString()}`,
     undefined,
     '신고 목록을 불러오지 못했습니다.',
   )
@@ -88,7 +88,7 @@ export const updateComplaint = (cmplNumb: number, update: ComplaintUpdate): Prom
  * @param pageNumber 조회할 페이지 번호
  * @return 이용정지 이력 페이지
  */
-export const getComplaintTargetSuspensions = (
+export const getComplaintSuspList = (
   cmplNumb: number,
   pageNumber: number,
 ): Promise<PageData<CurrentUserSuspension>> => {
@@ -108,7 +108,7 @@ export const getComplaintTargetSuspensions = (
  * @param request 정지 유형과 사유 및 기간
  * @return 등록된 이용정지 이력
  */
-export const createComplaintTargetSuspension = (
+export const setComplaintSuspension = (
   cmplNumb: number,
   request: CurrentUserSuspensionRequest,
 ): Promise<CurrentUserSuspension> => {
@@ -133,7 +133,7 @@ export const createComplaintTargetSuspension = (
  * @param rlesCntn 관리자 내부 해제 메모
  * @return 반환값이 없다
  */
-export const releaseComplaintTargetSuspension = (
+export const uptComplaintSuspReleased = (
   cmplNumb: number,
   spndNumb: number,
   rlesCntn: string,

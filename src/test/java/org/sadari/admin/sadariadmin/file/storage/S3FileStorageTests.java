@@ -38,7 +38,7 @@ class S3FileStorageTests {
      * @throws IOException S3 저장소 계약상 발생 가능
      */
     @Test
-    void setFileUsesConfiguredSharedBucket() throws IOException {
+    void setFileUsesSharedBucket() throws IOException {
 
         // 테스트 공용 버킷을 사용하는 관리자 S3 저장소를 생성한다
         S3FileStorage fileStorage = new S3FileStorage(s3Client, "shared-bucket");

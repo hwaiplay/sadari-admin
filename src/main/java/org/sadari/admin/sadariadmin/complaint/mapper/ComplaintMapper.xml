@@ -202,8 +202,8 @@
     </select>
 
     <!-- 동일 대상의 다른 신고 전체 건수를 조회한다 -->
-    <select id="getRelatedComplaintListCount" resultType="int">
-        SELECT /* getRelatedComplaintListCount */
+    <select id="getRelatedComplaintCnt" resultType="int">
+        SELECT /* getRelatedComplaintCnt */
                COUNT(1)
           FROM TH_CMPLNT C
          WHERE C.TAGT_TYPE = #{tagtType}

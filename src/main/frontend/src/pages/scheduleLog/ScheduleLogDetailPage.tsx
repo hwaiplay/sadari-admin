@@ -3,7 +3,7 @@ import { getScheduleFailures, getScheduleLog } from '../../api/scheduleLogApi'
 import { SCHEDULE_LOG_LIST_PATH } from '../../constants/routes'
 import type { ScheduleFail, ScheduleLog } from '../../types/scheduleLog'
 import { formatDate } from '../../utils/code'
-import { formatExecutionTime, getScheduleStatusClassName } from '../../utils/scheduleLog'
+import { formatExecutionTime, getScheduleStatusClass } from '../../utils/scheduleLog'
 
 type ScheduleLogDetailPageProps = {
   runxNumb: number
@@ -100,7 +100,7 @@ export function ScheduleLogDetailPage({ runxNumb, pageTitle, onMovePath, onError
                   <th>스케줄러명</th>
                   <td>{scheduleLog?.schdCodeName ?? scheduleLog?.schdCode ?? ''}</td>
                   <th>상태</th>
-                  <td>{scheduleLog && <span className={getScheduleStatusClassName(scheduleLog.execStat)}>{scheduleLog.execStat}</span>}</td>
+                  <td>{scheduleLog && <span className={getScheduleStatusClass(scheduleLog.execStat)}>{scheduleLog.execStat}</span>}</td>
                 </tr>
                 <tr>
                   <th>메서드명</th>

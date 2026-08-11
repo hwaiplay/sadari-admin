@@ -145,8 +145,8 @@
            AND CATE_CODE = #{cateCode}
     </select>
 
-    <select id="getServiceInfoOriginalAudit" resultType="org.sadari.admin.sadariadmin.serviceinfo.vo.ServiceInfoVO">
-        SELECT /* getServiceInfoOriginalAudit */ REGI_ADMN, REGI_DATE
+    <select id="getServiceInfoOrigAudit" resultType="org.sadari.admin.sadariadmin.serviceinfo.vo.ServiceInfoVO">
+        SELECT /* getServiceInfoOrigAudit */ REGI_ADMN, REGI_DATE
           FROM CT_SVINFO
          WHERE CATE_CGRP = #{cateCgrp}
            AND CATE_CODE = #{cateCode}

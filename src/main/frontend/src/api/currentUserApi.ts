@@ -75,7 +75,7 @@ export const getCurrentUser = (userNumb: number): Promise<CurrentUser> => {
  * @param pageNumber 조회할 페이지 번호
  * @return 로그인 이력 페이지
  */
-export const getCurrentUserLoginHistories = (
+export const getUserLoginHistoryList = (
   userNumb: number,
   pageNumber: number,
 ): Promise<PageData<CurrentUserLoginHistory>> => {
@@ -95,7 +95,7 @@ export const getCurrentUserLoginHistories = (
  * @param pageNumber 조회할 페이지 번호
  * @return 계정 처리 이력 페이지
  */
-export const getCurrentUserWithdrawalHistories = (
+export const getUserWithdrawalList = (
   userNumb: number,
   pageNumber: number,
 ): Promise<PageData<CurrentUserWithdrawalHistory>> => {
@@ -133,7 +133,7 @@ export const getCurrentUserSuspensions = (
  * @param request 정지 유형과 사유 및 기간
  * @return 등록된 정지 이력
  */
-export const createCurrentUserSuspension = (
+export const setCurrentUserSuspension = (
   userNumb: number,
   request: CurrentUserSuspensionRequest,
 ): Promise<CurrentUserSuspension> =>
@@ -156,7 +156,7 @@ export const createCurrentUserSuspension = (
  * @param rlesCntn 관리자 내부 해제 메모
  * @return 반환값 없음
  */
-export const releaseCurrentUserSuspension = (
+export const uptCurrentUserSuspRelease = (
   userNumb: number,
   spndNumb: number,
   rlesCntn: string,

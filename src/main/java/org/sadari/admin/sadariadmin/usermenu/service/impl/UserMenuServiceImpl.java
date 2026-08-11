@@ -184,14 +184,14 @@ public class UserMenuServiceImpl implements UserMenuService {
 
         // 기존 메뉴를 수정할 때 선택한 부모가 자신의 하위 메뉴인지 확인한다
         if (savedMenu != null && parnNumb != null
-                && userMenuMapper.getUserMenuDescendantCount(savedMenu.getMenuNumb(), parnNumb) > 0) {
+                && userMenuMapper.getMenuDescendantCnt(savedMenu.getMenuNumb(), parnNumb) > 0) {
             // "자기 자신이나 하위 메뉴를 상위 메뉴로 선택할 수 없습니다."
             throw new BusinessException(HttpStatus.BAD_REQUEST, ResultEnum.USER_MENU_CYCLE);
         }
 
         // 기존 하위 트리를 새 단계로 이동해도 3단계를 넘지 않는지 확인한다
         if (savedMenu != null
-                && menuLevl + userMenuMapper.getUserMenuDescendantDepth(savedMenu.getMenuNumb()) > 3) {
+                && menuLevl + userMenuMapper.getMenuDescendantDepth(savedMenu.getMenuNumb()) > 3) {
             // "사용자 메뉴는 최대 3단계까지 등록할 수 있습니다."
             throw new BusinessException(HttpStatus.BAD_REQUEST, ResultEnum.USER_MENU_MAX_DEPTH);
         }

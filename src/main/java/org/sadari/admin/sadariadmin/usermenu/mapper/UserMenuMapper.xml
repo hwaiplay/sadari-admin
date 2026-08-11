@@ -167,7 +167,7 @@
     </select>
 
     <!-- 사용자 메뉴에서 가장 깊은 하위 메뉴까지의 단계 차이를 조회한다. -->
-    <select id="getUserMenuDescendantDepth" resultType="int">
+    <select id="getMenuDescendantDepth" resultType="int">
         WITH RECURSIVE DESCENDANT_MENU AS (
             SELECT MENU_NUMB
                  , 1 AS TREE_DEPT
@@ -180,13 +180,13 @@
               JOIN DESCENDANT_MENU PARENT
                 ON PARENT.MENU_NUMB = CHILD.PARN_NUMB
         )
-        SELECT /* getUserMenuDescendantDepth */
+        SELECT /* getMenuDescendantDepth */
                COALESCE(MAX(TREE_DEPT), 0)
           FROM DESCENDANT_MENU
     </select>
 
     <!-- 지정한 후보 메뉴가 현재 메뉴의 하위 트리에 포함되는지 조회한다. -->
-    <select id="getUserMenuDescendantCount" resultType="int">
+    <select id="getMenuDescendantCnt" resultType="int">
         WITH RECURSIVE DESCENDANT_MENU AS (
             SELECT MENU_NUMB
               FROM TM_URMENU
@@ -197,7 +197,7 @@
               JOIN DESCENDANT_MENU PARENT
                 ON PARENT.MENU_NUMB = CHILD.PARN_NUMB
         )
-        SELECT /* getUserMenuDescendantCount */
+        SELECT /* getMenuDescendantCnt */
                COUNT(1)
           FROM DESCENDANT_MENU
          WHERE MENU_NUMB = #{candidateNumb}

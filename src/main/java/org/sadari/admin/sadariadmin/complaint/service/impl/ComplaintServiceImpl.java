@@ -171,7 +171,7 @@ public class ComplaintServiceImpl implements ComplaintService {
      */
     @Transactional
     @Override
-    public PageData<CurrentUserSuspensionVO> getTargetUserSuspensionList(Long cmplNumb, int pageNumber
+    public PageData<CurrentUserSuspensionVO> getTargetUserSuspList(Long cmplNumb, int pageNumber
                                                                       , AdminSessionVO admin) {
         // 신고 대상 회원번호를 서버에서 확정한 뒤 기존 이용정지 이력을 조회한다
         Long userNumb = getTargetUserNumb(cmplNumb, admin);
@@ -209,7 +209,7 @@ public class ComplaintServiceImpl implements ComplaintService {
      */
     @Transactional
     @Override
-    public void uptTargetUserSuspensionReleased(Long cmplNumb, Long spndNumb
+    public void uptTargetSuspReleased(Long cmplNumb, Long spndNumb
                                                , CurrentUserSuspensionVO request, AdminSessionVO admin) {
         // 요청에서 회원번호를 받지 않고 신고 대상 회원번호를 서버에서 확정한다
         Long userNumb = getTargetUserNumb(cmplNumb, admin);
@@ -241,7 +241,7 @@ public class ComplaintServiceImpl implements ComplaintService {
         detail.setRelatedComplaints(complaintMapper.getRelatedComplaintList(complaint.getTagtType()
                                                                            , complaint.getTagtNumb(), cmplNumb));
         // 동일 대상의 전체 다른 신고 건수를 상세 응답에 설정한다
-        detail.setRelatedComplaintCount(complaintMapper.getRelatedComplaintListCount(complaint.getTagtType()
+        detail.setRelatedComplaintCount(complaintMapper.getRelatedComplaintCnt(complaint.getTagtType()
                                                                                     , complaint.getTagtNumb()
                                                                                     , cmplNumb));
         // 사용자 신고일 때만 신고 대상 번호를 회원번호로 해석한다

@@ -211,7 +211,7 @@ public class ServiceInfoServiceImpl implements ServiceInfoService {
         }
 
         // 배포본 수정은 기존 공개 내용을 보존하도록 새 버전을 만든다.
-        ServiceInfoVO originalAudit = serviceInfoMapper.getServiceInfoOriginalAudit(SVIF_CATE, cateCode);
+        ServiceInfoVO originalAudit = serviceInfoMapper.getServiceInfoOrigAudit(SVIF_CATE, cateCode);
         // 최초 등록 감사정보가 없으면 불완전한 버전 생성을 차단한다.
         if (StringUtil.isEmpty(originalAudit)) {
             throw new BusinessException(HttpStatus.NOT_FOUND, ResultEnum.SERVICE_INFO_NOT_FOUND);

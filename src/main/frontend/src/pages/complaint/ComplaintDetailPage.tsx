@@ -1,9 +1,9 @@
 import { useEffect, useState } from 'react'
 import {
-  createComplaintTargetSuspension,
+  setComplaintSuspension,
   getComplaint,
-  getComplaintTargetSuspensions,
-  releaseComplaintTargetSuspension,
+  getComplaintSuspList,
+  uptComplaintSuspReleased,
   updateComplaint,
 } from '../../api/complaintApi'
 import { ImagePreviewButton } from '../../components/ImagePreviewButton'
@@ -202,7 +202,7 @@ export function ComplaintDetailPage({
    */
   const getTargetSuspensions = (pageNumber: number): Promise<PageData<CurrentUserSuspension>> => {
     // 신고 관리 API에서 지정 페이지의 대상 회원 이용정지 이력을 반환한다
-    return getComplaintTargetSuspensions(cmplNumb, pageNumber)
+    return getComplaintSuspList(cmplNumb, pageNumber)
   }
 
   /**
@@ -216,7 +216,7 @@ export function ComplaintDetailPage({
     request: CurrentUserSuspensionRequest,
   ): Promise<CurrentUserSuspension> => {
     // 회원번호 없이 신고번호와 이용정지 등록값만 신고 관리 API에 전달한다
-    return createComplaintTargetSuspension(cmplNumb, request)
+    return setComplaintSuspension(cmplNumb, request)
   }
 
   /**
@@ -227,9 +227,9 @@ export function ComplaintDetailPage({
    * @param rlesCntn 관리자 내부 해제 메모
    * @return 반환값이 없다
    */
-  const uptTargetSuspensionReleased = (spndNumb: number, rlesCntn: string): Promise<void> => {
+  const uptTargetSuspReleased = (spndNumb: number, rlesCntn: string): Promise<void> => {
     // 회원번호 없이 신고번호와 정지 이력 번호를 신고 관리 API에 전달한다
-    return releaseComplaintTargetSuspension(cmplNumb, spndNumb, rlesCntn)
+    return uptComplaintSuspReleased(cmplNumb, spndNumb, rlesCntn)
   }
 
   /**
@@ -454,7 +454,7 @@ export function ComplaintDetailPage({
           adminAuthCode={adminAuthCode}
           getSuspensions={getTargetSuspensions}
           createSuspension={setTargetSuspension}
-          releaseSuspension={uptTargetSuspensionReleased}
+          releaseSuspension={uptTargetSuspReleased}
           onRefreshTargetUser={refreshComplaint}
           onError={onError}
         />

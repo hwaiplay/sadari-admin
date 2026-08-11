@@ -57,7 +57,7 @@ class UserMenuServiceImplTest {
 
     /** 2단계 메뉴 아래에 신규 메뉴를 등록하면 3단계로 저장하는지 확인한다. */
     @Test
-    void setUserMenuCreatesThirdLevelMenu() {
+    void setMenuCreatesThirdLevel() {
         // 2단계 상위 사용자 메뉴를 생성한다
         UserMenuVO parentMenu = getMenu(20L, 2);
         // 상위 메뉴 번호를 사용한 신규 사용자 메뉴를 생성한다
@@ -91,7 +91,7 @@ class UserMenuServiceImplTest {
 
     /** 3단계 메뉴 아래에 신규 메뉴를 등록하지 못하는지 확인한다. */
     @Test
-    void setUserMenuRejectsFourthLevelMenu() {
+    void setMenuRejectsFourthLevel() {
         // 3단계 상위 사용자 메뉴를 생성한다
         UserMenuVO parentMenu = getMenu(30L, 3);
         // 3단계 메뉴 아래에 등록할 신규 사용자 메뉴를 생성한다
@@ -109,7 +109,7 @@ class UserMenuServiceImplTest {
 
     /** 하위 메뉴가 있는 사용자 메뉴를 삭제하지 못하는지 확인한다. */
     @Test
-    void delUserMenuRejectsMenuWithChildren() {
+    void delMenuRejectsChildren() {
         // 삭제 대상 사용자 메뉴를 생성한다
         UserMenuVO savedMenu = getMenu(10L, 1);
         // 삭제 대상 사용자 메뉴 상세 조회 결과를 설정한다
@@ -125,7 +125,7 @@ class UserMenuServiceImplTest {
 
     /** 사용자 메뉴 상세에서 직계 하위 메뉴 목록을 반환하는지 확인한다. */
     @Test
-    void getUserMenuChildListReturnsDirectChildren() {
+    void getMenuDirectChildren() {
         // 조회 기준 사용자 메뉴를 생성한다
         UserMenuVO parentMenu = getMenu(10L, 1);
         // 조회 기준 바로 아래의 사용자 메뉴를 생성한다

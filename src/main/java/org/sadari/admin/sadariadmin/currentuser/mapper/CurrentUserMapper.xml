@@ -338,16 +338,16 @@
     </select>
 
     <!-- 현재 사용자의 계정 처리 이력 전체 건수를 조회한다 -->
-    <select id="getWithdrawalHistoryListCount" resultType="int">
-        SELECT /* getWithdrawalHistoryListCount */
+    <select id="getWithdrawalHistoryCnt" resultType="int">
+        SELECT /* getWithdrawalHistoryCnt */
                COUNT(1)
           FROM TH_USWTHD
          WHERE USER_NUMB = #{userNumb}
     </select>
 
     <!-- 동시 정지 등록과 해제를 직렬화하기 위해 회원 행을 잠그고 상태를 조회한다 -->
-    <select id="getCurrentUserStatusForUpdate" resultType="string">
-        SELECT /* getCurrentUserStatusForUpdate */
+    <select id="getUserStatusForUpdate" resultType="string">
+        SELECT /* getUserStatusForUpdate */
                USER_STAT
           FROM TM_USERXM
          WHERE USER_NUMB = #{userNumb}
@@ -355,9 +355,9 @@
     </select>
 
     <!-- 회원의 적용 중 정지 이력을 잠금 조회한다 -->
-    <select id="getActiveSuspensionForUpdate"
+    <select id="getActiveSuspForUpdate"
             resultType="org.sadari.admin.sadariadmin.currentuser.vo.CurrentUserSuspensionVO">
-        SELECT /* getActiveSuspensionForUpdate */
+        SELECT /* getActiveSuspForUpdate */
                SPND_NUMB
              , USER_NUMB
              , PREV_STAT
@@ -464,8 +464,8 @@
     </update>
 
     <!-- 현재 정지 상태인 회원만 정지 직전 상태로 복구한다 -->
-    <update id="uptCurrentUserStatusAfterSuspension">
-        UPDATE /* uptCurrentUserStatusAfterSuspension */
+    <update id="uptUserStatusAfterSuspend">
+        UPDATE /* uptUserStatusAfterSuspend */
                TM_USERXM
            SET USER_STAT = #{userStat}
          WHERE USER_NUMB = #{userNumb}
@@ -473,9 +473,9 @@
     </update>
 
     <!-- 회원 상태가 변경된 정지 이력을 사용자 서버 반영 대기 상태로 변경한다 -->
-    <update id="uptUserSuspensionSyncPending">
+    <update id="uptUserSuspSyncPending">
         <bind name="userStatusSyncPending" value="@org.sadari.admin.sadariadmin.common.constant.Constant@USER_STATUS_SYNC_PENDING"/>
-        UPDATE /* uptUserSuspensionSyncPending */
+        UPDATE /* uptUserSuspSyncPending */
                TH_USSPND
            SET SYNC_STAT = #{userStatusSyncPending}
          WHERE SPND_NUMB = #{spndNumb}
@@ -571,8 +571,8 @@
     </select>
 
     <!-- 회원 정지 이력 전체 건수를 조회한다 -->
-    <select id="getSuspensionHistoryListCount" resultType="int">
-        SELECT /* getSuspensionHistoryListCount */
+    <select id="getSuspensionHistoryCnt" resultType="int">
+        SELECT /* getSuspensionHistoryCnt */
                COUNT(1)
           FROM TH_USSPND
          WHERE USER_NUMB = #{userNumb}

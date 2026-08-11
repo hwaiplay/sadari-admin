@@ -103,11 +103,11 @@ public class ComplaintController {
      * @return 이용정지 이력 페이지
      */
     @GetMapping("/{cmplNumb}/suspensions")
-    public ResultData getTargetUserSuspensionList(@PathVariable Long cmplNumb
+    public ResultData getTargetUserSuspList(@PathVariable Long cmplNumb
                                                  , @RequestParam(name = "page", defaultValue = "1") int pageNumber
                                                  , @AuthenticationPrincipal AdminSessionVO admin) {
         // 신고 대상 회원번호를 서버에서 확인한 이용정지 이력 페이지를 반환한다
-        return ResultData.success(complaintService.getTargetUserSuspensionList(cmplNumb, pageNumber, admin));
+        return ResultData.success(complaintService.getTargetUserSuspList(cmplNumb, pageNumber, admin));
     }
 
     /**
@@ -138,12 +138,12 @@ public class ComplaintController {
      * @return 처리 결과
      */
     @PatchMapping("/{cmplNumb}/suspensions/{spndNumb}")
-    public ResultData uptTargetUserSuspensionReleased(@PathVariable Long cmplNumb
+    public ResultData uptTargetSuspReleased(@PathVariable Long cmplNumb
                                                      , @PathVariable Long spndNumb
                                                      , @RequestBody(required = false) CurrentUserSuspensionVO request
                                                      , @AuthenticationPrincipal AdminSessionVO admin) {
         // 신고 대상 회원번호를 서버에서 확인한 뒤 적용 중인 이용정지를 해제한다
-        complaintService.uptTargetUserSuspensionReleased(cmplNumb, spndNumb, request, admin);
+        complaintService.uptTargetSuspReleased(cmplNumb, spndNumb, request, admin);
         // 이용정지 해제 완료 응답을 반환한다
         return ResultData.success();
     }

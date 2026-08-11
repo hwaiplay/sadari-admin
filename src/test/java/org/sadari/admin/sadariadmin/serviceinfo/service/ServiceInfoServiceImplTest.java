@@ -54,7 +54,7 @@ class ServiceInfoServiceImplTest {
 
     /** 이미 버전이 있는 카테고리에는 두 번째 논리 글 등록을 차단한다. */
     @Test
-    void setServiceInfoRejectsSecondArticleInCategory() {
+    void setServiceInfoRejectsDup() {
         ServiceInfoVO request = createRequest();
         when(serviceInfoMapper.getServiceInfoCategoryCnt("SVIF_CATE", "PRIVACY", "Y")).thenReturn(1);
         when(serviceInfoMapper.getServiceInfoCnt("SVIF_CATE", "PRIVACY")).thenReturn(2);
@@ -66,7 +66,7 @@ class ServiceInfoServiceImplTest {
 
     /** 배포된 서비스 정보 수정은 최신 버전 다음 번호의 미배포 초안을 생성한다. */
     @Test
-    void uptServiceInfoVersionCreatesNextDraftFromDeployedVersion() {
+    void uptServiceCreatesDraft() {
         ServiceInfoVO request = createRequest();
         ServiceInfoVO deployed = new ServiceInfoVO();
         deployed.setDplyYsno("Y");
@@ -76,7 +76,7 @@ class ServiceInfoServiceImplTest {
         when(serviceInfoMapper.getServiceInfoCategoryCnt("SVIF_CATE", "PRIVACY", "Y")).thenReturn(1);
         when(serviceInfoMapper.getLatestVersionForUpdate("SVIF_CATE", "PRIVACY")).thenReturn(4);
         when(serviceInfoMapper.getServiceInfoDtl("SVIF_CATE", "PRIVACY", 4)).thenReturn(deployed);
-        when(serviceInfoMapper.getServiceInfoOriginalAudit("SVIF_CATE", "PRIVACY")).thenReturn(originalAudit);
+        when(serviceInfoMapper.getServiceInfoOrigAudit("SVIF_CATE", "PRIVACY")).thenReturn(originalAudit);
         when(serviceInfoMapper.setServiceInfo(request)).thenReturn(1);
         when(serviceInfoMapper.getServiceInfoDtl("SVIF_CATE", "PRIVACY", 5)).thenReturn(request);
 
@@ -90,7 +90,7 @@ class ServiceInfoServiceImplTest {
 
     /** 미배포 초안 수정은 새 버전을 만들지 않고 선택 버전을 반복 저장한다. */
     @Test
-    void uptServiceInfoVersionUpdatesSameDraftVersion() {
+    void uptServiceInfoKeepsDraft() {
         ServiceInfoVO request = createRequest();
         ServiceInfoVO draft = new ServiceInfoVO();
         draft.setDplyYsno("N");

@@ -45,7 +45,7 @@ class CodeManageServiceTests {
      * @author OpenAI.Codex
      */
     @Test
-    void rejectMissingParentOnInsert() {
+    void setCodeRejectsNoParent() {
         // 존재하지 않는 상위 세부코드를 지정한 신규 세부코드를 준비한다
         CodeVO code = createCode("CHILD", "MISSING");
         // 신규 코드와 상위코드가 아직 존재하지 않는 조회 결과를 설정한다
@@ -68,7 +68,7 @@ class CodeManageServiceTests {
      * @author OpenAI.Codex
      */
     @Test
-    void rejectDescendantAsParentOnUpdate() {
+    void uptCodeRejectsDescendant() {
         // 현재 코드의 하위 세부코드를 새 부모로 지정한 수정 데이터를 준비한다
         CodeVO code = createCode("PARENT", "DESCENDANT");
         // 수정 대상과 지정 부모가 모두 존재하도록 조회 결과를 설정한다
@@ -93,7 +93,7 @@ class CodeManageServiceTests {
      * @author OpenAI.Codex
      */
     @Test
-    void rejectDeleteWhenChildrenExist() {
+    void delCodeRejectsChildren() {
         // 삭제 대상에 직접 하위 세부코드가 존재하도록 조회 결과를 설정한다
         when(codeMapper.getChildCodeCnt("GROUP", "PARENT")).thenReturn(1);
 

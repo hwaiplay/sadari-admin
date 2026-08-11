@@ -79,7 +79,7 @@ public interface ComplaintMapper {
      * @param cmplNumb 현재 신고 번호
      * @return 동일 대상의 다른 신고 건수
      */
-    int getRelatedComplaintListCount(@Param("tagtType") String tagtType
+    int getRelatedComplaintCnt(@Param("tagtType") String tagtType
                                     , @Param("tagtNumb") Long tagtNumb
                                     , @Param("cmplNumb") Long cmplNumb);
 

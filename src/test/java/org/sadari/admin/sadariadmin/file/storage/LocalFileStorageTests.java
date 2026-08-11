@@ -33,7 +33,7 @@ class LocalFileStorageTests {
      * @throws IOException 로컬 저장소 계약상 발생 가능
      */
     @Test
-    void setGetAndDelFileUseSameObjectKey() throws IOException {
+    void fileOpsUseSameKey() throws IOException {
 
         // 테스트 전용 공용 루트를 사용하는 로컬 저장소를 생성한다
         LocalFileStorage fileStorage = new LocalFileStorage(storageRoot.toString());

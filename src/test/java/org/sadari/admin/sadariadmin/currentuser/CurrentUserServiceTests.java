@@ -52,7 +52,7 @@ class CurrentUserServiceTests {
      * @author SeungHyeon.Kang
      */
     @Test
-    void getCurrentUserAndHistories() {
+    void getUserWithHistories() {
         // 관리자 목록의 기본 검색 조건과 같은 활성 상태를 설정한다.
         CurrentUserSearchVO search = new CurrentUserSearchVO();
         search.setUserStat("ACTIVE");
@@ -114,7 +114,7 @@ class CurrentUserServiceTests {
      * @author SeungHyeon.Kang
      */
     @Test
-    void createAndReleasePeriodSuspension() {
+    void setAndReleasePeriodSusp() {
         CurrentUserVO currentUser = getActiveCurrentUser();
         CurrentUserSuspensionVO request = new CurrentUserSuspensionVO();
         request.setSpndType("PERIOD");
@@ -152,7 +152,7 @@ class CurrentUserServiceTests {
      * @author SeungHyeon.Kang
      */
     @Test
-    void indefiniteSuspensionRequiresSuperAdmin() {
+    void setIndefSuspNeedsSuper() {
         CurrentUserSuspensionVO request = new CurrentUserSuspensionVO();
         request.setSpndType("INDEFINITE");
         request.setSpndRson("SERVICE_ABUSE");

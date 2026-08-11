@@ -68,7 +68,7 @@ class PopupContentServiceTests {
      * @author SeungHyeon.Kang
      */
     @Test
-    void rejectBlankPopupContentItem() {
+    void setPopupRejectsBlank() {
         // 회원 계정 처리 정책 팝업의 현재 상세를 조회한다
         PopupContentVO popupContent = popupContentService.getPopupContentDtl("ACCOUNT", "WITHDRAWAL_POLICY"
                                                                            , createAdminSession());

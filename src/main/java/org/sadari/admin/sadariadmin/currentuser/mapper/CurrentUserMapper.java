@@ -104,7 +104,7 @@ public interface CurrentUserMapper {
      * @param userNumb 조회할 회원번호
      * @return 계정 처리 이력 전체 건수
      */
-    int getWithdrawalHistoryListCount(@Param("userNumb") Long userNumb);
+    int getWithdrawalHistoryCnt(@Param("userNumb") Long userNumb);
 
     /**
      * 회원 행을 잠그고 현재 상태를 조회한다
@@ -113,7 +113,7 @@ public interface CurrentUserMapper {
      * @param userNumb 회원 번호
      * @return 현재 회원 상태
      */
-    String getCurrentUserStatusForUpdate(@Param("userNumb") Long userNumb);
+    String getUserStatusForUpdate(@Param("userNumb") Long userNumb);
 
     /**
      * 회원의 적용 중 정지 이력을 잠금 조회한다
@@ -122,7 +122,7 @@ public interface CurrentUserMapper {
      * @param userNumb 회원 번호
      * @return 적용 중 정지 이력
      */
-    CurrentUserSuspensionVO getActiveSuspensionForUpdate(@Param("userNumb") Long userNumb);
+    CurrentUserSuspensionVO getActiveSuspForUpdate(@Param("userNumb") Long userNumb);
 
     /**
      * 회원 정지 이력을 등록한다
@@ -168,7 +168,7 @@ public interface CurrentUserMapper {
      * @param userStat 복구할 회원 상태
      * @return 수정 건수
      */
-    int uptCurrentUserStatusAfterSuspension(@Param("userNumb") Long userNumb
+    int uptUserStatusAfterSuspend(@Param("userNumb") Long userNumb
                                           , @Param("userStat") String userStat);
 
     /**
@@ -178,7 +178,7 @@ public interface CurrentUserMapper {
      * @param spndNumb 반영을 기다릴 정지 이력 번호
      * @return 반영 대기 상태로 변경된 이력 건수
      */
-    int uptUserSuspensionSyncPending(@Param("spndNumb") Long spndNumb);
+    int uptUserSuspSyncPending(@Param("spndNumb") Long spndNumb);
 
     /**
      * 사용자 서버가 처리할 회원 상태 변경 Outbox 이벤트를 등록한다
@@ -209,5 +209,5 @@ public interface CurrentUserMapper {
      * @param userNumb 회원 번호
      * @return 정지 이력 건수
      */
-    int getSuspensionHistoryListCount(@Param("userNumb") Long userNumb);
+    int getSuspensionHistoryCnt(@Param("userNumb") Long userNumb);
 }
