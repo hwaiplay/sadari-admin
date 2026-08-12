@@ -29,21 +29,21 @@
 
     <!-- 알림 템플릿 공통 조회 컬럼 목록 -->
     <sql id="alimTempColumns">
-          ALIM_SITU
-        , FN_GET_CODE_NAME(#{alimSituCode}, ALIM_SITU, #{alimSituCode}) AS ALIM_SITU_NAME
-        , TEMP_CODE
-        , TEMP_TITL
-        , ALIM_TITL
-        , TEMP_CONT
-        , LINK_URLX
-        , USEE_YSNO
-        , FN_GET_CODE_NAME(#{commYsno}, USEE_YSNO, #{useeYsnoCode}) AS USEE_YSNO_NAME
-        , REGI_ADMN
-        , FN_GET_ADMIN_NAME(REGI_ADMN) AS REGI_ADMN_NAME
-        , REGI_DATE
-        , UPDT_ADMN
-        , FN_GET_ADMIN_NAME(UPDT_ADMN) AS UPDT_ADMN_NAME
-        , UPDT_DATE
+          A.ALIM_SITU
+        , FN_GET_CODE_NAME(#{alimSituCode}, A.ALIM_SITU, #{alimSituCode}) AS ALIM_SITU_NAME
+        , A.TEMP_CODE
+        , A.TEMP_TITL
+        , A.ALIM_TITL
+        , A.TEMP_CONT
+        , A.LINK_URLX
+        , A.USEE_YSNO
+        , FN_GET_CODE_NAME(#{commYsno}, A.USEE_YSNO, #{useeYsnoCode}) AS USEE_YSNO_NAME
+        , A.REGI_ADMN
+        , FN_GET_ADMIN_NAME(A.REGI_ADMN) AS REGI_ADMN_NAME
+        , A.REGI_DATE
+        , A.UPDT_ADMN
+        , FN_GET_ADMIN_NAME(A.UPDT_ADMN) AS UPDT_ADMN_NAME
+        , A.UPDT_DATE
     </sql>
 
     <!-- 페이징 인라인 뷰의 알림 템플릿 컬럼 목록 -->
@@ -117,9 +117,9 @@
         <include refid="codeNameBindings"/>
         SELECT /* getAlimTempDtl */
                <include refid="alimTempColumns"/>
-          FROM TB_ALTEMP
-         WHERE ALIM_SITU = #{alimSitu}
-           AND TEMP_CODE = #{tempCode}
+          FROM TB_ALTEMP A
+         WHERE A.ALIM_SITU = #{alimSitu}
+           AND A.TEMP_CODE = #{tempCode}
     </select>
 
     <!-- 같은 알림 상황 안의 템플릿 코드 중복 개수를 조회한다 -->

@@ -1,0 +1,139 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "https://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="org.sadari.admin.sadariadmin.alimicon.mapper.AlimIconMapper">
+
+    <!-- 알림 상황 공통코드와 선택적 아이콘 메타데이터를 함께 조회한다. -->
+    <sql id="alimIconColumns">
+        C.COMD_CODE AS ALIM_SITU
+        , C.COMD_NAME AS ALIM_SITU_NAME
+        , C.USEE_YSNO
+        , CASE WHEN I.ALIM_SITU IS NULL THEN 'N' ELSE 'Y' END AS ICON_REGI_YSNO
+        , I.MIME_TYPE
+        , I.FILE_SIZE
+        , I.PIXL_WDTH
+        , I.PIXL_HGHT
+        , COALESCE(TEMP.TEMP_CNT, 0) AS TEMP_CNT
+        , I.REGI_ADMN
+        , FN_GET_ADMIN_NAME(I.REGI_ADMN) AS REGI_ADMN_NAME
+        , I.REGI_DATE
+        , I.UPDT_ADMN
+        , FN_GET_ADMIN_NAME(I.UPDT_ADMN) AS UPDT_ADMN_NAME
+        , I.UPDT_DATE
+    </sql>
+
+    <!-- 알림 상황별 템플릿 수를 공통코드 목록에 연결한다. -->
+    <sql id="alimIconJoins">
+        LEFT JOIN TM_ALICON I
+               ON I.ALIM_SITU = C.COMD_CODE
+        LEFT JOIN (  SELECT T.ALIM_SITU
+                          , COUNT(1) AS TEMP_CNT
+                       FROM TB_ALTEMP T
+                   GROUP BY T.ALIM_SITU
+                  ) TEMP
+               ON TEMP.ALIM_SITU = C.COMD_CODE
+    </sql>
+
+    <!-- 공통코드 목록과 건수에 동일한 검색 조건을 적용한다. -->
+    <sql id="alimIconSearchConditions">
+        <if test="keyword != null and keyword != ''">
+            <bind name="keywordLike" value="'%' + keyword.toUpperCase() + '%'"/>
+           AND (UPPER(C.COMD_CODE) LIKE #{keywordLike} OR UPPER(C.COMD_NAME) LIKE #{keywordLike})
+        </if>
+        <if test="useeYsno != null and useeYsno != ''">
+           AND C.USEE_YSNO = #{useeYsno}
+        </if>
+    </sql>
+
+    <!-- ALIM_SITU의 모든 세부코드를 정렬 순서대로 조회한다. -->
+    <select id="getAlimIconList" parameterType="org.sadari.admin.sadariadmin.alimicon.vo.AlimIconSearchVO"
+            resultType="org.sadari.admin.sadariadmin.alimicon.vo.AlimIconVO">
+        <bind name="alimSitu" value="@org.sadari.admin.sadariadmin.common.constant.Constant@ALIM_SITU"/>
+        SELECT /* getAlimIconList */
+               P.*
+          FROM (  SELECT <include refid="alimIconColumns"/>
+                       , ROW_NUMBER() OVER (ORDER BY C.SORT_ORDR, C.COMD_CODE) AS ROW_NUMB
+                    FROM TB_CODEXD C
+                         <include refid="alimIconJoins"/>
+                   WHERE C.COMM_CODE = #{alimSitu}
+                         <include refid="alimIconSearchConditions"/>
+               ) P
+         WHERE P.ROW_NUMB BETWEEN #{startRow} AND #{endRow}
+      ORDER BY P.ROW_NUMB
+    </select>
+
+    <!-- 검색 조건에 맞는 ALIM_SITU 세부코드 수를 조회한다. -->
+    <select id="getAlimIconListCount" parameterType="org.sadari.admin.sadariadmin.alimicon.vo.AlimIconSearchVO" resultType="int">
+        <bind name="alimSitu" value="@org.sadari.admin.sadariadmin.common.constant.Constant@ALIM_SITU"/>
+        SELECT /* getAlimIconListCount */
+               COUNT(1)
+          FROM TB_CODEXD C
+         WHERE C.COMM_CODE = #{alimSitu}
+               <include refid="alimIconSearchConditions"/>
+    </select>
+
+    <!-- 알림 상황 공통코드와 등록된 아이콘 상세를 조회한다. -->
+    <select id="getAlimIconDtl" parameterType="string" resultType="org.sadari.admin.sadariadmin.alimicon.vo.AlimIconVO">
+        <bind name="alimSituCode" value="@org.sadari.admin.sadariadmin.common.constant.Constant@ALIM_SITU"/>
+        SELECT /* getAlimIconDtl */
+               <include refid="alimIconColumns"/>
+          FROM TB_CODEXD C
+               <include refid="alimIconJoins"/>
+         WHERE C.COMM_CODE = #{alimSituCode}
+           AND C.COMD_CODE = #{alimSitu}
+    </select>
+
+    <!-- 관리자 미리보기용 아이콘 바이너리를 알림 상황으로 조회한다. -->
+    <select id="getAlimIconImage" parameterType="string" resultType="org.sadari.admin.sadariadmin.alimicon.vo.AlimIconVO">
+        SELECT /* getAlimIconImage */
+               ALIM_SITU
+             , MIME_TYPE
+             , ICON_DATA
+          FROM TM_ALICON
+         WHERE ALIM_SITU = #{alimSitu}
+    </select>
+
+    <!-- 요청한 값이 ALIM_SITU 공통코드에 등록되어 있는지 확인한다. -->
+    <select id="getAlimSituCodeCount" parameterType="string" resultType="int">
+        <bind name="alimSituCode" value="@org.sadari.admin.sadariadmin.common.constant.Constant@ALIM_SITU"/>
+        SELECT /* getAlimSituCodeCount */
+               COUNT(1)
+          FROM TB_CODEXD
+         WHERE COMM_CODE = #{alimSituCode}
+           AND COMD_CODE = #{alimSitu}
+    </select>
+
+    <!-- 알림 상황별 아이콘 원본을 신규 등록하거나 현재 행에 직접 교체한다. -->
+    <insert id="saveAlimIcon" parameterType="org.sadari.admin.sadariadmin.alimicon.vo.AlimIconVO">
+        /* saveAlimIcon */
+        INSERT INTO TM_ALICON (
+                    ALIM_SITU
+                  , MIME_TYPE
+                  , ICON_DATA
+                  , FILE_SIZE
+                  , PIXL_WDTH
+                  , PIXL_HGHT
+                  , REGI_ADMN
+                  , REGI_DATE
+                  , UPDT_ADMN
+                  , UPDT_DATE
+        ) VALUES (  #{alimSitu}
+                  , #{mimeType}
+                  , #{iconData}
+                  , #{fileSize}
+                  , #{pixlWdth}
+                  , #{pixlHght}
+                  , #{regiAdmn}
+                  , CURRENT_TIMESTAMP
+                  , #{updtAdmn}
+                  , CURRENT_TIMESTAMP
+        ) AS NEW_ICON
+        ON DUPLICATE KEY UPDATE
+               MIME_TYPE = NEW_ICON.MIME_TYPE
+             , ICON_DATA = NEW_ICON.ICON_DATA
+             , FILE_SIZE = NEW_ICON.FILE_SIZE
+             , PIXL_WDTH = NEW_ICON.PIXL_WDTH
+             , PIXL_HGHT = NEW_ICON.PIXL_HGHT
+             , UPDT_ADMN = NEW_ICON.UPDT_ADMN
+             , UPDT_DATE = CURRENT_TIMESTAMP
+    </insert>
+</mapper>

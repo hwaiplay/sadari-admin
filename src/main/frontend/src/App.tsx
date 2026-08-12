@@ -2,15 +2,18 @@ import { useEffect, useEffectEvent, useMemo, useState } from 'react'
 import type { FormEvent } from 'react'
 import { getAdminSession, loginAdmin, logoutAdmin } from './api/adminApi'
 import { checkAlimTempDuplicate, getAlimTempDetail, getAlimTempList, saveAlimTempApi } from './api/alimTempApi'
+import { getAlimIconDetail, getAlimIconList, saveAlimIconApi } from './api/alimIconApi'
 import { checkMasterDuplicate, createCodeMaster, createDetailCode, getCodeList, getCodeMaster, getCodeMasters, getDetailCodes, updateCodeMaster, updateDetailCode } from './api/codeApi'
 import { deleteMenuApi, getMenuDetail, getMenuMngList, getSidebarMenus, getSubMenus, saveMenuApi } from './api/menuApi'
 import './App.css'
 import { DEFAULT_USEE_YSNO, ALIM_SITU, COMM_YSNO } from './constants/codes'
-import { ADMIN_AUTH_MANAGE_PATH, ALIM_TEMP_DETAIL_PREFIX, ALIM_TEMP_LIST_PATH, ALIM_TEMP_NEW_PATH, AUTH_GROUP_DETAIL_PREFIX, AUTH_GROUP_LIST_PATH, AUTH_GROUP_NEW_PATH, CODE_DETAIL_PREFIX, CODE_LIST_PATH, COMPLAINT_DETAIL_PREFIX, COMPLAINT_LIST_PATH, CURRENT_USER_DETAIL_PREFIX, CURRENT_USER_LIST_PATH, HOME_PATH, LOGIN_PATH, MENU_DETAIL_PREFIX, MENU_LIST_PATH, MENU_NEW_PATH, NOTICE_DETAIL_PREFIX, NOTICE_LIST_PATH, NOTICE_NEW_PATH, POPUP_CONTENT_DETAIL_PREFIX, POPUP_CONTENT_LIST_PATH, POPUP_CONTENT_NEW_PATH, SCHEDULE_LOG_DETAIL_PREFIX, SCHEDULE_LOG_LIST_PATH, SERVICE_INFO_DETAIL_PREFIX, SERVICE_INFO_LIST_PATH, SERVICE_INFO_NEW_PATH, USER_MENU_DETAIL_PREFIX, USER_MENU_LIST_PATH, USER_MENU_NEW_PATH } from './constants/routes'
+import { ADMIN_AUTH_MANAGE_PATH, ALIM_ICON_DETAIL_PREFIX, ALIM_ICON_LIST_PATH, ALIM_TEMP_DETAIL_PREFIX, ALIM_TEMP_LIST_PATH, ALIM_TEMP_NEW_PATH, AUTH_GROUP_DETAIL_PREFIX, AUTH_GROUP_LIST_PATH, AUTH_GROUP_NEW_PATH, CODE_DETAIL_PREFIX, CODE_LIST_PATH, COMPLAINT_DETAIL_PREFIX, COMPLAINT_LIST_PATH, CURRENT_USER_DETAIL_PREFIX, CURRENT_USER_LIST_PATH, HOME_PATH, LOGIN_PATH, MENU_DETAIL_PREFIX, MENU_LIST_PATH, MENU_NEW_PATH, NOTICE_DETAIL_PREFIX, NOTICE_LIST_PATH, NOTICE_NEW_PATH, POPUP_CONTENT_DETAIL_PREFIX, POPUP_CONTENT_LIST_PATH, POPUP_CONTENT_NEW_PATH, SCHEDULE_LOG_DETAIL_PREFIX, SCHEDULE_LOG_LIST_PATH, SERVICE_INFO_DETAIL_PREFIX, SERVICE_INFO_LIST_PATH, SERVICE_INFO_NEW_PATH, USER_MENU_DETAIL_PREFIX, USER_MENU_LIST_PATH, USER_MENU_NEW_PATH } from './constants/routes'
 import { AdminLayout } from './components/AdminLayout'
 import { LoginPage } from './pages/LoginPage'
 import { AlimTempDetailPage } from './pages/alim/AlimTempDetailPage'
 import { AlimTempListPage } from './pages/alim/AlimTempListPage'
+import { AlimIconDetailPage } from './pages/alim/AlimIconDetailPage'
+import { AlimIconListPage } from './pages/alim/AlimIconListPage'
 import { CodeDetailPage } from './pages/code/CodeDetailPage'
 import { CodeListPage } from './pages/code/CodeListPage'
 import { CodeMasterModal } from './pages/code/CodeMasterModal'
@@ -29,7 +32,7 @@ import { ComplaintDetailPage } from './pages/complaint/ComplaintDetailPage'
 import { NoticeManagePage } from './pages/notice/NoticeManagePage'
 import { ServiceInfoManagePage } from './pages/serviceInfo/ServiceInfoManagePage'
 import type { AdminSession } from './types/admin'
-import type { AlimTemp, AlimTempForm, AlimTempSearch } from './types/alim'
+import type { AlimIcon, AlimIconSearch, AlimTemp, AlimTempForm, AlimTempSearch } from './types/alim'
 import type { Code, CodeMaster, CodeMasterSearch, DetailCodeForm, DetailCodePayload } from './types/code'
 import type { Menu, MenuForm, MenuSearch } from './types/menu'
 import type { PageData } from './types/common'
@@ -41,6 +44,7 @@ const emptyPageData = <T,>(): PageData<T> => ({ items: [], totalCount: 0, pageNu
 const DEFAULT_MENU_SEARCH: MenuSearch = { keyword: '', useeYsno: '' }
 const DEFAULT_CODE_SEARCH: CodeMasterSearch = { keyword: '', useeYsno: '' }
 const DEFAULT_ALIM_SEARCH: AlimTempSearch = { keyword: '', alimSitu: '', useeYsno: '' }
+const DEFAULT_ALIM_ICON_SEARCH: AlimIconSearch = { keyword: '', useeYsno: '' }
 
 /**
  * 관리자 프론트 루트 컴포넌트
@@ -75,6 +79,9 @@ function App() {
   const [alimPageData, setAlimPageData] = useState<PageData<AlimTemp>>(emptyPageData())
   const [alimTempDetail, setAlimTempDetail] = useState<AlimTemp | null>(null)
   const [alimTempForm, setAlimTempForm] = useState<AlimTempForm>({ alimSitu: '', tempCode: '', tempTitl: '', alimTitl: '', tempCont: '', linkUrlx: '', useeYsno: DEFAULT_USEE_YSNO })
+  const [alimIcons, setAlimIcons] = useState<AlimIcon[]>([])
+  const [alimIconPageData, setAlimIconPageData] = useState<PageData<AlimIcon>>(emptyPageData())
+  const [alimIconDetail, setAlimIconDetail] = useState<AlimIcon | null>(null)
   const [admnIdxx, setAdmnIdxx] = useState('admin')
   const [passWord, setPassWord] = useState('')
   const [checkingSession, setCheckingSession] = useState(true)
@@ -112,6 +119,12 @@ function App() {
     return alimSitu && tempCode ? { alimSitu: decodeURIComponent(alimSitu), tempCode: decodeURIComponent(tempCode) } : null
   }, [currentPath])
 
+  const alimIconDetailKey = useMemo(() => {
+    if (!currentPath.startsWith(`${ALIM_ICON_DETAIL_PREFIX}/`)) return null
+    const alimSitu = currentPath.slice(ALIM_ICON_DETAIL_PREFIX.length + 1)
+    return alimSitu ? decodeURIComponent(alimSitu) : null
+  }, [currentPath])
+
   const scheduleLogDetailKey = useMemo(() => {
     if (!currentPath.startsWith(`${SCHEDULE_LOG_DETAIL_PREFIX}/`)) return null
     const runxNumb = Number(currentPath.slice(SCHEDULE_LOG_DETAIL_PREFIX.length + 1))
@@ -138,6 +151,8 @@ function App() {
   const isAlimTempListPage = currentPath === ALIM_TEMP_LIST_PATH
   const isAlimTempNewPage = currentPath === ALIM_TEMP_NEW_PATH
   const isAlimTempDetailPage = alimTempDetailKey !== null
+  const isAlimIconListPage = currentPath === ALIM_ICON_LIST_PATH
+  const isAlimIconDetailPage = alimIconDetailKey !== null
   const isUserMenuPage = currentPath === USER_MENU_LIST_PATH || currentPath === USER_MENU_NEW_PATH || currentPath.startsWith(USER_MENU_DETAIL_PREFIX)
   const isAuthGroupPage = currentPath === AUTH_GROUP_LIST_PATH || currentPath === AUTH_GROUP_NEW_PATH || currentPath.startsWith(AUTH_GROUP_DETAIL_PREFIX)
   const isAdminAuthManagePage = currentPath === ADMIN_AUTH_MANAGE_PATH
@@ -162,6 +177,7 @@ function App() {
     if (currentPath === USER_MENU_NEW_PATH || currentPath.startsWith(USER_MENU_DETAIL_PREFIX)) return USER_MENU_LIST_PATH
     if (currentPath.startsWith(CODE_DETAIL_PREFIX)) return CODE_LIST_PATH
     if (currentPath === ALIM_TEMP_NEW_PATH || currentPath.startsWith(ALIM_TEMP_DETAIL_PREFIX)) return ALIM_TEMP_LIST_PATH
+    if (currentPath.startsWith(ALIM_ICON_DETAIL_PREFIX)) return ALIM_ICON_LIST_PATH
     if (currentPath === POPUP_CONTENT_NEW_PATH || currentPath.startsWith(POPUP_CONTENT_DETAIL_PREFIX)) return POPUP_CONTENT_LIST_PATH
     if (currentPath === AUTH_GROUP_NEW_PATH || currentPath.startsWith(AUTH_GROUP_DETAIL_PREFIX)) return AUTH_GROUP_LIST_PATH
     if (currentPath.startsWith(SCHEDULE_LOG_DETAIL_PREFIX)) return SCHEDULE_LOG_LIST_PATH
@@ -403,6 +419,23 @@ function App() {
     setAlimTempForm({ alimSitu: detail.alimSitu, tempCode: detail.tempCode, tempTitl: detail.tempTitl, alimTitl: detail.alimTitl ?? '', tempCont: detail.tempCont, linkUrlx: detail.linkUrlx, useeYsno: detail.useeYsno ?? DEFAULT_USEE_YSNO })
   }
 
+  /** 알림 아이콘 목록 화면을 조회한다. */
+  const openAlimIconListPage = async (pageNumber = 1, search = DEFAULT_ALIM_ICON_SEARCH) => {
+    setError(null)
+    const [pageData] = await Promise.all([getAlimIconList(pageNumber, search), loadUseeYsnoCodeList()])
+    setAlimIconPageData(pageData)
+    setAlimIcons(pageData.items)
+    setListPageSnapshot(ALIM_ICON_LIST_PATH, pageData.pageNumber, search)
+    setAlimIconDetail(null)
+  }
+
+  /** 선택한 알림 아이콘 상세 화면을 조회한다. */
+  const openAlimIconDetailPage = async (alimSitu: string) => {
+    setError(null)
+    const detail = await getAlimIconDetail(alimSitu)
+    setAlimIconDetail(detail)
+  }
+
   /**
    * 현재 경로에 해당하는 기존 관리자 관리 화면 데이터를 조회한다
    * @Author SeungHyeon.Kang
@@ -443,6 +476,13 @@ function App() {
     else if (isAlimTempNewPage) void openAlimTempNewPage()
     // 알림 템플릿 상세 경로에서는 선택한 템플릿 정보를 조회한다
     else if (alimTempDetailKey) void openAlimTempDetailPage(alimTempDetailKey.alimSitu, alimTempDetailKey.tempCode)
+    // 알림 아이콘 목록은 마지막 검색 조건과 페이지로 복원한다
+    else if (isAlimIconListPage) {
+      const snapshot = getListPageSnapshot(ALIM_ICON_LIST_PATH, DEFAULT_ALIM_ICON_SEARCH)
+      void openAlimIconListPage(snapshot.pageNumber, snapshot.search)
+    }
+    // 선택한 알림 아이콘 상세를 조회한다
+    else if (alimIconDetailKey) void openAlimIconDetailPage(alimIconDetailKey)
   })
 
   useEffect(() => {
@@ -849,7 +889,7 @@ function App() {
     const hasRequired = alimTempForm.alimSitu.trim() && alimTempForm.tempCode.trim() && alimTempForm.tempTitl.trim() && alimTempForm.tempCont.trim() && alimTempForm.linkUrlx.trim()
     // 필수값이 하나라도 없으면 저장 요청을 보내지 않는다
     if (!hasRequired) {
-      setError('알림상황, 템플릿코드, 관리용 제목, 템플릿 내용, 이동 URL을 입력해 주세요.')
+      setError('알림상황, 템플릿코드, 관리용 제목, 템플릿 내용과 이동 URL을 입력해 주세요.')
       return false
     }
     // 템플릿 코드는 영문 대문자와 밑줄만 허용한다
@@ -886,6 +926,21 @@ function App() {
       movePath(`${ALIM_TEMP_DETAIL_PREFIX}/${encodeURIComponent(saved.alimSitu)}/${encodeURIComponent(saved.tempCode)}`)
     } catch (err: unknown) {
       setError(err instanceof Error ? err.message : '알림 템플릿 저장 중 오류가 발생했습니다.')
+    } finally {
+      setSaving(false)
+    }
+  }
+
+  /** 알림 상황별 아이콘을 등록하거나 현재 원본을 교체한다. */
+  const saveAlimIcon = async (alimSitu: string, file: File) => {
+    setSaving(true)
+    setError(null)
+    try {
+      const result = await saveAlimIconApi(alimSitu, file)
+      alert(result.message)
+      movePath(`${ALIM_ICON_DETAIL_PREFIX}/${encodeURIComponent(result.data.alimSitu)}`)
+    } catch (err: unknown) {
+      setError(err instanceof Error ? err.message : '알림 아이콘 저장 중 오류가 발생했습니다.')
     } finally {
       setSaving(false)
     }
@@ -930,6 +985,16 @@ function App() {
           onSaveAllSubMenus={() => void saveAllSubMenus()}
           onSaveAll={() => void saveAllMenuDetail()}
           onDelete={(menu) => void deleteMenu(menu)}
+        />
+      )}
+      {isAlimIconListPage && <AlimIconListPage icons={alimIcons} pageData={alimIconPageData} useeYsnoCodes={useeYsnoCodes} onSearch={(pageNumber, search) => void openAlimIconListPage(pageNumber, search)} onMovePath={movePath} />}
+      {isAlimIconDetailPage && alimIconDetail && (
+        <AlimIconDetailPage
+          key={alimIconDetail.alimSitu}
+          saving={saving}
+          detail={alimIconDetail}
+          onMovePath={movePath}
+          onSave={(alimSitu, file) => void saveAlimIcon(alimSitu, file)}
         />
       )}
       {isUserMenuPage && <UserMenuManagePage currentPath={currentPath} onMovePath={movePath} onError={setError} />}
@@ -1004,6 +1069,7 @@ function App() {
       {isAlimTempListPage && <AlimTempListPage alimTemps={alimTemps} pageData={alimPageData} alimSituCodes={alimSituCodes} useeYsnoCodes={useeYsnoCodes} onSearch={(pageNumber, search) => void openAlimTempListPage(pageNumber, search)} onMovePath={movePath} />}
       {(isAlimTempDetailPage || isAlimTempNewPage) && (
         <AlimTempDetailPage
+          key={isAlimTempNewPage ? 'new' : `${alimTempDetail?.alimSitu ?? ''}-${alimTempDetail?.tempCode ?? ''}`}
           isNewPage={isAlimTempNewPage}
           pageTitle={isAlimTempNewPage ? '알림 템플릿 등록' : `${activeMenuName || '알림 템플릿 관리'} 상세`}
           saving={saving}

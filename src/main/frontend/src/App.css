@@ -402,8 +402,106 @@ tbody tr {
 .menu-list-table tbody tr:not(.empty-row),
 .code-list-table tbody tr:not(.empty-row),
 .alim-temp-list-table tbody tr:not(.empty-row),
+.alim-icon-list-table tbody tr:not(.empty-row),
 .popup-content-list-table tbody tr:not(.empty-row) {
   cursor: pointer;
+}
+
+.alim-icon-preview-small {
+  width: 34px;
+  height: 34px;
+  object-fit: contain;
+  display: block;
+  margin: 0 auto;
+}
+
+.alim-temp-icon-picker {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  white-space: nowrap;
+}
+
+.alim-temp-icon-picker select {
+  flex: 1 1 auto;
+  min-width: 0;
+}
+
+.alim-temp-icon-preview {
+  width: 38px;
+  height: 38px;
+  flex: 0 0 38px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  background: #fff;
+  box-sizing: border-box;
+}
+
+.alim-temp-icon-button {
+  flex: 0 0 auto;
+  min-width: 72px;
+  padding: 0 16px;
+  justify-content: center;
+}
+
+.alim-icon-list-table table {
+  table-layout: fixed;
+}
+
+.alim-icon-list-table th,
+.alim-icon-list-table td {
+  vertical-align: middle;
+}
+
+.alim-icon-preview-large {
+  width: 96px;
+  height: 96px;
+  object-fit: contain;
+  display: block;
+  flex: 0 0 auto;
+  border: 1px solid #e5e7eb;
+  border-radius: 12px;
+  background: #fff;
+}
+
+.alim-icon-detail-table {
+  table-layout: fixed;
+}
+
+.alim-icon-detail-table th {
+  width: 136px;
+}
+
+.alim-icon-detail-table td {
+  vertical-align: middle;
+}
+
+.alim-icon-upload {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 24px;
+}
+
+.alim-icon-upload-control {
+  flex: 1 1 auto;
+  min-width: 0;
+}
+
+.alim-icon-upload-control p {
+  margin: 8px 0 0;
+  color: var(--muted);
+  font-size: 12px;
+}
+
+.col-icon-preview,
+.col-icon-count {
+  width: 96px;
+  text-align: center;
 }
 
 tbody tr:hover > td,

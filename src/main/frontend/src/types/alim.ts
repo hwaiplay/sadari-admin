@@ -25,6 +25,29 @@ export type AlimTempForm = {
   linkUrlx: string
   useeYsno: string
 }
+
+export type AlimIcon = {
+  alimSitu: string
+  alimSituName: string
+  iconRegiYsno: string
+  mimeType?: string | null
+  fileSize?: number | null
+  pixlWdth?: number | null
+  pixlHght?: number | null
+  useeYsno: string
+  tempCnt: number
+  regiAdmn: number | null
+  regiAdmnName?: string | null
+  regiDate: string | null
+  updtAdmn: number | null
+  updtAdmnName?: string | null
+  updtDate: string | null
+}
+
+export type AlimIconSearch = {
+  keyword: string
+  useeYsno: string
+}
 export type AlimTempSearch = {
   keyword: string
   alimSitu: string

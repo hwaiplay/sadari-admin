@@ -13,6 +13,8 @@ import java.time.LocalDateTime;
  * DATE              AUTHOR             NOTE
  * -----------------------------------------------------------
  * 2026-07-24        SeungHyeon.Kang    최초 생성
+ * 2026-08-12        SeungHyeon.Kang    선택한 알림 아이콘 정보 추가
+ * 2026-08-12        SeungHyeon.Kang    알림 상황 기준 아이콘 조회 전환
  */
 @Data
 public class AlimTempVO {

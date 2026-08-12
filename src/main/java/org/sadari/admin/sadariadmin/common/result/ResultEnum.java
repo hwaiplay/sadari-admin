@@ -17,6 +17,7 @@ import org.sadari.admin.sadariadmin.common.util.MessageUtil;
  * 2026-08-05        SeungHyeon.Kang    신고 조회와 처리 오류 추가
  * 2026-08-05        OpenAI.Codex       세부코드 계층 검증 오류 추가
  * 2026-08-10        SeungHyeon.Kang    사용자 메뉴 계층 검증 오류 추가
+ * 2026-08-12        SeungHyeon.Kang    알림 아이콘 검증 오류 추가
  */
 @Getter
 public enum ResultEnum {
@@ -101,6 +102,15 @@ public enum ResultEnum {
 
     /** 알림 템플릿 없음 */
     ALIM_TEMP_NOT_FOUND(2004, "alim-temp.not-found"),
+
+    /** 알림 아이콘 없음 */
+    ALIM_ICON_NOT_FOUND(2004, "alim-icon.not-found"),
+
+    /** 알림 아이콘 파일 또는 입력 형식 오류 */
+    ALIM_ICON_INVALID(2009, "alim-icon.invalid"),
+
+    /** 알림 아이콘 공통코드 오류 */
+    ALIM_ICON_SITU_INVALID(2009, "alim-icon.situ-invalid"),
 
     /** 팝업 콘텐츠 중복 */
     POPUP_CONTENT_DUPLICATE(2009, "popup-content.duplicate"),

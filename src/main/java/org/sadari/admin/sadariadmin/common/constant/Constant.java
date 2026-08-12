@@ -18,6 +18,7 @@ package org.sadari.admin.sadariadmin.common.constant;
  * 2026-07-30        SeungHyeon.Kang    로그인 제공자 공통코드 상수 추가
  * 2026-08-05        SeungHyeon.Kang    신고 관리 공통코드와 API 경로 추가
  * 2026-08-07        SeungHyeon.Kang    관리자 업로드 이미지 조회 경로 추가
+ * 2026-08-12        SeungHyeon.Kang    알림 아이콘 관리 API 경로 추가
  */
 public final class Constant {
 
@@ -180,6 +181,9 @@ public final class Constant {
     /** 알림 템플릿 관리 API URL 패턴 */
     public static final String API_ALIM_TEMP_PATTERN = "/api/alim-temps/**";
 
+    /** 알림 아이콘 관리 API URL 패턴 */
+    public static final String API_ALIM_ICON_PATTERN = "/api/alim-icons/**";
+
     /** 팝업 콘텐츠 관리 API URL 패턴 */
     public static final String API_POPUP_CONTENT_PATTERN = "/api/popup-contents/**";
 
@@ -209,6 +213,9 @@ public final class Constant {
 
     /** 알림 템플릿 관리 API URL 접두어 */
     public static final String API_ALIM_TEMP_PREFIX = "/api/alim-temps";
+
+    /** 알림 아이콘 관리 API URL 접두어 */
+    public static final String API_ALIM_ICON_PREFIX = "/api/alim-icons";
 
     /** 팝업 콘텐츠 관리 API URL 접두어 */
     public static final String API_POPUP_CONTENT_PREFIX = "/api/popup-contents";

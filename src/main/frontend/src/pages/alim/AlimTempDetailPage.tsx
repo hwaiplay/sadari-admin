@@ -35,6 +35,7 @@ type AlimTempDetailPageProps = {
  */
 export function AlimTempDetailPage({ isNewPage, pageTitle, saving, alimTempForm, alimTempDetail, alimSituCodes, useeYsnoCodes, onMovePath, onChange, onSubmit }: AlimTempDetailPageProps) {
   const permission = useMenuPermission()
+
   /**
    * 템플릿 코드 입력값 변경
    * @Author SeungHyeon.Kang

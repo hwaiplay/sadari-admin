@@ -27,6 +27,7 @@ import java.util.List;
  * -----------------------------------------------------------
  * 2026-07-24        SeungHyeon.Kang    최초 생성
  * 2026-07-31        SeungHyeon.Kang    알림 템플릿 목록 검색 조건 추가
+ * 2026-08-12        SeungHyeon.Kang    알림 아이콘 선택값 검증 추가
  */
 @Service
 @Transactional(readOnly = true)
