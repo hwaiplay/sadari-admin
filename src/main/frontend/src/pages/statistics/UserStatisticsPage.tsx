@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react'
+import type { MouseEvent, ReactElement } from 'react'
 import {
   Bar,
   BarChart,
@@ -21,6 +22,11 @@ type UserStatisticsPageProps = {
   onError: (message: string | null) => void
 }
 
+type StatisticsPeriod = {
+  days: UserStatisticsDays
+  label: string
+}
+
 const CHART_MARGIN = { top: 12, right: 22, bottom: 4, left: 0 }
 const AXIS_TICK = { fill: '#8a94a6', fontSize: 11 }
 const TOOLTIP_STYLE = {
@@ -30,7 +36,7 @@ const TOOLTIP_STYLE = {
   color: '#273044',
   fontSize: 12,
 }
-const STATISTICS_PERIOD_LIST: ReadonlyArray<{ days: UserStatisticsDays, label: string }> = [
+const STATISTICS_PERIOD_LIST: ReadonlyArray<StatisticsPeriod> = [
   { days: 30, label: '1개월' },
   { days: 90, label: '3개월' },
   { days: 180, label: '6개월' },
@@ -58,9 +64,17 @@ const formatDateTick = (value: string): string => {
  */
 const formatCountTick = (value: number): string => {
   // 만 단위 이상은 짧은 한글 단위로 표시한다.
-  if (value >= 10000) return `${Math.round(value / 1000) / 10}만`
+  if (value >= 10000) {
+    // 만 단위로 축약한 회원 또는 활동 수를 반환한다.
+    return `${Math.round(value / 1000) / 10}만`
+  }
+
   // 천 단위 이상은 짧은 한글 단위로 표시한다.
-  if (value >= 1000) return `${Math.round(value / 100) / 10}천`
+  if (value >= 1000) {
+    // 천 단위로 축약한 회원 또는 활동 수를 반환한다.
+    return `${Math.round(value / 100) / 10}천`
+  }
+
   // 작은 값은 원래 숫자로 표시한다.
   return String(value)
 }
@@ -129,7 +143,7 @@ const createInactivityData = (statistics: UserStatistics): InactivityChartItem[]
 }
 
 /**
- * 관리자 사용자 통계를 2열 2행 차트 대시보드로 표시한다.
+ * 관리자 사용자 통계를 3행 2열 차트 대시보드로 표시한다.
  *
  * @author SeungHyeon.Kang
  * @param onError 공통 오류 메시지 변경 함수
@@ -162,7 +176,7 @@ export function UserStatisticsPage({ onError }: UserStatisticsPageProps) {
         const result = await getUserStatistics(days)
         // 현재 화면에 해당하는 최신 요청 결과만 반영한다.
         if (active) {
-          // 네 통계 차트가 공유할 조회 결과를 설정한다.
+          // 여섯 통계 차트가 공유할 조회 결과를 설정한다.
           setStatistics(result)
           // 이전 공통 오류 메시지를 제거한다.
           onError(null)
@@ -212,6 +226,43 @@ export function UserStatisticsPage({ onError }: UserStatisticsPageProps) {
     onError(null)
     // 선택한 기간으로 조회 조건을 변경한다.
     setDays(selectedDays)
+  }
+
+  /**
+   * 기간 버튼에 설정된 일수를 사용자 통계 조회 조건에 적용한다.
+   *
+   * @author SeungHyeon.Kang
+   * @param event 선택한 기간 버튼의 클릭 이벤트
+   * @return 반환값이 없다
+   */
+  const handlePeriodClick = (event: MouseEvent<HTMLButtonElement>): void => {
+    // 버튼 값은 허용된 네 조회 기간 중 하나이므로 사용자 통계 기간 타입으로 변환한다.
+    const selectedDays = Number(event.currentTarget.value) as UserStatisticsDays
+    // 변환한 조회 기간으로 통계 재조회를 시작한다.
+    handleDaysClick(selectedDays)
+  }
+
+  /**
+   * 사용자 통계 조회 기간 한 항목을 선택 버튼으로 표시한다.
+   *
+   * @author SeungHyeon.Kang
+   * @param period 버튼에 표시할 기간 이름과 고정 일수
+   * @return 조회 기간 선택 버튼
+   */
+  const renderPeriodButton = (period: StatisticsPeriod): ReactElement => {
+    // 현재 조회 기간을 활성 상태로 구분한 버튼을 반환한다.
+    return (
+      <button
+        type="button"
+        key={period.days}
+        value={period.days}
+        className={days === period.days ? 'active' : ''}
+        onClick={handlePeriodClick}
+      >
+        {/* "1개월", "3개월", "6개월", "1년" 중 선택 가능한 조회 기간 */}
+        {period.label}
+      </button>
+    )
   }
 
   /**
@@ -266,7 +317,7 @@ export function UserStatisticsPage({ onError }: UserStatisticsPageProps) {
   // 서버의 최종 조회 시각을 관리자 로컬 표시 형식으로 변환한다.
   const generatedAt = new Date(statistics.generatedAt).toLocaleString('ko-KR')
 
-  // 상태·가입·활동·활성 통계를 같은 크기의 2열 2행 차트로 표시한다.
+  // 여섯 통계를 같은 크기의 3행 2열 차트로 표시한다.
   return (
     <section className="user-statistics-page">
       {/* 화면 제목, 집계 기준과 공통 기간 필터 */}
@@ -278,21 +329,11 @@ export function UserStatisticsPage({ onError }: UserStatisticsPageProps) {
         </div>
         <div className="statistics-period" aria-label="통계 조회 기간">
           {/* "1개월", "3개월", "6개월", "1년" */}
-          {STATISTICS_PERIOD_LIST.map((period) => (
-            <button
-              type="button"
-              key={period.days}
-              className={days === period.days ? 'active' : ''}
-              onClick={() => handleDaysClick(period.days)}
-            >
-              {/* "1개월", "3개월", "6개월", "1년" 중 선택 가능한 조회 기간 */}
-              {period.label}
-            </button>
-          ))}
+          {STATISTICS_PERIOD_LIST.map(renderPeriodButton)}
         </div>
       </section>
 
-      {/* 네 가지 핵심 통계를 2열 2행으로 배치한다. */}
+      {/* 여섯 가지 사용자 통계를 3행 2열로 배치한다. */}
       <section className={`statistics-grid${loading ? ' loading' : ''}`} aria-busy={loading}>
         <article className="statistics-card statistics-card-status">
           <header>
@@ -408,10 +449,10 @@ export function UserStatisticsPage({ onError }: UserStatisticsPageProps) {
             </div>
           </div>
         </article>
-      </section>
 
-      {/* 가입자의 정착과 계정 이탈을 설명하는 추가 통계 영역 */}
-      <UserInsightCharts statistics={statistics} />
+        {/* 가입자 유지율과 계정 이탈 및 복구 추세 통계 카드 */}
+        <UserInsightCharts statistics={statistics} />
+      </section>
 
       {/* 마지막 실시간 조회 시각 */}
       <p className="statistics-generated">마지막 집계: {generatedAt}</p>

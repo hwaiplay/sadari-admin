@@ -16,6 +16,7 @@ import java.util.List;
  * -----------------------------------------------------------
  * 2026-08-13        SeungHyeon.Kang    최초 생성
  * 2026-08-13        SeungHyeon.Kang    사용자 정착과 이탈 통계 조회 추가
+ * 2026-08-13        SeungHyeon.Kang    미사용 전환과 활동 깊이 통계 제거
  */
 @Mapper
 public interface UserStatisticsMapper {
@@ -53,24 +54,6 @@ public interface UserStatisticsMapper {
      * @return 기간별 가입자 재방문 유지율
      */
     List<UserStatisticsVO.UserRetentionStatistics> getUserRetentionList(UserStatisticsSearchVO search);
-
-    /**
-     * 선택 기간 가입자의 온보딩과 독후감 및 소셜 활동 전환 수를 조회한다
-     *
-     * @author SeungHyeon.Kang
-     * @param search 조회 시작일과 종료일
-     * @return 단계별 핵심 행동 전환 수
-     */
-    UserStatisticsVO.UserConversionStatistics getUserConversionDtl(UserStatisticsSearchVO search);
-
-    /**
-     * 현재 정상 회원의 선택 기간 활동을 가장 깊은 행동 단계로 분류한다
-     *
-     * @author SeungHyeon.Kang
-     * @param search 조회 시작일과 종료일
-     * @return 활동 깊이별 정상 회원 수
-     */
-    UserStatisticsVO.UserActivityCompositionStatistics getUserActivityDtl(UserStatisticsSearchVO search);
 
     /**
      * 선택 기간의 계정 비활성화와 영구 탈퇴 및 정지와 복구 추세를 조회한다

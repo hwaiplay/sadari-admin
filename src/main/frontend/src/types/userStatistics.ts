@@ -28,20 +28,6 @@ export type UserRetentionStatistics = {
   retentionRate: number
 }
 
-export type UserConversionStatistics = {
-  joinCntt: number
-  onboardingCntt: number
-  reportCntt: number
-  socialCntt: number
-}
-
-export type UserActivityComposition = {
-  visitCntt: number
-  reportCntt: number
-  communityCntt: number
-  relationCntt: number
-}
-
 export type UserChurnTrendStatistics = {
   statDate: string
   withdrawnCntt: number
@@ -58,20 +44,12 @@ export type UserStatistics = {
   trendList: UserTrendStatistics[]
   inactivity: UserInactivityStatistics
   retentionList: UserRetentionStatistics[]
-  conversion: UserConversionStatistics
-  activityComposition: UserActivityComposition
   churnTrendList: UserChurnTrendStatistics[]
 }
 
 export type InactivityChartItem = {
   name: string
   userCntt: number
-}
-
-export type InsightChartItem = {
-  name: string
-  userCntt: number
-  fill: string
 }
 
 export type RetentionChartItem = UserRetentionStatistics & {

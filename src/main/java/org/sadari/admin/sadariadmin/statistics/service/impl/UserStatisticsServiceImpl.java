@@ -28,6 +28,7 @@ import java.util.Set;
  * 2026-08-13        SeungHyeon.Kang    최초 생성
  * 2026-08-13        SeungHyeon.Kang    유지율과 전환 및 활동 구성과 이탈 추세 추가
  * 2026-08-13        SeungHyeon.Kang    사용자 통계 조회 기간을 1년까지 확장
+ * 2026-08-13        SeungHyeon.Kang    미사용 전환과 활동 깊이 집계 제거
  */
 @Service
 @RequiredArgsConstructor
@@ -84,10 +85,6 @@ public class UserStatisticsServiceImpl implements UserStatisticsService {
         statistics.setInactivity(userStatisticsMapper.getUserInactivityDtl());
         // 가입 후 1일과 7일 및 30일 재방문 유지율을 설정한다
         statistics.setRetentionList(userStatisticsMapper.getUserRetentionList(search));
-        // 선택 기간 가입자의 단계별 핵심 행동 전환 수를 설정한다
-        statistics.setConversion(userStatisticsMapper.getUserConversionDtl(search));
-        // 현재 정상 회원의 선택 기간 활동 깊이별 수를 설정한다
-        statistics.setActivityComposition(userStatisticsMapper.getUserActivityDtl(search));
         // 일별 계정 비활성화와 영구 탈퇴 및 정지와 복구 수를 설정한다
         statistics.setChurnTrendList(userStatisticsMapper.getUserChurnTrendList(search));
 

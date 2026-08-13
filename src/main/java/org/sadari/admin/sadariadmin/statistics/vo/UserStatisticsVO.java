@@ -10,12 +10,13 @@ import java.util.List;
  * fileName       : UserStatisticsVO
  * author         : SeungHyeon.Kang
  * date           : 2026-08-13
- * description    : 관리자 사용자 현황과 정착 및 이탈 통계를 전달한다
+ * description    : 관리자 사용자 현황과 유지 및 이탈 통계를 전달한다
  * ===========================================================
  * DATE              AUTHOR             NOTE
  * -----------------------------------------------------------
  * 2026-08-13        SeungHyeon.Kang    최초 생성
  * 2026-08-13        SeungHyeon.Kang    유지율과 전환 및 활동 구성과 이탈 추세 추가
+ * 2026-08-13        SeungHyeon.Kang    미사용 전환과 활동 깊이 응답 제거
  */
 @Data
 public class UserStatisticsVO {
@@ -40,12 +41,6 @@ public class UserStatisticsVO {
 
     // 가입 후 기간별 재방문 유지율
     private List<UserRetentionStatistics> retentionList;
-
-    // 선택 기간 가입자의 핵심 행동 전환 수
-    private UserConversionStatistics conversion;
-
-    // 현재 정상 회원의 선택 기간 활동 깊이별 수
-    private UserActivityCompositionStatistics activityComposition;
 
     // 일별 계정 비활성화와 영구 탈퇴 및 정지와 복구 수
     private List<UserChurnTrendStatistics> churnTrendList;
@@ -122,40 +117,6 @@ public class UserStatisticsVO {
 
         // 재방문 확인 기간이 지난 가입자의 재방문 비율
         private double retentionRate;
-    }
-
-    // 선택 기간 가입자의 단계별 핵심 행동 전환 수
-    @Data
-    public static class UserConversionStatistics {
-
-        // 선택 기간 전체 가입자 수
-        private long joinCntt;
-
-        // 온보딩을 완료한 가입자 수
-        private long onboardingCntt;
-
-        // 온보딩 완료 후 독후감을 작성한 가입자 수
-        private long reportCntt;
-
-        // 독후감 작성 후 소셜 활동까지 수행한 가입자 수
-        private long socialCntt;
-    }
-
-    // 현재 정상 회원의 선택 기간 활동 깊이별 수
-    @Data
-    public static class UserActivityCompositionStatistics {
-
-        // 로그인만 수행한 정상 회원 수
-        private long visitCntt;
-
-        // 독후감까지 작성한 정상 회원 수
-        private long reportCntt;
-
-        // 댓글 또는 좋아요까지 수행한 정상 회원 수
-        private long communityCntt;
-
-        // 팔로우까지 수행한 정상 회원 수
-        private long relationCntt;
     }
 
     // 일별 계정 이탈과 복구 처리 수

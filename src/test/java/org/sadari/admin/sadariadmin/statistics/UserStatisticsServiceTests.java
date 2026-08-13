@@ -13,7 +13,6 @@ import java.time.LocalDate;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
-import static org.junit.jupiter.api.Assertions.assertTrue;
 
 /**
  * fileName       : UserStatisticsServiceTests
@@ -26,6 +25,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
  * 2026-08-13        SeungHyeon.Kang    최초 생성
  * 2026-08-13        SeungHyeon.Kang    사용자 정착과 이탈 통계 검증 추가
  * 2026-08-13        SeungHyeon.Kang    6개월과 1년 조회 기간 검증 추가
+ * 2026-08-13        SeungHyeon.Kang    유지율과 이탈 중심 응답 검증으로 정리
  */
 @SpringBootTest
 @ActiveProfiles("loc")
@@ -60,14 +60,6 @@ class UserStatisticsServiceTests {
         assertNotNull(statistics.getInactivity());
         // 가입 후 재방문 유지율이 1일과 7일 및 30일 세 구간으로 생성되는지 확인한다
         assertEquals(3, statistics.getRetentionList().size());
-        // 선택 기간 가입자의 단계별 전환 수가 응답에 포함되는지 확인한다
-        assertNotNull(statistics.getConversion());
-        // 순차 조건이 적용된 전환 수가 이전 단계보다 증가하지 않는지 확인한다
-        assertTrue(statistics.getConversion().getJoinCntt() >= statistics.getConversion().getOnboardingCntt());
-        assertTrue(statistics.getConversion().getOnboardingCntt() >= statistics.getConversion().getReportCntt());
-        assertTrue(statistics.getConversion().getReportCntt() >= statistics.getConversion().getSocialCntt());
-        // 현재 정상 회원의 활동 깊이별 집계가 응답에 포함되는지 확인한다
-        assertNotNull(statistics.getActivityComposition());
         // 날짜가 없는 날도 포함해 30개의 계정 이탈 추세 점이 생성되는지 확인한다
         assertEquals(30, statistics.getChurnTrendList().size());
     }
