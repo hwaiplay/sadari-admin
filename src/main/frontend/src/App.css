@@ -2400,8 +2400,24 @@ button:active:not(:disabled) {
 .menu-group.active.has-children .menu-item.child.active {
   color: var(--accent);
   background: transparent;
-  border-color: var(--accent-border);
+  border-color: transparent;
   box-shadow: none;
+}
+
+.menu-group:not(.has-children).active > .menu-item.active,
+.menu-group.active.has-children .menu-item.child.active {
+  font-weight: 700;
+}
+
+.menu-group:not(.has-children).active > .menu-item.active::after,
+.menu-group.active.has-children .menu-item.child.active::after {
+  width: 7px;
+  height: 7px;
+  flex: 0 0 7px;
+  margin-left: 10px;
+  border-radius: 50%;
+  background: var(--accent);
+  content: '';
 }
 
 .menu-group.active > .menu-item:hover:not(:disabled) {
@@ -2411,7 +2427,7 @@ button:active:not(:disabled) {
 .menu-group.active.has-children .menu-item.child.active:hover:not(:disabled) {
   color: var(--accent);
   background: transparent;
-  border-color: var(--accent-border);
+  border-color: transparent;
   box-shadow: none;
 }
 
