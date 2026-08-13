@@ -1,5 +1,4 @@
 import { useEffect, useState } from 'react'
-import type { MouseEvent } from 'react'
 import {
   Bar,
   BarChart,
@@ -13,6 +12,7 @@ import {
   YAxis,
 } from 'recharts'
 import { getUserStatistics } from '../../api/userStatisticsApi'
+import type { UserStatisticsDays } from '../../api/userStatisticsApi'
 import type { InactivityChartItem, UserStatistics } from '../../types/userStatistics'
 import { UserInsightCharts } from './UserInsightCharts'
 import './UserStatisticsPage.css'
@@ -30,6 +30,12 @@ const TOOLTIP_STYLE = {
   color: '#273044',
   fontSize: 12,
 }
+const STATISTICS_PERIOD_LIST: ReadonlyArray<{ days: UserStatisticsDays, label: string }> = [
+  { days: 30, label: '1개월' },
+  { days: 90, label: '3개월' },
+  { days: 180, label: '6개월' },
+  { days: 365, label: '1년' },
+]
 
 /**
  * 통계 날짜 축을 월과 일 형식으로 표시한다.
@@ -130,7 +136,7 @@ const createInactivityData = (statistics: UserStatistics): InactivityChartItem[]
  * @return 사용자 통계 화면
  */
 export function UserStatisticsPage({ onError }: UserStatisticsPageProps) {
-  const [days, setDays] = useState<30 | 90>(30)
+  const [days, setDays] = useState<UserStatisticsDays>(30)
   const [statistics, setStatistics] = useState<UserStatistics | null>(null)
   const [loading, setLoading] = useState(true)
   const [requestVersion, setRequestVersion] = useState(0)
@@ -193,23 +199,19 @@ export function UserStatisticsPage({ onError }: UserStatisticsPageProps) {
   useEffect(loadStatistics, [days, requestVersion, onError])
 
   /**
-   * 조회 기간 버튼에서 30일 또는 90일 값을 적용한다.
+   * 조회 기간 버튼에서 1개월과 3개월 및 6개월과 1년 값을 적용한다.
    *
    * @author SeungHyeon.Kang
-   * @param event 조회 기간 버튼 클릭 이벤트
+   * @param selectedDays 조회 기간에 대응하는 고정 일수
    * @return 반환값이 없다
    */
-  const handleDaysClick = (event: MouseEvent<HTMLButtonElement>): void => {
-    const selectedDays = Number(event.currentTarget.dataset.days)
-    // 허용된 기간 버튼의 값만 조회 상태에 반영한다.
-    if (selectedDays === 30 || selectedDays === 90) {
-      // 기간 변경 중 기존 차트를 흐리게 표시한다.
-      setLoading(true)
-      // 새 요청 전 이전 공통 오류 메시지를 제거한다.
-      onError(null)
-      // 선택한 기간으로 조회 조건을 변경한다.
-      setDays(selectedDays)
-    }
+  const handleDaysClick = (selectedDays: UserStatisticsDays): void => {
+    // 기간 변경 중 기존 차트를 흐리게 표시한다.
+    setLoading(true)
+    // 새 요청 전 이전 공통 오류 메시지를 제거한다.
+    onError(null)
+    // 선택한 기간으로 조회 조건을 변경한다.
+    setDays(selectedDays)
   }
 
   /**
@@ -275,10 +277,18 @@ export function UserStatisticsPage({ onError }: UserStatisticsPageProps) {
           <p>{statistics.startDate} ~ {statistics.endDate} · 실시간 조회</p>
         </div>
         <div className="statistics-period" aria-label="통계 조회 기간">
-          {/* "30일" */}
-          <button type="button" data-days="30" className={days === 30 ? 'active' : ''} onClick={handleDaysClick}>30일</button>
-          {/* "90일" */}
-          <button type="button" data-days="90" className={days === 90 ? 'active' : ''} onClick={handleDaysClick}>90일</button>
+          {/* "1개월", "3개월", "6개월", "1년" */}
+          {STATISTICS_PERIOD_LIST.map((period) => (
+            <button
+              type="button"
+              key={period.days}
+              className={days === period.days ? 'active' : ''}
+              onClick={() => handleDaysClick(period.days)}
+            >
+              {/* "1개월", "3개월", "6개월", "1년" 중 선택 가능한 조회 기간 */}
+              {period.label}
+            </button>
+          ))}
         </div>
       </section>
 

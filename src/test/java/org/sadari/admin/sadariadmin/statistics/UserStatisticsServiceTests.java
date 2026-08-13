@@ -25,6 +25,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
  * -----------------------------------------------------------
  * 2026-08-13        SeungHyeon.Kang    최초 생성
  * 2026-08-13        SeungHyeon.Kang    사용자 정착과 이탈 통계 검증 추가
+ * 2026-08-13        SeungHyeon.Kang    6개월과 1년 조회 기간 검증 추가
  */
 @SpringBootTest
 @ActiveProfiles("loc")
@@ -92,5 +93,50 @@ class UserStatisticsServiceTests {
         assertEquals(90, statistics.getChurnTrendList().size());
         // 긴 조회 기간에서도 세 유지율 구간을 동일하게 제공하는지 확인한다
         assertEquals(3, statistics.getRetentionList().size());
+    }
+
+    /**
+     * 6개월 조회에서 오늘을 포함한 180일 추세가 생성되는지 확인한다
+     *
+     * @author SeungHyeon.Kang
+     */
+    @Test
+    void getSixMonthUserStatistics() {
+        // 실제 관리자 세션과 동일한 최소 인증 정보를 생성한다
+        AdminSessionVO admin = new AdminSessionVO();
+        // 관리자 인증 여부 검증에 사용할 번호를 설정한다
+        admin.setAdmnNumb(1L);
+
+        // 오늘을 포함한 180일 사용자 통계를 실시간 조회한다
+        UserStatisticsVO statistics = userStatisticsService.getUserStatistics(180, admin);
+
+        // 신규 가입과 활동 및 활성 회원 추세가 180개 날짜로 생성되는지 확인한다
+        assertEquals(180, statistics.getTrendList().size());
+        // 계정 이탈과 복구 추세가 180개 날짜로 생성되는지 확인한다
+        assertEquals(180, statistics.getChurnTrendList().size());
+    }
+
+    /**
+     * 1년 조회에서 오늘을 포함한 365일 추세가 생성되는지 확인한다
+     *
+     * @author SeungHyeon.Kang
+     */
+    @Test
+    void getOneYearUserStatistics() {
+        // 실제 관리자 세션과 동일한 최소 인증 정보를 생성한다
+        AdminSessionVO admin = new AdminSessionVO();
+        // 관리자 인증 여부 검증에 사용할 번호를 설정한다
+        admin.setAdmnNumb(1L);
+
+        // 오늘을 포함한 365일 사용자 통계를 실시간 조회한다
+        UserStatisticsVO statistics = userStatisticsService.getUserStatistics(365, admin);
+
+        // 조회 기간이 오늘을 포함한 365일인지 확인한다
+        assertEquals(LocalDate.now().minusDays(364), statistics.getStartDate());
+        assertEquals(LocalDate.now(), statistics.getEndDate());
+        // 신규 가입과 활동 및 활성 회원 추세가 365개 날짜로 생성되는지 확인한다
+        assertEquals(365, statistics.getTrendList().size());
+        // 계정 이탈과 복구 추세가 365개 날짜로 생성되는지 확인한다
+        assertEquals(365, statistics.getChurnTrendList().size());
     }
 }

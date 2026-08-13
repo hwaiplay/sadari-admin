@@ -27,6 +27,7 @@ import java.util.Set;
  * -----------------------------------------------------------
  * 2026-08-13        SeungHyeon.Kang    최초 생성
  * 2026-08-13        SeungHyeon.Kang    유지율과 전환 및 활동 구성과 이탈 추세 추가
+ * 2026-08-13        SeungHyeon.Kang    사용자 통계 조회 기간을 1년까지 확장
  */
 @Service
 @RequiredArgsConstructor
@@ -34,7 +35,7 @@ import java.util.Set;
 public class UserStatisticsServiceImpl implements UserStatisticsService {
 
     // 통계 화면에서 허용하는 조회 일수
-    private static final Set<Integer> ALLOWED_DAYS = Set.of(30, 90);
+    private static final Set<Integer> ALLOWED_DAYS = Set.of(30, 90, 180, 365);
 
     // 사용자 통계 조회 Mapper
     private final UserStatisticsMapper userStatisticsMapper;
