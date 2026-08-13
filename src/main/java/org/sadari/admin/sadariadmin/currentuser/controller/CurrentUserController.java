@@ -26,6 +26,7 @@ import org.springframework.web.bind.annotation.RestController;
  * DATE              AUTHOR             NOTE
  * -----------------------------------------------------------
  * 2026-07-30        SeungHyeon.Kang    최초 생성
+ * 2026-08-13        SeungHyeon.Kang    삭제 회원의 유효 제재 목록과 해제 API 추가
  */
 @RestController
 @RequestMapping(Constant.API_CURRENT_USERS_PREFIX)
@@ -174,6 +175,46 @@ public class CurrentUserController {
         // 관리자 요청의 회원 이용 정지를 해제한다
         currentUserService.uptUserSuspensionReleased(userNumb, spndNumb, request, admin);
         // 정지 해제 완료 응답을 반환한다
+        return ResultData.success();
+    }
+
+    /**
+     * 물리 삭제된 회원에게 남아 있는 유효 제재 목록을 조회한다
+     *
+     * @author SeungHyeon.Kang
+     * @param userNumb 검색할 과거 회원 번호
+     * @param pageNumber 페이지 번호
+     * @param admin 로그인 관리자
+     * @return 삭제 회원의 유효 제재 목록
+     */
+    @GetMapping("/deleted-suspensions")
+    public ResultData getDeletedSuspensionList(
+        @RequestParam(required = false) Long userNumb
+        , @RequestParam(name = "page", defaultValue = "1") int pageNumber
+        , @AuthenticationPrincipal AdminSessionVO admin
+    ) {
+        // 과거 회원 번호만 노출하고 OAuth 식별값은 제외한 제재 목록을 반환한다
+        return ResultData.success(currentUserService.getDeletedSuspensionList(userNumb, pageNumber, admin));
+    }
+
+    /**
+     * 물리 삭제된 회원에게 남아 있는 유효 제재를 해제한다
+     *
+     * @author SeungHyeon.Kang
+     * @param spndNumb 제재 이력 번호
+     * @param request 과거 회원 번호와 필수 해제 메모
+     * @param admin 처리 관리자
+     * @return 처리 결과
+     */
+    @PatchMapping("/deleted-suspensions/{spndNumb}")
+    public ResultData uptDeletedSuspReleased(
+        @PathVariable Long spndNumb
+        , @RequestBody CurrentUserSuspensionVO request
+        , @AuthenticationPrincipal AdminSessionVO admin
+    ) {
+        // 삭제 회원 제재 이력에 관리자와 일시 및 해제 근거를 기록한다
+        currentUserService.uptDeletedSuspReleased(request.getUserNumb(), spndNumb, request, admin);
+        // 삭제 회원 제재 해제 완료 응답을 반환한다
         return ResultData.success();
     }
 }

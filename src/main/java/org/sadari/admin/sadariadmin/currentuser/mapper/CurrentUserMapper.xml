@@ -577,4 +577,89 @@
           FROM TH_USSPND
          WHERE USER_NUMB = #{userNumb}
     </select>
+
+    <!-- 물리 삭제된 과거 회원 번호에 남아 있고 기간이 만료되지 않은 제재를 최신순으로 조회한다 -->
+    <select id="getDeletedSuspensionList"
+            resultType="org.sadari.admin.sadariadmin.currentuser.vo.CurrentUserSuspensionVO">
+        <bind name="spndType" value="@org.sadari.admin.sadariadmin.common.constant.Constant@SPND_TYPE"/>
+        <bind name="spndRson" value="@org.sadari.admin.sadariadmin.common.constant.Constant@SPND_RSON"/>
+        <bind name="spndStat" value="@org.sadari.admin.sadariadmin.common.constant.Constant@SPND_STAT"/>
+        SELECT /* getDeletedSuspensionList */
+               P.SPND_NUMB
+             , P.USER_NUMB
+             , P.PREV_STAT
+             , P.SPND_TYPE
+             , P.SPND_TYPE_NAME
+             , P.SPND_RSON
+             , P.SPND_RSON_NAME
+             , P.SPND_CNTN
+             , P.SPND_STAT
+             , P.SPND_STAT_NAME
+             , P.STRT_DATE
+             , P.ENDX_DATE
+             , P.REGI_ADMN
+             , P.REGI_ADMN_NAME
+             , P.REGI_DATE
+          FROM (  SELECT R.*
+                       , ROW_NUMBER() OVER (ORDER BY R.STRT_DATE DESC, R.SPND_NUMB DESC) AS ROW_NUMB
+                    FROM (  SELECT S.SPND_NUMB
+                                 , S.USER_NUMB
+                                 , S.PREV_STAT
+                                 , S.SPND_TYPE
+                                 , FN_GET_CODE_NAME(#{spndType}, S.SPND_TYPE, #{spndType}) AS SPND_TYPE_NAME
+                                 , S.SPND_RSON
+                                 , FN_GET_CODE_NAME(#{spndRson}, S.SPND_RSON, #{spndRson}) AS SPND_RSON_NAME
+                                 , S.SPND_CNTN
+                                 , S.SPND_STAT
+                                 , FN_GET_CODE_NAME(#{spndStat}, S.SPND_STAT, #{spndStat}) AS SPND_STAT_NAME
+                                 , S.STRT_DATE
+                                 , S.ENDX_DATE
+                                 , S.REGI_ADMN
+                                 , FN_GET_ADMIN_NAME(S.REGI_ADMN) AS REGI_ADMN_NAME
+                                 , S.REGI_DATE
+                              FROM TH_USSPND S
+                         LEFT JOIN TM_USERXM U
+                                ON U.USER_NUMB = S.USER_NUMB
+                             WHERE U.USER_NUMB IS NULL
+                               AND S.SPND_STAT = 'ACTIVE'
+                               AND (S.SPND_TYPE = 'INDEFINITE' OR S.ENDX_DATE > CURRENT_TIMESTAMP)
+                               AND (#{userNumb,jdbcType=NUMERIC} IS NULL OR S.USER_NUMB = #{userNumb,jdbcType=NUMERIC})
+                         ) R
+               ) P
+         WHERE P.ROW_NUMB BETWEEN #{startRow} AND #{endRow}
+         ORDER BY P.ROW_NUMB
+    </select>
+
+    <!-- 물리 삭제된 과거 회원 번호에 남아 있고 기간이 만료되지 않은 제재 건수를 조회한다 -->
+    <select id="getDeletedSuspensionCnt" resultType="int">
+        SELECT /* getDeletedSuspensionCnt */
+               COUNT(1)
+          FROM TH_USSPND S
+     LEFT JOIN TM_USERXM U
+            ON U.USER_NUMB = S.USER_NUMB
+         WHERE U.USER_NUMB IS NULL
+           AND S.SPND_STAT = 'ACTIVE'
+           AND (S.SPND_TYPE = 'INDEFINITE' OR S.ENDX_DATE > CURRENT_TIMESTAMP)
+           AND (#{userNumb,jdbcType=NUMERIC} IS NULL OR S.USER_NUMB = #{userNumb,jdbcType=NUMERIC})
+    </select>
+
+    <!-- 물리 삭제된 회원의 유효 제재를 동시 해제하지 못하도록 잠금 조회한다 -->
+    <select id="getDeletedActiveSuspForUpdate"
+            resultType="org.sadari.admin.sadariadmin.currentuser.vo.CurrentUserSuspensionVO">
+        SELECT /* getDeletedActiveSuspForUpdate */
+               S.SPND_NUMB
+             , S.USER_NUMB
+             , S.SPND_TYPE
+             , S.ENDX_DATE
+             , S.SPND_STAT
+          FROM TH_USSPND S
+     LEFT JOIN TM_USERXM U
+            ON U.USER_NUMB = S.USER_NUMB
+         WHERE S.SPND_NUMB = #{spndNumb}
+           AND S.USER_NUMB = #{userNumb}
+           AND U.USER_NUMB IS NULL
+           AND S.SPND_STAT = 'ACTIVE'
+           AND (S.SPND_TYPE = 'INDEFINITE' OR S.ENDX_DATE > CURRENT_TIMESTAMP)
+           FOR UPDATE
+    </select>
 </mapper>

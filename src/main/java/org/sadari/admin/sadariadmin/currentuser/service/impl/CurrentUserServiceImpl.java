@@ -36,6 +36,7 @@ import java.util.Locale;
  * 2026-07-30        SeungHyeon.Kang    회원 상태 변경을 사용자 서버용 Outbox 이벤트와 함께 저장
  * 2026-07-30        SeungHyeon.Kang    로그인 제공자 공통코드 검색 검증
  * 2026-07-30        SeungHyeon.Kang    정지 이력 동기화 상태와 임시 Outbox 전달 적용
+ * 2026-08-13        SeungHyeon.Kang    삭제 회원의 유효 제재 목록과 관리자 해제 처리 추가
  */
 @Service
 @Transactional(readOnly = true)
@@ -291,6 +292,83 @@ public class CurrentUserServiceImpl implements CurrentUserService {
             uptUserSuspSyncPending(activeSuspension.getSpndNumb());
             // 복구된 상태를 사용자 서버가 반영하도록 같은 트랜잭션에 이벤트를 저장한다
             setCurrentUserStatusEvent(userNumb, activeSuspension.getSpndNumb());
+        }
+    }
+
+    /**
+     * 물리 삭제된 회원에게 남아 있는 유효 제재 목록을 조회한다
+     *
+     * @author SeungHyeon.Kang
+     * @param userNumb 검색할 과거 회원 번호
+     * @param pageNumber 조회할 페이지 번호
+     * @param admin 로그인 관리자
+     * @return 삭제 회원의 유효 제재 페이지
+     */
+    @Override
+    public PageData<CurrentUserSuspensionVO> getDeletedSuspensionList(Long userNumb, int pageNumber
+                                                                    , AdminSessionVO admin) {
+        // 관리자 인증이 확인된 경우에만 삭제 회원 제재 이력을 조회한다
+        checkLogin(admin);
+
+        // 회원 번호 검색값이 있으면 실제 발급 범위에 맞는지 검증한다
+        if (!StringUtil.isEmpty(userNumb)) {
+            validateUserNumb(userNumb);
+        }
+
+        // 공통 관리자 목록과 같은 페이지 범위를 계산한다
+        PageRequest pageRequest = new PageRequest(pageNumber);
+        // 해시를 노출하지 않고 과거 회원 번호와 제재 감사정보만 반환한다
+        return PageData.of(currentUserMapper.getDeletedSuspensionList(userNumb, pageRequest.getStartRow()
+                                                                     , pageRequest.getEndRow())
+                         , currentUserMapper.getDeletedSuspensionCnt(userNumb), pageRequest);
+    }
+
+    /**
+     * 물리 삭제된 회원에게 남아 있는 유효 제재를 해제한다
+     *
+     * @author SeungHyeon.Kang
+     * @param userNumb 과거 회원 번호
+     * @param spndNumb 제재 이력 번호
+     * @param request 필수 해제 메모
+     * @param admin 처리 관리자
+     */
+    @Transactional
+    @Override
+    public void uptDeletedSuspReleased(Long userNumb, Long spndNumb, CurrentUserSuspensionVO request
+                                      , AdminSessionVO admin) {
+        // 삭제 회원 제재를 해제한 관리자를 감사정보에 남기기 위해 인증을 검증한다
+        checkLogin(admin);
+        // 삭제된 과거 계정을 특정할 회원 번호를 검증한다
+        validateUserNumb(userNumb);
+
+        // 해제할 단일 제재 이력 번호가 없으면 변경하지 않는다
+        if (StringUtil.isEmpty(spndNumb) || spndNumb < 1) {
+            throw new BusinessException(HttpStatus.BAD_REQUEST, ResultEnum.COMMON_INVALID_REQUEST);
+        }
+
+        // 삭제 회원 제재 해제에는 관리 판단 근거가 남도록 메모를 필수로 받는다
+        String releaseContent = StringUtil.isEmpty(request) ? null : trimToNull(request.getRlesCntn());
+        if (StringUtil.isEmpty(releaseContent)) {
+            throw new BusinessException(HttpStatus.BAD_REQUEST, ResultEnum.COMMON_REQUIRED_VALUE);
+        }
+
+        // DB 저장 크기를 초과하는 메모는 감사정보 절단 없이 요청 단계에서 거절한다
+        validateContentLength(releaseContent);
+        // 동일 제재를 여러 관리자가 동시에 해제하지 않도록 유효 이력을 잠근다
+        CurrentUserSuspensionVO activeSuspension = currentUserMapper.getDeletedActiveSuspForUpdate(userNumb, spndNumb);
+        if (StringUtil.isEmpty(activeSuspension)) {
+            throw new BusinessException(HttpStatus.NOT_FOUND, ResultEnum.USER_SUSPENSION_NOT_FOUND);
+        }
+
+        // 관리자 판단 근거를 해제 이력에 기록한다
+        activeSuspension.setRlesCntn(releaseContent);
+        // 실제 해제 관리자를 감사정보에 기록한다
+        activeSuspension.setRlesAdmn(admin.getAdmnNumb());
+        // 마지막 수정 관리자를 해제 관리자와 일치시킨다
+        activeSuspension.setUpdtAdmn(admin.getAdmnNumb());
+        // 회원 행이 없는 제재 이력만 해제하며 사용자 상태와 Outbox는 변경하지 않는다
+        if (currentUserMapper.uptUserSuspensionReleased(activeSuspension) != 1) {
+            throw new BusinessException(HttpStatus.CONFLICT, ResultEnum.USER_SUSPENSION_NOT_FOUND);
         }
     }
 

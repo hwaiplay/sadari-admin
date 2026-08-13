@@ -5,7 +5,7 @@ import { getCurrentUsers } from '../../api/currentUserApi'
 import { Pagination } from '../../components/Pagination'
 import { AdminDatePicker } from '../../components/AdminDatePicker'
 import { USER_PROV, USER_STAT } from '../../constants/codes'
-import { CURRENT_USER_DETAIL_PREFIX, CURRENT_USER_LIST_PATH } from '../../constants/routes'
+import { CURRENT_USER_DETAIL_PREFIX, CURRENT_USER_LIST_PATH, DELETED_SUSPENSION_PATH } from '../../constants/routes'
 import type { Code } from '../../types/code'
 import type { PageData } from '../../types/common'
 import type { CurrentUser, CurrentUserSearch } from '../../types/currentUser'
@@ -222,7 +222,14 @@ export function CurrentUserListPage({ onMovePath, onError }: CurrentUserListPage
       {/* 현재 사용자 화면 제목과 검색 결과 건수 */}
       <section className="content-header">
         <h1>현 사용자 관리</h1>
-        <div className="status">총 {pageData.totalCount.toLocaleString()}건</div>
+        {/* 현재 사용자 건수와 삭제 회원 제재 화면 이동 영역 */}
+        <div className="header-actions">
+          <div className="status">총 {pageData.totalCount.toLocaleString()}건</div>
+          <button type="button" className="subtle-button" onClick={() => onMovePath(DELETED_SUSPENSION_PATH)}>
+            {/* "삭제회원 제재" */}
+            삭제회원 제재
+          </button>
+        </div>
       </section>
 
       {/* 사용자 검색 조건 */}

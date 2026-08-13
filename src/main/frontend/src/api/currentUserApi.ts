@@ -7,6 +7,7 @@ import type {
   CurrentUserSuspension,
   CurrentUserSuspensionRequest,
   CurrentUserWithdrawalHistory,
+  DeletedSuspensionSearch,
 } from '../types/currentUser'
 
 /**
@@ -170,3 +171,57 @@ export const uptCurrentUserSuspRelease = (
     },
     '이용 정지를 해제하지 못했습니다.',
   )
+
+/**
+ * 물리 삭제된 회원에게 남아 있는 유효 제재를 조회한다
+ *
+ * @author SeungHyeon.Kang
+ * @param pageNumber 조회할 페이지 번호
+ * @param search 과거 회원 번호 검색 조건
+ * @return 삭제 회원의 유효 제재 페이지
+ */
+export const getDeletedSuspensions = (
+  pageNumber: number,
+  search: DeletedSuspensionSearch,
+): Promise<PageData<CurrentUserSuspension>> => {
+  // 과거 회원 번호가 있을 때만 검색 조건에 포함한다
+  const params = new URLSearchParams({ page: String(pageNumber) })
+  // 공백을 제거한 회원 번호 검색값만 서버에 전달한다
+  if (search.userNumb.trim()) {
+    // 과거 회원 번호로 정확히 일치하는 제재를 조회한다
+    params.set('userNumb', search.userNumb.trim())
+  }
+
+  // OAuth 식별값을 노출하지 않는 삭제 회원 제재 목록 API를 호출한다
+  return fetchJson<PageData<CurrentUserSuspension>>(
+    `/api/current-users/deleted-suspensions?${params.toString()}`,
+    undefined,
+    '삭제 회원 제재 목록을 불러오지 못했습니다.',
+  )
+}
+
+/**
+ * 물리 삭제된 회원에게 남아 있는 유효 제재를 관리자 메모와 함께 해제한다
+ *
+ * @author SeungHyeon.Kang
+ * @param userNumb 과거 회원 번호
+ * @param spndNumb 제재 이력 번호
+ * @param rlesCntn 필수 관리자 해제 메모
+ * @return 반환값 없음
+ */
+export const uptDeletedSuspension = (
+  userNumb: number,
+  spndNumb: number,
+  rlesCntn: string,
+): Promise<void> => {
+  // 과거 회원 번호와 해제 근거를 감사 이력 API에 전달한다
+  return fetchJson<void>(
+    `/api/current-users/deleted-suspensions/${spndNumb}`,
+    {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ userNumb, rlesCntn }),
+    },
+    '삭제 회원 제재를 해제하지 못했습니다.',
+  )
+}

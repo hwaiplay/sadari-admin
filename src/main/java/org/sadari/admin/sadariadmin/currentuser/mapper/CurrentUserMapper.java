@@ -22,6 +22,7 @@ import java.util.List;
  * 2026-07-30        SeungHyeon.Kang    최초 생성
  * 2026-07-30        SeungHyeon.Kang    회원 상태 변경 Outbox 이벤트 등록 추가
  * 2026-07-30        SeungHyeon.Kang    정지 이력 동기화 상태 수정 추가
+ * 2026-08-13        SeungHyeon.Kang    삭제 회원의 유효 제재 조회와 잠금 조회 추가
  */
 @Mapper
 public interface CurrentUserMapper {
@@ -210,4 +211,37 @@ public interface CurrentUserMapper {
      * @return 정지 이력 건수
      */
     int getSuspensionHistoryCnt(@Param("userNumb") Long userNumb);
+
+    /**
+     * 물리 삭제된 회원에게 남아 있는 유효 제재를 최신순으로 조회한다
+     *
+     * @author SeungHyeon.Kang
+     * @param userNumb 검색할 과거 회원 번호
+     * @param startRow 페이지 시작 행
+     * @param endRow 페이지 종료 행
+     * @return 삭제 회원의 유효 제재 목록
+     */
+    List<CurrentUserSuspensionVO> getDeletedSuspensionList(@Param("userNumb") Long userNumb
+                                                          , @Param("startRow") int startRow
+                                                          , @Param("endRow") int endRow);
+
+    /**
+     * 물리 삭제된 회원에게 남아 있는 유효 제재 건수를 조회한다
+     *
+     * @author SeungHyeon.Kang
+     * @param userNumb 검색할 과거 회원 번호
+     * @return 삭제 회원의 유효 제재 건수
+     */
+    int getDeletedSuspensionCnt(@Param("userNumb") Long userNumb);
+
+    /**
+     * 물리 삭제된 회원의 유효 제재 한 건을 관리자 해제 전에 잠금 조회한다
+     *
+     * @author SeungHyeon.Kang
+     * @param userNumb 과거 회원 번호
+     * @param spndNumb 제재 이력 번호
+     * @return 잠근 유효 제재 이력
+     */
+    CurrentUserSuspensionVO getDeletedActiveSuspForUpdate(@Param("userNumb") Long userNumb
+                                                         , @Param("spndNumb") Long spndNumb);
 }

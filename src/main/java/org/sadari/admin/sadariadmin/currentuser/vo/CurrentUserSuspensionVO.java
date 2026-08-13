@@ -14,6 +14,7 @@ import java.time.LocalDateTime;
  * -----------------------------------------------------------
  * 2026-07-30        SeungHyeon.Kang    최초 생성
  * 2026-07-30        SeungHyeon.Kang    사용자 서버 동기화 상태 추가
+ * 2026-08-13        SeungHyeon.Kang    삭제 회원의 보존 제재 목록과 해제 정보에 재사용
  */
 @Data
 public class CurrentUserSuspensionVO {

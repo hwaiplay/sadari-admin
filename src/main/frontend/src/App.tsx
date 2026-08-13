@@ -27,6 +27,7 @@ import { ScheduleLogDetailPage } from './pages/scheduleLog/ScheduleLogDetailPage
 import { PopupContentManagePage } from './pages/popup/PopupContentManagePage'
 import { CurrentUserListPage } from './pages/currentUser/CurrentUserListPage'
 import { CurrentUserDetailPage } from './pages/currentUser/CurrentUserDetailPage'
+import { DeletedSuspensionPage } from './pages/currentUser/DeletedSuspensionPage'
 import { ComplaintListPage } from './pages/complaint/ComplaintListPage'
 import { ComplaintDetailPage } from './pages/complaint/ComplaintDetailPage'
 import { InquiryListPage } from './pages/inquiry/InquiryListPage'
@@ -41,7 +42,7 @@ import type { Menu, MenuForm, MenuSearch } from './types/menu'
 import type { PageData } from './types/common'
 import { emptyDetailForm, emptyMenuForm, getNextSortOrdr, toDetailCodeForm, toMenuForm } from './utils/forms'
 import { getListPageSnapshot, setListPageSnapshot } from './utils/search'
-import { INQUIRY_DETAIL_PREFIX, INQUIRY_LIST_PATH } from './constants/routes'
+import { DELETED_SUSPENSION_PATH, INQUIRY_DETAIL_PREFIX, INQUIRY_LIST_PATH } from './constants/routes'
 
 const emptyPageData = <T,>(): PageData<T> => ({ items: [], totalCount: 0, pageNumber: 1, pageSize: 20, totalPages: 0 })
 
@@ -170,6 +171,7 @@ function App() {
   const isScheduleLogDetailPage = scheduleLogDetailKey !== null
   const isCurrentUserListPage = currentPath === CURRENT_USER_LIST_PATH
   const isCurrentUserDetailPage = currentUserDetailKey !== null
+  const isDeletedSuspensionPage = currentPath === DELETED_SUSPENSION_PATH
   const isUserStatisticsPage = currentPath === USER_STATISTICS_PATH
   const isComplaintListPage = currentPath === COMPLAINT_LIST_PATH
   const isComplaintDetailPage = complaintDetailKey !== null
@@ -195,6 +197,7 @@ function App() {
     if (currentPath === AUTH_GROUP_NEW_PATH || currentPath.startsWith(AUTH_GROUP_DETAIL_PREFIX)) return AUTH_GROUP_LIST_PATH
     if (currentPath.startsWith(SCHEDULE_LOG_DETAIL_PREFIX)) return SCHEDULE_LOG_LIST_PATH
     if (currentPath.startsWith(CURRENT_USER_DETAIL_PREFIX)) return CURRENT_USER_LIST_PATH
+    if (currentPath === DELETED_SUSPENSION_PATH) return CURRENT_USER_LIST_PATH
     if (currentPath.startsWith(COMPLAINT_DETAIL_PREFIX)) return COMPLAINT_LIST_PATH
     if (currentPath.startsWith(INQUIRY_DETAIL_PREFIX)) return INQUIRY_LIST_PATH
     if (currentPath === NOTICE_NEW_PATH || currentPath.startsWith(NOTICE_DETAIL_PREFIX)) return NOTICE_LIST_PATH
@@ -1062,6 +1065,7 @@ function App() {
         />
       )}
       {isCurrentUserListPage && <CurrentUserListPage onMovePath={movePath} onError={setError} />}
+      {isDeletedSuspensionPage && <DeletedSuspensionPage onMovePath={movePath} onError={setError} />}
       {isUserStatisticsPage && <UserStatisticsPage onError={setError} />}
       {isCurrentUserDetailPage && (
         <CurrentUserDetailPage

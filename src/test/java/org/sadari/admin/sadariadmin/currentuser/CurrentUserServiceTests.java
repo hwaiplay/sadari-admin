@@ -14,6 +14,7 @@ import org.sadari.admin.sadariadmin.currentuser.vo.CurrentUserVO;
 import org.sadari.admin.sadariadmin.currentuser.vo.CurrentUserWithdrawalHistoryVO;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -36,6 +37,7 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
  * 2026-07-30        SeungHyeon.Kang    회원 상태 Outbox 통합 저장 구조 반영
  * 2026-07-30        SeungHyeon.Kang    사용자 서버 상태 반영 결과 조회 검증
  * 2026-07-30        SeungHyeon.Kang    로그인 제공자 공통코드명 조회 검증
+ * 2026-08-13        SeungHyeon.Kang    물리 삭제 회원의 유효 제재 조회와 해제 검증
  */
 @SpringBootTest
 @ActiveProfiles("loc")
@@ -45,6 +47,9 @@ class CurrentUserServiceTests {
     // 실제 현재 사용자 Mapper가 연결된 조회 서비스
     @Autowired
     private CurrentUserService currentUserService;
+    // 물리 삭제 회원 제재 시나리오를 트랜잭션 안에서 구성할 DB 접근 객체
+    @Autowired
+    private JdbcTemplate jdbcTemplate;
 
     /**
      * 활성 사용자 검색 결과가 상세와 두 이력 조회로 이어지는지 확인한다.
@@ -161,6 +166,58 @@ class CurrentUserServiceTests {
             currentUserService.setUserSuspension(getActiveCurrentUser().getUserNumb(), request, createAdminSession())
         );
         assertEquals(ResultEnum.USER_SUSPENSION_INDEFINITE_FORBIDDEN, exception.getResultEnum());
+    }
+
+    /**
+     * 물리 삭제된 회원의 유효 제재를 목록에서 조회하고 필수 메모와 함께 해제하는지 확인한다
+     *
+     * @author SeungHyeon.Kang
+     */
+    @Test
+    void getAndReleaseDeletedSuspension() {
+        // 현재 회원과 제재 이력에서 사용하지 않는 과거 회원 번호를 계산한다
+        Long deletedUserNumb = jdbcTemplate.queryForObject(
+            "SELECT GREATEST(COALESCE((SELECT MAX(USER_NUMB) FROM TM_USERXM), 0), COALESCE((SELECT MAX(USER_NUMB) FROM TH_USSPND), 0)) + 1"
+            , Long.class
+        );
+        // 테스트 트랜잭션에서 충돌하지 않을 새 제재 이력 번호를 계산한다
+        Long spndNumb = jdbcTemplate.queryForObject(
+            "SELECT COALESCE(MAX(SPND_NUMB), 0) + 1 FROM TH_USSPND", Long.class
+        );
+        // 회원 원본 없이 감사 이력만 남은 무기한 제재를 생성한다
+        jdbcTemplate.update(
+            "INSERT INTO TH_USSPND (SPND_NUMB, USER_NUMB, PREV_STAT, SPND_TYPE, SPND_RSON, SPND_CNTN, SPND_STAT, SYNC_STAT, STRT_DATE, REGI_ADMN, REGI_DATE, UPDT_ADMN, UPDT_DATE) VALUES (?, ?, 'SUSPENDED', 'INDEFINITE', 'SERVICE_ABUSE', '삭제 회원 제재 테스트', 'ACTIVE', 'COMPLETED', CURRENT_TIMESTAMP, 1, CURRENT_TIMESTAMP, 1, CURRENT_TIMESTAMP)"
+            , spndNumb, deletedUserNumb
+        );
+
+        // 과거 회원 번호로 삭제 회원의 유효 제재 목록을 조회한다
+        PageData<CurrentUserSuspensionVO> suspensionPage = currentUserService.getDeletedSuspensionList(
+            deletedUserNumb, 1, createAdminSession()
+        );
+        // OAuth 식별값 없이 과거 회원 번호 기준 제재 한 건이 조회되는지 검증한다
+        assertEquals(1, suspensionPage.getTotalCount());
+        // 목록에서 조회한 제재 번호가 보존 이력과 일치하는지 검증한다
+        assertEquals(spndNumb, suspensionPage.getItems().get(0).getSpndNumb());
+
+        // 삭제 회원 제재 해제 근거를 기록할 요청을 생성한다
+        CurrentUserSuspensionVO release = new CurrentUserSuspensionVO();
+        // 감사 이력에 필수로 남길 관리자 판단 근거를 설정한다
+        release.setRlesCntn("동일 Kakao 계정 신규 가입 허용");
+        // 회원 원본을 복구하지 않고 보존된 제재 이력만 해제한다
+        currentUserService.uptDeletedSuspReleased(deletedUserNumb, spndNumb, release, createAdminSession());
+
+        // 해제 뒤 제재 상태가 관리자 해제로 변경됐는지 조회한다
+        String suspensionStatus = jdbcTemplate.queryForObject(
+            "SELECT SPND_STAT FROM TH_USSPND WHERE SPND_NUMB = ?", String.class, spndNumb
+        );
+        // 같은 Kakao 계정의 신규 가입을 허용할 해제 상태가 기록되는지 검증한다
+        assertEquals("RELEASED", suspensionStatus);
+        // 해제 판단 근거가 감사 이력에 원문으로 보존되는지 검증한다
+        String releaseContent = jdbcTemplate.queryForObject(
+            "SELECT RLES_CNTN FROM TH_USSPND WHERE SPND_NUMB = ?", String.class, spndNumb
+        );
+        // 관리자 입력 해제 메모가 정확히 저장되는지 검증한다
+        assertEquals("동일 Kakao 계정 신규 가입 허용", releaseContent);
     }
 
     /**

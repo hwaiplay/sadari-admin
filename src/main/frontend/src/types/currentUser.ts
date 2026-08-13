@@ -87,3 +87,7 @@ export type CurrentUserSuspensionRequest = {
   spndCntn: string
   endxDate: string | null
 }
+
+export type DeletedSuspensionSearch = {
+  userNumb: string
+}

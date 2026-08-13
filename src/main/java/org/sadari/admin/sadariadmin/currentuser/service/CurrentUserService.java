@@ -17,6 +17,7 @@ import org.sadari.admin.sadariadmin.currentuser.vo.CurrentUserWithdrawalHistoryV
  * DATE              AUTHOR             NOTE
  * -----------------------------------------------------------
  * 2026-07-30        SeungHyeon.Kang    최초 생성
+ * 2026-08-13        SeungHyeon.Kang    삭제 회원의 유효 제재 목록과 해제 업무 추가
  */
 public interface CurrentUserService {
 
@@ -98,4 +99,28 @@ public interface CurrentUserService {
      */
     void uptUserSuspensionReleased(Long userNumb, Long spndNumb, CurrentUserSuspensionVO request
                                   , AdminSessionVO admin);
+
+    /**
+     * 물리 삭제된 회원에게 남아 있는 유효 제재 목록을 조회한다
+     *
+     * @author SeungHyeon.Kang
+     * @param userNumb 검색할 과거 회원 번호
+     * @param pageNumber 조회할 페이지 번호
+     * @param admin 로그인 관리자
+     * @return 삭제 회원의 유효 제재 페이지
+     */
+    PageData<CurrentUserSuspensionVO> getDeletedSuspensionList(Long userNumb, int pageNumber
+                                                             , AdminSessionVO admin);
+
+    /**
+     * 물리 삭제된 회원에게 남아 있는 유효 제재를 해제한다
+     *
+     * @author SeungHyeon.Kang
+     * @param userNumb 과거 회원 번호
+     * @param spndNumb 제재 이력 번호
+     * @param request 필수 해제 메모
+     * @param admin 처리 관리자
+     */
+    void uptDeletedSuspReleased(Long userNumb, Long spndNumb, CurrentUserSuspensionVO request
+                               , AdminSessionVO admin);
 }
