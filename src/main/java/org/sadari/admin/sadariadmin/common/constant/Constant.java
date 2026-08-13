@@ -19,6 +19,8 @@ package org.sadari.admin.sadariadmin.common.constant;
  * 2026-08-05        SeungHyeon.Kang    신고 관리 공통코드와 API 경로 추가
  * 2026-08-07        SeungHyeon.Kang    관리자 업로드 이미지 조회 경로 추가
  * 2026-08-12        SeungHyeon.Kang    알림 아이콘 관리 API 경로 추가
+ * 2026-08-13        SeungHyeon.Kang    사용자 통계 API 경로 추가
+ * 2026-08-13        SeungHyeon.Kang    사용자 이탈 추세 처리 유형 추가
  */
 public final class Constant {
 
@@ -109,8 +111,17 @@ public final class Constant {
     /** 정지 회원 상태 */
     public static final String USER_STAT_SUSPENDED = "SUSPENDED";
 
+    /** 정상 회원 상태 */
+    public static final String USER_STAT_ACTIVE = "ACTIVE";
+
     /** 영구 삭제 대기 회원 상태 */
     public static final String USER_STAT_DELETE_PENDING = "DELETE_PENDING";
+
+    /** 계정 비활성화 처리 유형 */
+    public static final String WTHD_TYPE_SOFT = "SOFT";
+
+    /** 영구 탈퇴 처리 유형 */
+    public static final String WTHD_TYPE_HARD = "HARD";
 
     /** 회원 상태 변경 Outbox 이벤트 유형 */
     public static final String EVENT_TYPE_USER_STATUS_CHANGED = "USER_STATUS_CHANGED";
@@ -240,6 +251,12 @@ public final class Constant {
 
     /** 현재 사용자 관리 API URL 패턴 */
     public static final String API_CURRENT_USERS_PATTERN = "/api/current-users/**";
+
+    /** 사용자 통계 API URL 접두어 */
+    public static final String API_USER_STATISTICS_PREFIX = "/api/user-statistics";
+
+    /** 사용자 통계 API URL 패턴 */
+    public static final String API_USER_STATISTICS_PATTERN = "/api/user-statistics/**";
 
     /** 신고 관리 API URL 접두어 */
     public static final String API_COMPLAINTS_PREFIX = "/api/complaints";

@@ -1,0 +1,424 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "https://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="org.sadari.admin.sadariadmin.statistics.mapper.UserStatisticsMapper">
+    <!-- 공통코드에 정의된 모든 회원 상태를 현재 회원 수와 함께 조회한다 -->
+    <select id="getUserStatusList"
+            resultType="org.sadari.admin.sadariadmin.statistics.vo.UserStatisticsVO$UserStatusStatistics">
+        <bind name="userStatCode" value="@org.sadari.admin.sadariadmin.common.constant.Constant@USER_STAT"/>
+        <bind name="yes" value="@org.sadari.admin.sadariadmin.common.constant.Constant@YES"/>
+        SELECT /* getUserStatusList */
+               C.COMD_CODE AS USER_STAT
+             , C.COMD_NAME AS USER_STAT_NAME
+             , COUNT(U.USER_NUMB) AS USER_CNTT
+          FROM TB_CODEXD C
+     LEFT JOIN TM_USERXM U
+            ON U.USER_STAT = C.COMD_CODE
+         WHERE C.COMM_CODE = #{userStatCode}
+           AND C.USEE_YSNO = #{yes}
+      GROUP BY C.COMD_CODE
+             , C.COMD_NAME
+             , C.SORT_ORDR
+      ORDER BY C.SORT_ORDR
+             , C.COMD_CODE
+    </select>
+
+    <!-- 선택 기간의 일별 신규 가입과 활동 및 현재 정상 회원의 활성 추세를 원천 테이블에서 집계한다 -->
+    <select id="getUserTrendList"
+            parameterType="org.sadari.admin.sadariadmin.statistics.vo.UserStatisticsSearchVO"
+            resultType="org.sadari.admin.sadariadmin.statistics.vo.UserStatisticsVO$UserTrendStatistics">
+        <bind name="active" value="@org.sadari.admin.sadariadmin.common.constant.Constant@USER_STAT_ACTIVE"/>
+        WITH RECURSIVE DATE_RANGE AS (
+            SELECT CAST(#{startDate} AS DATE) AS STAT_DATE
+             UNION ALL
+            SELECT DATE_ADD(D.STAT_DATE, INTERVAL 1 DAY) AS STAT_DATE
+              FROM DATE_RANGE D
+             WHERE D.STAT_DATE <![CDATA[<]]> #{endDate}
+        )
+        , JOIN_ACTIVITY AS (
+            SELECT DATE(U.JOIN_DATE) AS STAT_DATE
+                 , COUNT(1) AS JOIN_CNTT
+              FROM TM_USERXM U
+             WHERE U.JOIN_DATE <![CDATA[>=]]> #{startDate}
+               AND U.JOIN_DATE <![CDATA[<]]> DATE_ADD(#{endDate}, INTERVAL 1 DAY)
+          GROUP BY DATE(U.JOIN_DATE)
+        )
+        , REPORT_ACTIVITY AS (
+            SELECT DATE(R.REGI_DATE) AS STAT_DATE
+                 , COUNT(1) AS REPORT_CNTT
+              FROM TM_REPORT R
+             WHERE R.REGI_DATE <![CDATA[>=]]> #{startDate}
+               AND R.REGI_DATE <![CDATA[<]]> DATE_ADD(#{endDate}, INTERVAL 1 DAY)
+          GROUP BY DATE(R.REGI_DATE)
+        )
+        , REPLY_ACTIVITY AS (
+            SELECT DATE(P.REGI_DATE) AS STAT_DATE
+                 , COUNT(1) AS REPLY_CNTT
+              FROM TB_REPLXX P
+             WHERE P.REGI_DATE <![CDATA[>=]]> #{startDate}
+               AND P.REGI_DATE <![CDATA[<]]> DATE_ADD(#{endDate}, INTERVAL 1 DAY)
+          GROUP BY DATE(P.REGI_DATE)
+        )
+        , LIKE_ACTIVITY AS (
+            SELECT DATE(K.REGI_DATE) AS STAT_DATE
+                 , COUNT(1) AS LIKE_CNTT
+              FROM TB_LIKEXX K
+             WHERE K.REGI_DATE <![CDATA[>=]]> #{startDate}
+               AND K.REGI_DATE <![CDATA[<]]> DATE_ADD(#{endDate}, INTERVAL 1 DAY)
+          GROUP BY DATE(K.REGI_DATE)
+        )
+        , FOLLOW_ACTIVITY AS (
+            SELECT DATE(F.REGI_DATE) AS STAT_DATE
+                 , COUNT(1) AS FOLLOW_CNTT
+              FROM TB_FOLLOW F
+             WHERE F.REGI_DATE <![CDATA[>=]]> #{startDate}
+               AND F.REGI_DATE <![CDATA[<]]> DATE_ADD(#{endDate}, INTERVAL 1 DAY)
+          GROUP BY DATE(F.REGI_DATE)
+        )
+        , ACTIVE_LOGIN AS (
+            SELECT DATE(H.LOGN_DATE) AS LOGN_DATE
+                 , H.USER_NUMB AS USER_NUMB
+              FROM TM_USERXM U
+        INNER JOIN TB_LOGHIS H
+                ON H.USER_NUMB = U.USER_NUMB
+             WHERE U.USER_STAT = #{active}
+               AND H.LOGN_DATE <![CDATA[>=]]> DATE_SUB(#{startDate}, INTERVAL 29 DAY)
+               AND H.LOGN_DATE <![CDATA[<]]> DATE_ADD(#{endDate}, INTERVAL 1 DAY)
+          GROUP BY DATE(H.LOGN_DATE)
+                 , H.USER_NUMB
+        )
+        , ACTIVE_ACTIVITY AS (
+            SELECT D.STAT_DATE AS STAT_DATE
+                 , COUNT(DISTINCT CASE
+                                      WHEN L.LOGN_DATE = D.STAT_DATE THEN L.USER_NUMB
+                                  END) AS DAU_CNTT
+                 , COUNT(DISTINCT CASE
+                                      WHEN L.LOGN_DATE <![CDATA[>=]]> DATE_SUB(D.STAT_DATE, INTERVAL 6 DAY) THEN L.USER_NUMB
+                                  END) AS WAU_CNTT
+                 , COUNT(DISTINCT L.USER_NUMB) AS MAU_CNTT
+              FROM DATE_RANGE D
+         LEFT JOIN ACTIVE_LOGIN L
+                ON L.LOGN_DATE BETWEEN DATE_SUB(D.STAT_DATE, INTERVAL 29 DAY) AND D.STAT_DATE
+          GROUP BY D.STAT_DATE
+        )
+        SELECT /* getUserTrendList */
+               D.STAT_DATE AS STAT_DATE
+             , COALESCE(J.JOIN_CNTT, 0) AS JOIN_CNTT
+             , COALESCE(R.REPORT_CNTT, 0) AS REPORT_CNTT
+             , COALESCE(P.REPLY_CNTT, 0) AS REPLY_CNTT
+             , COALESCE(K.LIKE_CNTT, 0) AS LIKE_CNTT
+             , COALESCE(F.FOLLOW_CNTT, 0) AS FOLLOW_CNTT
+             , COALESCE(A.DAU_CNTT, 0) AS DAU_CNTT
+             , COALESCE(A.WAU_CNTT, 0) AS WAU_CNTT
+             , COALESCE(A.MAU_CNTT, 0) AS MAU_CNTT
+          FROM DATE_RANGE D
+     LEFT JOIN JOIN_ACTIVITY J
+            ON J.STAT_DATE = D.STAT_DATE
+     LEFT JOIN REPORT_ACTIVITY R
+            ON R.STAT_DATE = D.STAT_DATE
+     LEFT JOIN REPLY_ACTIVITY P
+            ON P.STAT_DATE = D.STAT_DATE
+     LEFT JOIN LIKE_ACTIVITY K
+            ON K.STAT_DATE = D.STAT_DATE
+     LEFT JOIN FOLLOW_ACTIVITY F
+            ON F.STAT_DATE = D.STAT_DATE
+     LEFT JOIN ACTIVE_ACTIVITY A
+            ON A.STAT_DATE = D.STAT_DATE
+      ORDER BY D.STAT_DATE
+    </select>
+
+    <!-- 현재 정상 회원의 마지막 로그인 또는 가입일을 기준으로 미접속 구간을 집계한다 -->
+    <select id="getUserInactivityDtl"
+            resultType="org.sadari.admin.sadariadmin.statistics.vo.UserStatisticsVO$UserInactivityStatistics">
+        <bind name="active" value="@org.sadari.admin.sadariadmin.common.constant.Constant@USER_STAT_ACTIVE"/>
+        SELECT /* getUserInactivityDtl */
+               COALESCE(SUM(CASE
+                                WHEN COALESCE(L.LAST_LOGN_DATE, U.JOIN_DATE) <![CDATA[<]]> DATE_SUB(CURRENT_TIMESTAMP, INTERVAL 30 DAY)
+                                 AND COALESCE(L.LAST_LOGN_DATE, U.JOIN_DATE) <![CDATA[>=]]> DATE_SUB(CURRENT_TIMESTAMP, INTERVAL 90 DAY)
+                                THEN 1
+                                ELSE 0
+                            END), 0) AS INACTIVE30_CNTT
+             , COALESCE(SUM(CASE
+                                WHEN COALESCE(L.LAST_LOGN_DATE, U.JOIN_DATE) <![CDATA[<]]> DATE_SUB(CURRENT_TIMESTAMP, INTERVAL 90 DAY)
+                                THEN 1
+                                ELSE 0
+                            END), 0) AS INACTIVE90_CNTT
+          FROM TM_USERXM U
+     LEFT JOIN (  SELECT H.USER_NUMB AS USER_NUMB
+                       , MAX(H.LOGN_DATE) AS LAST_LOGN_DATE
+                    FROM TB_LOGHIS H
+                   WHERE H.USER_NUMB IS NOT NULL
+                GROUP BY H.USER_NUMB
+               ) L
+            ON L.USER_NUMB = U.USER_NUMB
+         WHERE U.USER_STAT = #{active}
+    </select>
+
+    <!-- 선택 기간과 동일한 길이의 이전 가입 코호트에서 1일과 7일 및 30일 내 재방문율을 조회한다 -->
+    <select id="getUserRetentionList"
+            parameterType="org.sadari.admin.sadariadmin.statistics.vo.UserStatisticsSearchVO"
+            resultType="org.sadari.admin.sadariadmin.statistics.vo.UserStatisticsVO$UserRetentionStatistics">
+        WITH COHORT AS (
+            SELECT U.USER_NUMB AS USER_NUMB
+                 , DATE(U.JOIN_DATE) AS JOIN_DATE
+              FROM TM_USERXM U
+             WHERE U.JOIN_DATE <![CDATA[>=]]> DATE_SUB(#{startDate}, INTERVAL 30 DAY)
+               AND U.JOIN_DATE <![CDATA[<]]> DATE_ADD(#{endDate}, INTERVAL 1 DAY)
+        )
+        , RETURN_FLAG AS (
+            SELECT C.USER_NUMB AS USER_NUMB
+                 , MAX(CASE
+                           WHEN H.LOGN_DATE <![CDATA[<]]> DATE_ADD(C.JOIN_DATE, INTERVAL 2 DAY) THEN 1
+                           ELSE 0
+                       END) AS DAY1_RETURN
+                 , MAX(CASE
+                           WHEN H.LOGN_DATE <![CDATA[<]]> DATE_ADD(C.JOIN_DATE, INTERVAL 8 DAY) THEN 1
+                           ELSE 0
+                       END) AS DAY7_RETURN
+                 , MAX(CASE
+                           WHEN H.LOGN_DATE <![CDATA[<]]> DATE_ADD(C.JOIN_DATE, INTERVAL 31 DAY) THEN 1
+                           ELSE 0
+                       END) AS DAY30_RETURN
+              FROM COHORT C
+         LEFT JOIN TB_LOGHIS H
+                ON H.USER_NUMB = C.USER_NUMB
+               AND H.LOGN_DATE <![CDATA[>=]]> DATE_ADD(C.JOIN_DATE, INTERVAL 1 DAY)
+               AND H.LOGN_DATE <![CDATA[<]]> DATE_ADD(C.JOIN_DATE, INTERVAL 31 DAY)
+          GROUP BY C.USER_NUMB
+        )
+        , RETENTION_SUMMARY AS (
+            SELECT SUM(CASE
+                           WHEN C.JOIN_DATE BETWEEN DATE_SUB(#{startDate}, INTERVAL 1 DAY)
+                                                AND DATE_SUB(#{endDate}, INTERVAL 1 DAY) THEN 1
+                           ELSE 0
+                       END) AS DAY1_COHORT_CNTT
+                 , SUM(CASE
+                           WHEN C.JOIN_DATE BETWEEN DATE_SUB(#{startDate}, INTERVAL 1 DAY)
+                                                AND DATE_SUB(#{endDate}, INTERVAL 1 DAY)
+                            AND F.DAY1_RETURN = 1 THEN 1
+                           ELSE 0
+                       END) AS DAY1_RETAINED_CNTT
+                 , SUM(CASE
+                           WHEN C.JOIN_DATE BETWEEN DATE_SUB(#{startDate}, INTERVAL 7 DAY)
+                                                AND DATE_SUB(#{endDate}, INTERVAL 7 DAY) THEN 1
+                           ELSE 0
+                       END) AS DAY7_COHORT_CNTT
+                 , SUM(CASE
+                           WHEN C.JOIN_DATE BETWEEN DATE_SUB(#{startDate}, INTERVAL 7 DAY)
+                                                AND DATE_SUB(#{endDate}, INTERVAL 7 DAY)
+                            AND F.DAY7_RETURN = 1 THEN 1
+                           ELSE 0
+                       END) AS DAY7_RETAINED_CNTT
+                 , SUM(CASE
+                           WHEN C.JOIN_DATE BETWEEN DATE_SUB(#{startDate}, INTERVAL 30 DAY)
+                                                AND DATE_SUB(#{endDate}, INTERVAL 30 DAY) THEN 1
+                           ELSE 0
+                       END) AS DAY30_COHORT_CNTT
+                 , SUM(CASE
+                           WHEN C.JOIN_DATE BETWEEN DATE_SUB(#{startDate}, INTERVAL 30 DAY)
+                                                AND DATE_SUB(#{endDate}, INTERVAL 30 DAY)
+                            AND F.DAY30_RETURN = 1 THEN 1
+                           ELSE 0
+                       END) AS DAY30_RETAINED_CNTT
+              FROM COHORT C
+         LEFT JOIN RETURN_FLAG F
+                ON F.USER_NUMB = C.USER_NUMB
+        )
+        SELECT /* getUserRetentionList */
+               1 AS PERIOD_DAYS
+             , COALESCE(R.DAY1_COHORT_CNTT, 0) AS COHORT_CNTT
+             , COALESCE(R.DAY1_RETAINED_CNTT, 0) AS RETAINED_CNTT
+             , ROUND(COALESCE(R.DAY1_RETAINED_CNTT * 100.0 / NULLIF(R.DAY1_COHORT_CNTT, 0), 0), 1) AS RETENTION_RATE
+          FROM RETENTION_SUMMARY R
+         UNION ALL
+        SELECT 7 AS PERIOD_DAYS
+             , COALESCE(R.DAY7_COHORT_CNTT, 0) AS COHORT_CNTT
+             , COALESCE(R.DAY7_RETAINED_CNTT, 0) AS RETAINED_CNTT
+             , ROUND(COALESCE(R.DAY7_RETAINED_CNTT * 100.0 / NULLIF(R.DAY7_COHORT_CNTT, 0), 0), 1) AS RETENTION_RATE
+          FROM RETENTION_SUMMARY R
+         UNION ALL
+        SELECT 30 AS PERIOD_DAYS
+             , COALESCE(R.DAY30_COHORT_CNTT, 0) AS COHORT_CNTT
+             , COALESCE(R.DAY30_RETAINED_CNTT, 0) AS RETAINED_CNTT
+             , ROUND(COALESCE(R.DAY30_RETAINED_CNTT * 100.0 / NULLIF(R.DAY30_COHORT_CNTT, 0), 0), 1) AS RETENTION_RATE
+          FROM RETENTION_SUMMARY R
+      ORDER BY PERIOD_DAYS
+    </select>
+
+    <!-- 선택 기간 가입자가 온보딩과 독후감 및 소셜 활동을 순서대로 완료한 전환 수를 조회한다 -->
+    <select id="getUserConversionDtl"
+            parameterType="org.sadari.admin.sadariadmin.statistics.vo.UserStatisticsSearchVO"
+            resultType="org.sadari.admin.sadariadmin.statistics.vo.UserStatisticsVO$UserConversionStatistics">
+        <bind name="yes" value="@org.sadari.admin.sadariadmin.common.constant.Constant@YES"/>
+        WITH COHORT AS (
+            SELECT U.USER_NUMB AS USER_NUMB
+                 , U.ONBD_YSNO AS ONBD_YSNO
+              FROM TM_USERXM U
+             WHERE U.JOIN_DATE <![CDATA[>=]]> #{startDate}
+               AND U.JOIN_DATE <![CDATA[<]]> DATE_ADD(#{endDate}, INTERVAL 1 DAY)
+        )
+        , REPORT_USER AS (
+            SELECT R.USER_NUMB AS USER_NUMB
+              FROM TM_REPORT R
+        INNER JOIN COHORT C
+                ON C.USER_NUMB = R.USER_NUMB
+          GROUP BY R.USER_NUMB
+        )
+        , SOCIAL_USER AS (
+            SELECT S.USER_NUMB AS USER_NUMB
+              FROM (  SELECT P.USER_NUMB AS USER_NUMB
+                        FROM TB_REPLXX P
+                       WHERE P.USER_NUMB IS NOT NULL
+                       UNION ALL
+                      SELECT K.USER_NUMB AS USER_NUMB
+                        FROM TB_LIKEXX K
+                       UNION ALL
+                      SELECT F.USER_NUMB AS USER_NUMB
+                        FROM TB_FOLLOW F
+                   ) S
+        INNER JOIN COHORT C
+                ON C.USER_NUMB = S.USER_NUMB
+          GROUP BY S.USER_NUMB
+        )
+        SELECT /* getUserConversionDtl */
+               COUNT(C.USER_NUMB) AS JOIN_CNTT
+             , COALESCE(SUM(CASE
+                                WHEN C.ONBD_YSNO = #{yes} THEN 1
+                                ELSE 0
+                            END), 0) AS ONBOARDING_CNTT
+             , COALESCE(SUM(CASE
+                                WHEN C.ONBD_YSNO = #{yes} AND R.USER_NUMB IS NOT NULL THEN 1
+                                ELSE 0
+                            END), 0) AS REPORT_CNTT
+             , COALESCE(SUM(CASE
+                                WHEN C.ONBD_YSNO = #{yes} AND R.USER_NUMB IS NOT NULL
+                                 AND S.USER_NUMB IS NOT NULL THEN 1
+                                ELSE 0
+                            END), 0) AS SOCIAL_CNTT
+          FROM COHORT C
+     LEFT JOIN REPORT_USER R
+            ON R.USER_NUMB = C.USER_NUMB
+     LEFT JOIN SOCIAL_USER S
+            ON S.USER_NUMB = C.USER_NUMB
+    </select>
+
+    <!-- 현재 정상 회원의 선택 기간 행동을 방문과 독후감 및 소통과 관계의 가장 깊은 단계로 분류한다 -->
+    <select id="getUserActivityDtl"
+            parameterType="org.sadari.admin.sadariadmin.statistics.vo.UserStatisticsSearchVO"
+            resultType="org.sadari.admin.sadariadmin.statistics.vo.UserStatisticsVO$UserActivityCompositionStatistics">
+        <bind name="active" value="@org.sadari.admin.sadariadmin.common.constant.Constant@USER_STAT_ACTIVE"/>
+        WITH ACTIVE_USER AS (
+            SELECT U.USER_NUMB AS USER_NUMB
+              FROM TM_USERXM U
+             WHERE U.USER_STAT = #{active}
+        )
+        , USER_ACTIVITY AS (
+            SELECT H.USER_NUMB AS USER_NUMB
+                 , 1 AS ACTIVITY_DEPTH
+              FROM TB_LOGHIS H
+        INNER JOIN ACTIVE_USER U
+                ON U.USER_NUMB = H.USER_NUMB
+             WHERE H.LOGN_DATE <![CDATA[>=]]> #{startDate}
+               AND H.LOGN_DATE <![CDATA[<]]> DATE_ADD(#{endDate}, INTERVAL 1 DAY)
+             UNION ALL
+            SELECT R.USER_NUMB AS USER_NUMB
+                 , 2 AS ACTIVITY_DEPTH
+              FROM TM_REPORT R
+        INNER JOIN ACTIVE_USER U
+                ON U.USER_NUMB = R.USER_NUMB
+             WHERE R.REGI_DATE <![CDATA[>=]]> #{startDate}
+               AND R.REGI_DATE <![CDATA[<]]> DATE_ADD(#{endDate}, INTERVAL 1 DAY)
+             UNION ALL
+            SELECT P.USER_NUMB AS USER_NUMB
+                 , 3 AS ACTIVITY_DEPTH
+              FROM TB_REPLXX P
+        INNER JOIN ACTIVE_USER U
+                ON U.USER_NUMB = P.USER_NUMB
+             WHERE P.REGI_DATE <![CDATA[>=]]> #{startDate}
+               AND P.REGI_DATE <![CDATA[<]]> DATE_ADD(#{endDate}, INTERVAL 1 DAY)
+             UNION ALL
+            SELECT K.USER_NUMB AS USER_NUMB
+                 , 3 AS ACTIVITY_DEPTH
+              FROM TB_LIKEXX K
+        INNER JOIN ACTIVE_USER U
+                ON U.USER_NUMB = K.USER_NUMB
+             WHERE K.REGI_DATE <![CDATA[>=]]> #{startDate}
+               AND K.REGI_DATE <![CDATA[<]]> DATE_ADD(#{endDate}, INTERVAL 1 DAY)
+             UNION ALL
+            SELECT F.USER_NUMB AS USER_NUMB
+                 , 4 AS ACTIVITY_DEPTH
+              FROM TB_FOLLOW F
+        INNER JOIN ACTIVE_USER U
+                ON U.USER_NUMB = F.USER_NUMB
+             WHERE F.REGI_DATE <![CDATA[>=]]> #{startDate}
+               AND F.REGI_DATE <![CDATA[<]]> DATE_ADD(#{endDate}, INTERVAL 1 DAY)
+        )
+        , USER_DEPTH AS (
+            SELECT A.USER_NUMB AS USER_NUMB
+                 , MAX(A.ACTIVITY_DEPTH) AS ACTIVITY_DEPTH
+              FROM USER_ACTIVITY A
+          GROUP BY A.USER_NUMB
+        )
+        SELECT /* getUserActivityDtl */
+               COALESCE(SUM(CASE WHEN D.ACTIVITY_DEPTH = 1 THEN 1 ELSE 0 END), 0) AS VISIT_CNTT
+             , COALESCE(SUM(CASE WHEN D.ACTIVITY_DEPTH = 2 THEN 1 ELSE 0 END), 0) AS REPORT_CNTT
+             , COALESCE(SUM(CASE WHEN D.ACTIVITY_DEPTH = 3 THEN 1 ELSE 0 END), 0) AS COMMUNITY_CNTT
+             , COALESCE(SUM(CASE WHEN D.ACTIVITY_DEPTH = 4 THEN 1 ELSE 0 END), 0) AS RELATION_CNTT
+          FROM USER_DEPTH D
+    </select>
+
+    <!-- 선택 기간의 계정 비활성화와 영구 탈퇴 및 정지와 복구 처리 수를 일별로 조회한다 -->
+    <select id="getUserChurnTrendList"
+            parameterType="org.sadari.admin.sadariadmin.statistics.vo.UserStatisticsSearchVO"
+            resultType="org.sadari.admin.sadariadmin.statistics.vo.UserStatisticsVO$UserChurnTrendStatistics">
+        <bind name="soft" value="@org.sadari.admin.sadariadmin.common.constant.Constant@WTHD_TYPE_SOFT"/>
+        <bind name="hard" value="@org.sadari.admin.sadariadmin.common.constant.Constant@WTHD_TYPE_HARD"/>
+        WITH RECURSIVE DATE_RANGE AS (
+            SELECT CAST(#{startDate} AS DATE) AS STAT_DATE
+             UNION ALL
+            SELECT DATE_ADD(D.STAT_DATE, INTERVAL 1 DAY) AS STAT_DATE
+              FROM DATE_RANGE D
+             WHERE D.STAT_DATE <![CDATA[<]]> #{endDate}
+        )
+        , WITHDRAWAL_ACTIVITY AS (
+            SELECT DATE(W.REQU_DATE) AS STAT_DATE
+                 , SUM(CASE WHEN W.WTHD_TYPE = #{soft} THEN 1 ELSE 0 END) AS WITHDRAWN_CNTT
+                 , SUM(CASE WHEN W.WTHD_TYPE = #{hard} THEN 1 ELSE 0 END) AS DELETE_CNTT
+              FROM TH_USWTHD W
+             WHERE W.REQU_DATE <![CDATA[>=]]> #{startDate}
+               AND W.REQU_DATE <![CDATA[<]]> DATE_ADD(#{endDate}, INTERVAL 1 DAY)
+          GROUP BY DATE(W.REQU_DATE)
+        )
+        , RESTORE_ACTIVITY AS (
+            SELECT DATE(W.RCOV_DATE) AS STAT_DATE
+                 , COUNT(1) AS RESTORED_CNTT
+              FROM TH_USWTHD W
+             WHERE W.RCOV_DATE <![CDATA[>=]]> #{startDate}
+               AND W.RCOV_DATE <![CDATA[<]]> DATE_ADD(#{endDate}, INTERVAL 1 DAY)
+          GROUP BY DATE(W.RCOV_DATE)
+        )
+        , SUSPEND_ACTIVITY AS (
+            SELECT DATE(S.STRT_DATE) AS STAT_DATE
+                 , COUNT(1) AS SUSPENDED_CNTT
+              FROM TH_USSPND S
+             WHERE S.STRT_DATE <![CDATA[>=]]> #{startDate}
+               AND S.STRT_DATE <![CDATA[<]]> DATE_ADD(#{endDate}, INTERVAL 1 DAY)
+          GROUP BY DATE(S.STRT_DATE)
+        )
+        SELECT /* getUserChurnTrendList */
+               D.STAT_DATE AS STAT_DATE
+             , COALESCE(W.WITHDRAWN_CNTT, 0) AS WITHDRAWN_CNTT
+             , COALESCE(W.DELETE_CNTT, 0) AS DELETE_CNTT
+             , COALESCE(S.SUSPENDED_CNTT, 0) AS SUSPENDED_CNTT
+             , COALESCE(R.RESTORED_CNTT, 0) AS RESTORED_CNTT
+          FROM DATE_RANGE D
+     LEFT JOIN WITHDRAWAL_ACTIVITY W
+            ON W.STAT_DATE = D.STAT_DATE
+     LEFT JOIN SUSPEND_ACTIVITY S
+            ON S.STAT_DATE = D.STAT_DATE
+     LEFT JOIN RESTORE_ACTIVITY R
+            ON R.STAT_DATE = D.STAT_DATE
+      ORDER BY D.STAT_DATE
+    </select>
+</mapper>

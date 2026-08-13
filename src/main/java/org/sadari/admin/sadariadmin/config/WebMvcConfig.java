@@ -17,6 +17,7 @@ import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
  * 2026-07-30        SeungHyeon.Kang    팝업 콘텐츠 관리 권한 경로 추가
  * 2026-07-30        SeungHyeon.Kang    현재 사용자 조회 권한 경로 추가
  * 2026-08-05        SeungHyeon.Kang    신고 관리 권한 경로 추가
+ * 2026-08-13        SeungHyeon.Kang    사용자 통계 조회 권한 경로 추가
  */
 @Configuration
 public class WebMvcConfig implements WebMvcConfigurer {
@@ -43,6 +44,7 @@ public class WebMvcConfig implements WebMvcConfigurer {
                         "/api/admin-auths/**",
                         "/api/schedule-logs/**",
                         "/api/current-users/**",
+                        "/api/user-statistics/**",
                         "/api/complaints/**"
                 );
     }
