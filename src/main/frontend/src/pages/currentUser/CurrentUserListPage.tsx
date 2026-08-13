@@ -19,7 +19,7 @@ type CurrentUserListPageProps = {
 
 const DEFAULT_SEARCH: CurrentUserSearch = {
   keyword: '',
-  userStat: 'ACTIVE',
+  userStat: '',
   userProv: '',
   onbdYsno: '',
   joinDateFrom: '',
@@ -81,7 +81,7 @@ export function CurrentUserListPage({ onMovePath, onError }: CurrentUserListPage
     }
   }
 
-  // 첫 진입 시 기본 활성 사용자 목록과 상태 공통코드를 함께 조회한다.
+  // 첫 진입 시 전체 사용자 목록과 상태 공통코드를 함께 조회한다.
   useEffect(() => {
     let active = true
     // 상세 이동 전에 사용한 현재 사용자 목록 조회 상태를 확인한다.
@@ -131,7 +131,7 @@ export function CurrentUserListPage({ onMovePath, onError }: CurrentUserListPage
   }
 
   /**
-   * 검색 조건과 결과를 기본 활성 사용자 상태로 초기화한다.
+   * 검색 조건과 결과를 전체 사용자 상태로 초기화한다.
    *
    * @author SeungHyeon.Kang
    * @return 반환값이 없다

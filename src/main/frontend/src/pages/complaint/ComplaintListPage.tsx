@@ -19,7 +19,7 @@ type ComplaintListPageProps = {
 
 const DEFAULT_SEARCH: ComplaintSearch = {
   cmplNumb: '',
-  cmplStat: 'CMPL_RECEIVED',
+  cmplStat: '',
   tagtType: '',
   tagtNumb: '',
   cmplRson: '',
@@ -82,12 +82,12 @@ export function ComplaintListPage({ onMovePath, onError }: ComplaintListPageProp
     }
   }
 
-  // 첫 진입 시 기본 접수 신고 목록과 세 종류의 신고 공통코드를 조회한다
+  // 첫 진입 시 전체 신고 목록과 세 종류의 신고 공통코드를 조회한다
   useEffect(() => {
     let active = true
     // 상세 이동 전에 사용한 신고 목록 조회 상태를 확인한다
     const snapshot = getListPageSnapshot(COMPLAINT_LIST_PATH, DEFAULT_SEARCH)
-    // 신고 검색 셀렉트와 기본 접수 목록 데이터를 병렬로 조회한다
+    // 신고 검색 셀렉트와 전체 목록 데이터를 병렬로 조회한다
     Promise.all([
       getCodeList(CMPL_TAGT),
       getCodeList(CMPL_RSON),
@@ -103,7 +103,7 @@ export function ComplaintListPage({ onMovePath, onError }: ComplaintListPageProp
           setReasonCodes(reasons.filter((code) => code.useeYsno !== 'N'))
           // 활성 신고 처리 상태를 검색 선택지에 설정한다
           setStatusCodes(statuses.filter((code) => code.useeYsno !== 'N'))
-          // 기본 접수 신고 목록을 화면에 설정한다
+          // 전체 신고 목록을 화면에 설정한다
           setPageData(complaints)
           // 복원된 신고 검색 조건을 입력과 페이지 이동 조건에 함께 설정한다
           setSearch(snapshot.search)
@@ -148,19 +148,19 @@ export function ComplaintListPage({ onMovePath, onError }: ComplaintListPageProp
   }
 
   /**
-   * 신고 검색 조건과 결과를 기본 접수 상태로 초기화한다
+   * 신고 검색 조건과 결과를 전체 상태로 초기화한다
    *
    * @author SeungHyeon.Kang
    * @return 반환값이 없다
    */
   const handleReset = (): void => {
-    // 입력 조건과 적용 조건을 기본 접수 상태로 되돌린다
+    // 입력 조건과 적용 조건을 전체 상태로 되돌린다
     const nextSearch = { ...DEFAULT_SEARCH }
     // 검색 폼을 기본값으로 설정한다
     setSearch(nextSearch)
     // 페이지 이동용 적용 검색값을 기본값으로 설정한다
     setAppliedSearch(nextSearch)
-    // 기본 접수 조건의 신고 첫 페이지를 조회한다
+    // 전체 조건의 신고 첫 페이지를 조회한다
     void loadComplaints(1, nextSearch)
   }
 

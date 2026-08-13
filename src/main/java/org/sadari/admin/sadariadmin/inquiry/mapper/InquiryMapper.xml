@@ -1,0 +1,71 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "https://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="org.sadari.admin.sadariadmin.inquiry.mapper.InquiryMapper">
+    <sql id="searchConditions">
+        <if test="inqrNumb != null"> AND I.INQR_NUMB = #{inqrNumb}</if>
+        <if test="inqrCatg != null and inqrCatg != ''"> AND I.INQR_CATG = #{inqrCatg}</if>
+        <if test="inqrStat != null and inqrStat != ''"> AND I.INQR_STAT = #{inqrStat}</if>
+        <if test="userKeyword != null and userKeyword != ''">
+            <bind name="userKeywordLike" value="'%' + userKeyword.toUpperCase() + '%'"/>
+            AND (CAST(I.USER_NUMB AS CHAR) LIKE #{userKeywordLike} OR UPPER(U.USER_NICK) LIKE #{userKeywordLike})
+        </if>
+    </sql>
+    <sql id="columns">
+        I.INQR_NUMB, I.USER_NUMB, U.USER_NICK, U.USER_STAT,
+        I.INQR_CATG, FN_GET_CODE_NAME('INQR_CATG', I.INQR_CATG, 'INQR_CATG') AS INQR_CATG_NAME,
+        I.INQR_TITL, I.INQR_CNTN, I.INQR_STAT,
+        FN_GET_CODE_NAME('INQR_STAT', I.INQR_STAT, 'INQR_STAT') AS INQR_STAT_NAME,
+        I.SPND_NUMB, S.SPND_STAT,
+        FN_GET_CODE_NAME('SPND_RSON', S.SPND_RSON, 'SPND_RSON') AS SPND_RSON_NAME,
+        S.STRT_DATE AS SPND_STRT_DATE, S.ENDX_DATE AS SPND_ENDX_DATE,
+        I.ASGN_ADMN, FN_GET_ADMIN_NAME(I.ASGN_ADMN) AS ASGN_ADMN_NAME,
+        I.ANSW_DATE, I.REGI_DATE, I.UPDT_DATE
+    </sql>
+    <select id="getInquiryList" resultType="org.sadari.admin.sadariadmin.inquiry.vo.InquiryVO">
+        SELECT P.* FROM (
+            SELECT <include refid="columns"/>,
+                   ROW_NUMBER() OVER (ORDER BY I.REGI_DATE DESC, I.INQR_NUMB DESC) AS ROW_NUMB
+              FROM CT_INQURY I
+         LEFT JOIN TM_USERXM U ON U.USER_NUMB = I.USER_NUMB
+         LEFT JOIN TH_USSPND S ON S.SPND_NUMB = I.SPND_NUMB
+             WHERE 1 = 1 <include refid="searchConditions"/>
+        ) P
+        WHERE P.ROW_NUMB BETWEEN #{startRow} AND #{endRow}
+        ORDER BY P.ROW_NUMB
+    </select>
+    <select id="getInquiryListCount" resultType="int">
+        SELECT COUNT(1) FROM CT_INQURY I
+        LEFT JOIN TM_USERXM U ON U.USER_NUMB = I.USER_NUMB
+        WHERE 1 = 1 <include refid="searchConditions"/>
+    </select>
+    <select id="getInquiryDtl" resultType="org.sadari.admin.sadariadmin.inquiry.vo.InquiryVO">
+        SELECT <include refid="columns"/>
+          FROM CT_INQURY I
+     LEFT JOIN TM_USERXM U ON U.USER_NUMB = I.USER_NUMB
+     LEFT JOIN TH_USSPND S ON S.SPND_NUMB = I.SPND_NUMB
+         WHERE I.INQR_NUMB = #{inqrNumb}
+    </select>
+    <select id="getInquiryForUpdate" resultType="org.sadari.admin.sadariadmin.inquiry.vo.InquiryVO">
+        SELECT INQR_NUMB, USER_NUMB, INQR_STAT, SPND_NUMB, ASGN_ADMN, UPDT_DATE
+          FROM CT_INQURY WHERE INQR_NUMB = #{inqrNumb} FOR UPDATE
+    </select>
+    <select id="getInquiryAnswerList" resultType="org.sadari.admin.sadariadmin.inquiry.vo.InquiryAnswerVO">
+        SELECT ANSW_NUMB, ANSW_CNTN, READ_YSNO, REGI_ADMN,
+               FN_GET_ADMIN_NAME(REGI_ADMN) AS REGI_ADMN_NAME, REGI_DATE
+          FROM CT_INQANS WHERE INQR_NUMB = #{inqrNumb}
+      ORDER BY REGI_DATE, ANSW_NUMB
+    </select>
+    <update id="uptInquiryReviewing">
+        UPDATE CT_INQURY SET INQR_STAT = 'INQR_REVIEWING', ASGN_ADMN = #{admnNumb}, UPDT_DATE = CURRENT_TIMESTAMP(6)
+         WHERE INQR_NUMB = #{inqrNumb} AND INQR_STAT = 'INQR_RECEIVED' AND UPDT_DATE = #{updtDate}
+    </update>
+    <insert id="setInquiryAnswer">
+        INSERT INTO CT_INQANS (INQR_NUMB, ANSW_CNTN, READ_YSNO, REGI_ADMN)
+        VALUES (#{inqrNumb}, #{answCntn}, 'N', #{admnNumb})
+    </insert>
+    <update id="uptInquiryAnswered">
+        UPDATE CT_INQURY SET INQR_STAT = 'INQR_ANSWERED', ASGN_ADMN = #{admnNumb},
+               ANSW_DATE = CURRENT_TIMESTAMP(6), UPDT_DATE = CURRENT_TIMESTAMP(6)
+         WHERE INQR_NUMB = #{inqrNumb}
+    </update>
+</mapper>

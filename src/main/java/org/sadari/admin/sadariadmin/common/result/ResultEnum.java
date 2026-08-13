@@ -160,6 +160,12 @@ public enum ResultEnum {
     /** 신고 동시 수정 충돌 */
     COMPLAINT_CONFLICT(2009, "complaint.conflict"),
 
+    /** 고객문의가 존재하지 않는 경우 */
+    INQUIRY_NOT_FOUND(2004, "inquiry.not-found"),
+
+    /** 고객문의 상태가 다른 관리자 처리로 변경된 경우 */
+    INQUIRY_CONFLICT(2009, "inquiry.conflict"),
+
     /** 신고 담당자 처리 권한 없음 */
     COMPLAINT_ASSIGNEE_FORBIDDEN(1004, "complaint.assignee-forbidden"),
 

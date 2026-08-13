@@ -29,6 +29,8 @@ import { CurrentUserListPage } from './pages/currentUser/CurrentUserListPage'
 import { CurrentUserDetailPage } from './pages/currentUser/CurrentUserDetailPage'
 import { ComplaintListPage } from './pages/complaint/ComplaintListPage'
 import { ComplaintDetailPage } from './pages/complaint/ComplaintDetailPage'
+import { InquiryListPage } from './pages/inquiry/InquiryListPage'
+import { InquiryDetailPage } from './pages/inquiry/InquiryDetailPage'
 import { NoticeManagePage } from './pages/notice/NoticeManagePage'
 import { ServiceInfoManagePage } from './pages/serviceInfo/ServiceInfoManagePage'
 import { UserStatisticsPage } from './pages/statistics/UserStatisticsPage'
@@ -39,6 +41,7 @@ import type { Menu, MenuForm, MenuSearch } from './types/menu'
 import type { PageData } from './types/common'
 import { emptyDetailForm, emptyMenuForm, getNextSortOrdr, toDetailCodeForm, toMenuForm } from './utils/forms'
 import { getListPageSnapshot, setListPageSnapshot } from './utils/search'
+import { INQUIRY_DETAIL_PREFIX, INQUIRY_LIST_PATH } from './constants/routes'
 
 const emptyPageData = <T,>(): PageData<T> => ({ items: [], totalCount: 0, pageNumber: 1, pageSize: 20, totalPages: 0 })
 
@@ -144,6 +147,12 @@ function App() {
     return Number.isInteger(cmplNumb) && cmplNumb > 0 ? cmplNumb : null
   }, [currentPath])
 
+  const inquiryDetailKey = useMemo(() => {
+    if (!currentPath.startsWith(`${INQUIRY_DETAIL_PREFIX}/`)) return null
+    const inqrNumb = Number(currentPath.slice(INQUIRY_DETAIL_PREFIX.length + 1))
+    return Number.isInteger(inqrNumb) && inqrNumb > 0 ? inqrNumb : null
+  }, [currentPath])
+
   const isMenuListPage = currentPath === MENU_LIST_PATH
   const isMenuNewPage = currentPath === MENU_NEW_PATH || currentPath.startsWith(`${MENU_NEW_PATH}/`)
   const isMenuDetailPage = detailKey !== null
@@ -164,6 +173,8 @@ function App() {
   const isUserStatisticsPage = currentPath === USER_STATISTICS_PATH
   const isComplaintListPage = currentPath === COMPLAINT_LIST_PATH
   const isComplaintDetailPage = complaintDetailKey !== null
+  const isInquiryListPage = currentPath === INQUIRY_LIST_PATH
+  const isInquiryDetailPage = inquiryDetailKey !== null
   const isPopupContentPage = currentPath === POPUP_CONTENT_LIST_PATH
     || currentPath === POPUP_CONTENT_NEW_PATH
     || currentPath.startsWith(`${POPUP_CONTENT_DETAIL_PREFIX}/`)
@@ -185,6 +196,7 @@ function App() {
     if (currentPath.startsWith(SCHEDULE_LOG_DETAIL_PREFIX)) return SCHEDULE_LOG_LIST_PATH
     if (currentPath.startsWith(CURRENT_USER_DETAIL_PREFIX)) return CURRENT_USER_LIST_PATH
     if (currentPath.startsWith(COMPLAINT_DETAIL_PREFIX)) return COMPLAINT_LIST_PATH
+    if (currentPath.startsWith(INQUIRY_DETAIL_PREFIX)) return INQUIRY_LIST_PATH
     if (currentPath === NOTICE_NEW_PATH || currentPath.startsWith(NOTICE_DETAIL_PREFIX)) return NOTICE_LIST_PATH
     if (currentPath === SERVICE_INFO_NEW_PATH || currentPath.startsWith(SERVICE_INFO_DETAIL_PREFIX)) return SERVICE_INFO_LIST_PATH
     return currentPath
@@ -1066,6 +1078,15 @@ function App() {
           cmplNumb={complaintDetailKey}
           adminNumb={admin.admnNumb}
           adminAuthCode={admin.authCode}
+          onMovePath={movePath}
+          onError={setError}
+        />
+      )}
+      {isInquiryListPage && <InquiryListPage onMovePath={movePath} onError={setError} />}
+      {isInquiryDetailPage && (
+        <InquiryDetailPage
+          key={inquiryDetailKey}
+          inqrNumb={inquiryDetailKey}
           onMovePath={movePath}
           onError={setError}
         />

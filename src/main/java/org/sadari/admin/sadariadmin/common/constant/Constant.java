@@ -264,6 +264,12 @@ public final class Constant {
     /** 신고 관리 API URL 패턴 */
     public static final String API_COMPLAINTS_PATTERN = "/api/complaints/**";
 
+    /** 고객문의 관리 API URL 접두어 */
+    public static final String API_INQUIRIES_PREFIX = "/api/inquiries";
+
+    /** 고객문의 관리 API URL 패턴 */
+    public static final String API_INQUIRIES_PATTERN = "/api/inquiries/**";
+
     /** 관리자 업로드 이미지 조회 URL 패턴 */
     public static final String API_UPLOADS_PATTERN = "/uploads/**";
 

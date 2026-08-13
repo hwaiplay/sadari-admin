@@ -45,7 +45,8 @@ public class WebMvcConfig implements WebMvcConfigurer {
                         "/api/schedule-logs/**",
                         "/api/current-users/**",
                         "/api/user-statistics/**",
-                        "/api/complaints/**"
+                        "/api/complaints/**",
+                        "/api/inquiries/**"
                 );
     }
 }
