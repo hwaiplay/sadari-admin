@@ -9,6 +9,7 @@ import type { ScheduleLog, ScheduleLogSearch } from '../../types/scheduleLog'
 import { formatDate } from '../../utils/code'
 import { formatExecutionTime, getScheduleStatusClass } from '../../utils/scheduleLog'
 import { Pagination } from '../../components/Pagination'
+import { AdminDatePicker } from '../../components/AdminDatePicker'
 import type { PageData } from '../../types/common'
 import { getListPageSnapshot, setListPageSnapshot } from '../../utils/search'
 
@@ -220,13 +221,13 @@ export function ScheduleLogListPage({ onMovePath, onError }: ScheduleLogListPage
           </label>
           <label>
             <span>시작일(From)</span>
-            <input type="date" value={search.strtDateFrom}
-                   onChange={(event) => setSearch({ ...search, strtDateFrom: event.target.value })} />
+            <AdminDatePicker value={search.strtDateFrom} ariaLabel="시작일 From 날짜 선택"
+                             onChange={(value) => setSearch({ ...search, strtDateFrom: value })} />
           </label>
           <label>
             <span>시작일(To)</span>
-            <input type="date" value={search.strtDateTo}
-                   onChange={(event) => setSearch({ ...search, strtDateTo: event.target.value })} />
+            <AdminDatePicker value={search.strtDateTo} ariaLabel="시작일 To 날짜 선택"
+                             onChange={(value) => setSearch({ ...search, strtDateTo: value })} />
           </label>
           <div className="list-search-actions">
             <button type="button" className="subtle-button"

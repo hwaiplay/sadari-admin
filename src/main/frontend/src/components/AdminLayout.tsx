@@ -28,7 +28,7 @@ type AdminLayoutProps = {
  * @return
  */
 export function AdminLayout({ admin, menus, activePath, error, onMovePath, onLogout, children }: AdminLayoutProps) {
-  const [openedMenuNumb, setOpenedMenuNumb] = useState<string | null>(null)
+  const [menuOpenState, setMenuOpenState] = useState<Record<string, boolean>>({})
   const parentMenus = menus.filter((menu) => menu.subxNumb === '0')
   const getChildMenus = (menuNumb: string) => menus.filter((menu) => menu.menuNumb === menuNumb && menu.subxNumb !== '0')
 
@@ -52,7 +52,10 @@ export function AdminLayout({ admin, menus, activePath, error, onMovePath, onLog
   const handleParentMenuClick = (menu: Menu) => {
     const childMenus = getChildMenus(menu.menuNumb)
     if (childMenus.length > 0) {
-      setOpenedMenuNumb(openedMenuNumb === menu.menuNumb ? null : menu.menuNumb)
+      const menuStateKey = menu.menuNumb
+      const activeChild = childMenus.some((child) => activePath === child.menuUrlx)
+      const opened = menuOpenState[menuStateKey] ?? activeChild
+      setMenuOpenState((current) => ({ ...current, [menuStateKey]: !opened }))
       return
     }
     handleMenuMove(menu.menuUrlx)
@@ -72,8 +75,10 @@ export function AdminLayout({ admin, menus, activePath, error, onMovePath, onLog
             const activeChild = childMenus.some((child) => activePath === child.menuUrlx)
             // 현재 경로가 부모 또는 자식 메뉴에 연결되면 메뉴 그룹을 활성화한다
             const active = activePath === menu.menuUrlx || activeChild
-            // 활성 자식 메뉴가 속한 부모 그룹은 계층을 확인할 수 있도록 항상 펼친다
-            const opened = openedMenuNumb === menu.menuNumb || activeChild
+            // 경로 변경과 관계없이 유지할 부모 메뉴 펼침 상태를 조회한다
+            const menuStateKey = menu.menuNumb
+            // 활성 그룹도 사용자가 직접 접을 수 있도록 펼침 상태만 기준으로 노출한다
+            const opened = menuOpenState[menuStateKey] ?? activeChild
             // 자식 메뉴가 있는 활성 그룹은 부모와 자식을 하나의 선택 영역으로 표시한다
             const groupClassName = active
               ? `menu-group active${hasChildren ? ' has-children' : ''}`
@@ -85,11 +90,15 @@ export function AdminLayout({ admin, menus, activePath, error, onMovePath, onLog
                   <span className="menu-label">{menu.menuName}</span>
                   {childMenus.length > 0 && <span className={opened ? 'menu-arrow opened' : 'menu-arrow'} aria-hidden="true" />}
                 </button>
-                {opened && childMenus.map((child) => (
-                  <button key={`${child.menuNumb}-${child.subxNumb}`} type="button" className={activePath === child.menuUrlx ? 'menu-item child active' : 'menu-item child'} onClick={() => handleMenuMove(child.menuUrlx)}>
-                    <span className="menu-label child">{child.menuName}</span>
-                  </button>
-                ))}
+                <div className={opened ? 'menu-children opened' : 'menu-children'} aria-hidden={!opened}>
+                  <div className="menu-children-inner">
+                    {childMenus.map((child) => (
+                      <button key={`${child.menuNumb}-${child.subxNumb}`} type="button" className={activePath === child.menuUrlx ? 'menu-item child active' : 'menu-item child'} onClick={() => handleMenuMove(child.menuUrlx)}>
+                        <span className="menu-label child">{child.menuName}</span>
+                      </button>
+                    ))}
+                  </div>
+                </div>
               </div>
             )
           })}

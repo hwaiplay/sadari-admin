@@ -3,6 +3,7 @@ import type { FormEvent, KeyboardEvent, MouseEvent } from 'react'
 import { getCodeList } from '../../api/codeApi'
 import { getCurrentUsers } from '../../api/currentUserApi'
 import { Pagination } from '../../components/Pagination'
+import { AdminDatePicker } from '../../components/AdminDatePicker'
 import { USER_PROV, USER_STAT } from '../../constants/codes'
 import { CURRENT_USER_DETAIL_PREFIX, CURRENT_USER_LIST_PATH } from '../../constants/routes'
 import type { Code } from '../../types/code'
@@ -261,11 +262,11 @@ export function CurrentUserListPage({ onMovePath, onError }: CurrentUserListPage
         </label>
         <label>
           <span>가입일 시작</span>
-          <input type="date" value={search.joinDateFrom} onChange={(event) => setSearch({ ...search, joinDateFrom: event.target.value })} />
+          <AdminDatePicker value={search.joinDateFrom} ariaLabel="가입일 시작 날짜 선택" onChange={(value) => setSearch({ ...search, joinDateFrom: value })} />
         </label>
         <label>
           <span>가입일 종료</span>
-          <input type="date" value={search.joinDateTo} onChange={(event) => setSearch({ ...search, joinDateTo: event.target.value })} />
+          <AdminDatePicker value={search.joinDateTo} ariaLabel="가입일 종료 날짜 선택" onChange={(value) => setSearch({ ...search, joinDateTo: value })} />
         </label>
         {/* 검색 실행과 초기화 버튼 */}
         <div className="current-user-search-actions">

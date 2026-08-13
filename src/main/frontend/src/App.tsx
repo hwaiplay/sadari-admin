@@ -36,7 +36,7 @@ import type { AlimIcon, AlimIconSearch, AlimTemp, AlimTempForm, AlimTempSearch }
 import type { Code, CodeMaster, CodeMasterSearch, DetailCodeForm, DetailCodePayload } from './types/code'
 import type { Menu, MenuForm, MenuSearch } from './types/menu'
 import type { PageData } from './types/common'
-import { emptyDetailForm, emptyMenuForm, toDetailCodeForm, toMenuForm } from './utils/forms'
+import { emptyDetailForm, emptyMenuForm, getNextSortOrdr, toDetailCodeForm, toMenuForm } from './utils/forms'
 import { getListPageSnapshot, setListPageSnapshot } from './utils/search'
 
 const emptyPageData = <T,>(): PageData<T> => ({ items: [], totalCount: 0, pageNumber: 1, pageSize: 20, totalPages: 0 })
@@ -655,7 +655,13 @@ function App() {
    * @return
    */
   const addChildForm = () => {
-    setChildForms([...childForms, emptyMenuForm(menuForm.menuNumb)])
+    // 기존 하위메뉴와 아직 저장하지 않은 입력 행을 합쳐 다음 정렬값을 계산한다
+    const nextSortOrdr = getNextSortOrdr([...subMenus, ...childForms])
+    // 현재 메뉴 아래에 다음 정렬값이 입력된 신규 하위메뉴 행을 추가한다
+    setChildForms([
+      ...childForms,
+      { ...emptyMenuForm(menuForm.menuNumb), sortOrdr: nextSortOrdr },
+    ])
   }
 
   /**
@@ -787,7 +793,39 @@ function App() {
    * @author SeungHyeon.Kang
    * @return 반환값이 없다
    */
-  const addDetailInput = () => setDetailForms([...detailForms, emptyDetailForm(selectedDetailCode)])
+  const addDetailInput = () => {
+    const siblingItems: Array<{ sortOrdr: number | string | null }> = []
+
+    // 현재 선택한 부모에 속한 기존 세부코드만 다음 정렬값 계산에 포함한다
+    for (const detailCode of detailCodes) {
+      // 다른 부모에 속한 세부코드는 현재 입력 행의 형제 정렬값에서 제외한다
+      if ((detailCode.upprCode ?? '') !== selectedDetailCode) {
+        continue
+      }
+
+      // 같은 부모에 속한 기존 세부코드의 정렬값을 계산 목록에 추가한다
+      siblingItems.push(detailCode)
+    }
+
+    // 현재 선택한 부모에 추가한 미저장 입력 행도 다음 정렬값 계산에 포함한다
+    for (const detailForm of detailForms) {
+      // 다른 부모에 추가한 입력 행은 현재 입력 행의 형제 정렬값에서 제외한다
+      if (detailForm.upprCode !== selectedDetailCode) {
+        continue
+      }
+
+      // 같은 부모에 추가한 미저장 입력 행의 정렬값을 계산 목록에 추가한다
+      siblingItems.push(detailForm)
+    }
+
+    // 현재 형제 데이터의 마지막 정렬값 다음 번호를 신규 입력 행에 설정한다
+    const nextSortOrdr = getNextSortOrdr(siblingItems)
+    // 선택한 세부코드 아래에 계산된 정렬값을 가진 신규 입력 행을 추가한다
+    setDetailForms([
+      ...detailForms,
+      { ...emptyDetailForm(selectedDetailCode), sortOrdr: nextSortOrdr },
+    ])
+  }
 
   /**
    * 저장 전 세부코드 입력 폼 삭제

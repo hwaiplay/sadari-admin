@@ -18,6 +18,7 @@ import type { Code } from '../../types/code'
 import type { PageData } from '../../types/common'
 import type { UserMenu, UserMenuForm, UserMenuSearch } from '../../types/userMenu'
 import { formatDate, getUseeYsnoCodeName } from '../../utils/code'
+import { getNextSortOrdr } from '../../utils/forms'
 import { getListPageSnapshot, setListPageSnapshot } from '../../utils/search'
 
 type UserMenuManagePageProps = {
@@ -309,10 +310,17 @@ export function UserMenuManagePage({ currentPath, onMovePath, onError }: UserMen
       return
     }
 
-    // 현재 상세 메뉴를 상위 메뉴로 지정한 빈 입력 행을 추가한다.
-    setChildForms((currentForms) => [
-      ...currentForms,
-      { ...emptyUserMenuForm(), parnNumb: String(detail.menuNumb), menuUrlx: '' },
+    // 기존 하위 메뉴와 아직 저장하지 않은 입력 행을 합쳐 다음 정렬값을 계산한다.
+    const nextSortOrdr = getNextSortOrdr([...childMenus, ...childForms])
+    // 현재 상세 메뉴를 상위 메뉴로 지정하고 다음 정렬값을 가진 빈 입력 행을 추가한다.
+    setChildForms([
+      ...childForms,
+      {
+        ...emptyUserMenuForm(),
+        parnNumb: String(detail.menuNumb),
+        menuUrlx: '',
+        sortOrdr: nextSortOrdr,
+      },
     ])
   }
 

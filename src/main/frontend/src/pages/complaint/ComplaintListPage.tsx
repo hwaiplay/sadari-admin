@@ -3,6 +3,7 @@ import type { FormEvent, KeyboardEvent, MouseEvent } from 'react'
 import { getCodeList } from '../../api/codeApi'
 import { getComplaints } from '../../api/complaintApi'
 import { Pagination } from '../../components/Pagination'
+import { AdminDatePicker } from '../../components/AdminDatePicker'
 import { CMPL_RSON, CMPL_STAT, CMPL_TAGT } from '../../constants/codes'
 import { COMPLAINT_DETAIL_PREFIX, COMPLAINT_LIST_PATH } from '../../constants/routes'
 import type { Code } from '../../types/code'
@@ -301,11 +302,11 @@ export function ComplaintListPage({ onMovePath, onError }: ComplaintListPageProp
         </label>
         <label>
           <span>접수일 시작</span>
-          <input type="date" value={search.regiDateFrom} onChange={(event) => setSearch({ ...search, regiDateFrom: event.target.value })} />
+          <AdminDatePicker value={search.regiDateFrom} ariaLabel="접수일 시작 날짜 선택" onChange={(value) => setSearch({ ...search, regiDateFrom: value })} />
         </label>
         <label>
           <span>접수일 종료</span>
-          <input type="date" value={search.regiDateTo} onChange={(event) => setSearch({ ...search, regiDateTo: event.target.value })} />
+          <AdminDatePicker value={search.regiDateTo} ariaLabel="접수일 종료 날짜 선택" onChange={(value) => setSearch({ ...search, regiDateTo: value })} />
         </label>
         {/* 신고 검색 실행과 초기화 버튼 */}
         <div className="complaint-search-actions">

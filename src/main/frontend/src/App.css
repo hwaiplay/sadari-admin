@@ -581,8 +581,14 @@ tbody tr:last-child > td {
   width: 32px;
   min-width: 32px;
   height: 32px;
+  min-height: 32px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
   padding: 0;
   border-radius: 50%;
+  box-sizing: border-box;
+  aspect-ratio: 1;
 }
 
 .col-tree-toggle .icon-toggle-button svg {
@@ -902,6 +908,30 @@ tbody tr:last-child > td {
   width: 64px;
   min-width: 0;
   text-align: center;
+}
+
+.menu-submenu-table table {
+  min-width: 1040px;
+  table-layout: fixed;
+}
+
+.menu-submenu-table .col-sort {
+  width: 96px;
+  min-width: 96px;
+  max-width: 96px;
+}
+
+.menu-submenu-table .col-sort input {
+  width: 100%;
+  min-width: 0;
+  text-align: center;
+}
+
+.menu-submenu-table .col-datetime {
+  width: 150px;
+  min-width: 150px;
+  max-width: 150px;
+  white-space: nowrap;
 }
 
 .code-edit-table table {
@@ -2059,10 +2089,6 @@ tbody tr:last-child > td {
   border-color: var(--border);
 }
 
-.note-editor:hover,
-.note-editor:hover .note-toolbar,
-.note-editor:hover .note-editable,
-.note-editor:hover .note-statusbar,
 .note-editor .note-btn:hover:not(:disabled) {
   border-color: var(--border);
   background-color: var(--table-hover);
@@ -2371,13 +2397,51 @@ button:active:not(:disabled) {
   background: transparent;
 }
 
-.menu-group.active.has-children > .menu-item.child.active {
+.menu-group.active.has-children .menu-item.child.active {
   color: var(--accent);
-  background: rgba(255, 255, 255, 0.68);
+  background: transparent;
+  border-color: var(--accent-border);
+  box-shadow: none;
 }
 
 .menu-group.active > .menu-item:hover:not(:disabled) {
   background: rgba(255, 255, 255, 0.52);
+}
+
+.menu-group.active.has-children .menu-item.child.active:hover:not(:disabled) {
+  color: var(--accent);
+  background: transparent;
+  border-color: var(--accent-border);
+  box-shadow: none;
+}
+
+.menu-children {
+  display: grid;
+  grid-template-rows: 0fr;
+  opacity: 0;
+  visibility: hidden;
+  transform: translateY(-6px);
+  transition:
+    grid-template-rows 220ms ease,
+    opacity 160ms ease,
+    transform 220ms ease,
+    visibility 0s linear 220ms;
+}
+
+.menu-children.opened {
+  grid-template-rows: 1fr;
+  opacity: 1;
+  visibility: visible;
+  transform: translateY(0);
+  transition-delay: 0s;
+}
+
+.menu-children-inner {
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  overflow: hidden;
 }
 
 .menu-item {
@@ -2672,5 +2736,139 @@ tbody tr:hover > td,
 
   .detail-panel {
     padding: 18px 14px;
+  }
+}
+
+/* 사용자단 선택 목록과 동일한 둥근 팝오버 스타일을 지원 브라우저에 적용한다 */
+@supports (appearance: base-select) {
+  select,
+  ::picker(select) {
+    appearance: base-select;
+  }
+
+  select {
+    height: 42px;
+    align-items: center;
+    padding-right: 13px;
+    border: 1px solid var(--border-strong);
+    border-radius: 9px;
+    background-image: none;
+    box-shadow: none;
+    line-height: 1.2;
+    cursor: pointer;
+  }
+
+  select:not(:open):focus {
+    border-color: var(--border-strong);
+    box-shadow: none;
+  }
+
+  select:open {
+    border-color: var(--accent-border);
+    box-shadow: 0 0 0 2px var(--focus);
+  }
+
+  select::picker-icon {
+    content: '';
+    width: 8px;
+    height: 8px;
+    margin-right: 3px;
+    margin-left: auto;
+    border-right: 2px solid currentColor;
+    border-bottom: 2px solid currentColor;
+    color: var(--muted);
+    box-sizing: border-box;
+    rotate: 45deg;
+    translate: 0 -2px;
+    transition: rotate 160ms ease, translate 160ms ease, color 160ms ease;
+  }
+
+  select:open::picker-icon {
+    color: var(--accent);
+    rotate: 225deg;
+    translate: 0 2px;
+  }
+
+  ::picker(select) {
+    margin-top: 5px;
+    padding: 5px;
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    background: #fff;
+    box-shadow: 0 12px 30px rgba(21, 21, 21, 0.14);
+    opacity: 0;
+    transform: translateY(-5px) scale(0.98);
+    transition:
+      opacity 160ms ease,
+      transform 160ms ease,
+      display 160ms allow-discrete,
+      overlay 160ms allow-discrete;
+  }
+
+  select:open::picker(select) {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+
+  @starting-style {
+    select:open::picker(select) {
+      opacity: 0;
+      transform: translateY(-5px) scale(0.98);
+    }
+  }
+
+  option {
+    min-height: 36px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 8px 10px;
+    border: 0;
+    border-radius: 10px;
+    color: var(--text-h);
+    background: transparent;
+    font-size: 13px;
+    cursor: pointer;
+  }
+
+  option + option {
+    margin-top: 3px;
+  }
+
+  option:hover,
+  option:focus-visible {
+    color: var(--accent);
+    background: var(--accent-soft);
+    outline: none;
+  }
+
+  option:checked {
+    color: var(--accent);
+    background: var(--accent-soft);
+    font-weight: 800;
+  }
+
+  option::checkmark {
+    order: 1;
+    margin-left: auto;
+    color: var(--accent);
+  }
+}
+
+input[type='datetime-local']::-webkit-calendar-picker-indicator {
+  padding: 6px;
+  border-radius: 50%;
+  cursor: pointer;
+  filter: sepia(0.3) saturate(1.4) hue-rotate(85deg);
+}
+
+input[type='datetime-local']::-webkit-calendar-picker-indicator:hover {
+  background-color: var(--accent-soft);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .menu-children,
+  .menu-arrow {
+    transition: none;
   }
 }

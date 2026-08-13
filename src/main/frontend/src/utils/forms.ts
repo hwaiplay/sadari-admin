@@ -2,6 +2,36 @@ import { DEFAULT_USEE_YSNO } from '../constants/codes'
 import type { DetailCodeForm } from '../types/code'
 import type { Menu, MenuForm } from '../types/menu'
 
+type SortOrderItem = {
+  sortOrdr: number | string | null | undefined
+}
+
+/**
+ * 기존 형제 데이터와 미저장 입력 행을 기준으로 다음 정렬값을 계산한다
+ *
+ * @author SeungHyeon.Kang
+ * @param items 정렬값을 가진 현재 형제 데이터와 미저장 입력 행
+ * @return 현재 최댓값보다 1 큰 정렬 입력값
+ */
+export const getNextSortOrdr = (items: SortOrderItem[]): string => {
+  let maxSortOrdr = 0
+
+  // 비어 있거나 잘못된 정렬값은 제외하고 현재 형제 데이터의 최댓값을 찾는다
+  for (const item of items) {
+    const sortOrdr = Number(item.sortOrdr)
+    // 1보다 작은 값과 숫자가 아닌 값은 다음 정렬값 계산에서 제외한다
+    if (!Number.isFinite(sortOrdr) || sortOrdr < 1) {
+      continue
+    }
+
+    // 현재까지 확인한 정렬값 중 가장 큰 값을 유지한다
+    maxSortOrdr = Math.max(maxSortOrdr, sortOrdr)
+  }
+
+  // 기존 형제 데이터가 없으면 1을 반환하고 있으면 최댓값의 다음 번호를 반환한다
+  return String(maxSortOrdr + 1)
+}
+
 /**
  * 빈 메뉴 입력 폼 생성
  * @Author SeungHyeon.Kang

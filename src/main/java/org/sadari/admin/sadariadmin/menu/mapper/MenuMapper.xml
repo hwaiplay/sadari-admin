@@ -181,7 +181,7 @@
           FROM TM_ADMENU
          WHERE MENU_NUMB = #{menuNumb}
            AND SUBX_NUMB != #{topMenuSubxNumb}
-      ORDER BY COALESCE(SORT_ORDR, 9999) DESC
+      ORDER BY COALESCE(SORT_ORDR, 9999) ASC
     </select>
 
     <!-- 신규 상위 메뉴 번호를 조회한다 -->

@@ -74,7 +74,7 @@ export function MenuDetailPage({ isNewPage, pageTitle, saving, menuForm, menuDet
                 <p>등록된 하위메뉴 목록입니다.</p>
               </div>
             </div>
-            <section className="table-wrap menu-list-table">
+            <section className="table-wrap menu-list-table menu-submenu-table">
               <table>
                 <thead>
                   <tr>
@@ -83,7 +83,7 @@ export function MenuDetailPage({ isNewPage, pageTitle, saving, menuForm, menuDet
                     <th className="col-usee">사용여부</th>
                     <th className="col-sort">정렬</th>
                     <th>수정자</th>
-                    <th>수정일</th>
+                    <th className="col-datetime">수정일</th>
                     <th className="col-action">삭제</th>
                   </tr>
                 </thead>
@@ -104,7 +104,7 @@ export function MenuDetailPage({ isNewPage, pageTitle, saving, menuForm, menuDet
                         </td>
                         <td className="col-sort"><input type="number" min="1" value={menu.sortOrdr ?? 1} onChange={(event) => onChangeSubMenu(index, 'sortOrdr', event.target.value)} /></td>
                         <td>{menu.updtAdmnName ?? menu.updtAdmn}</td>
-                        <td>{formatDate(menu.updtDate)}</td>
+                        <td className="col-datetime">{formatDate(menu.updtDate)}</td>
                         <td className="col-action">
                           {permission.deltYsno === 'Y' && <button type="button" className="delete-button" onClick={(event) => { event.stopPropagation(); onDelete(menu) }}>삭제</button>}
                         </td>
