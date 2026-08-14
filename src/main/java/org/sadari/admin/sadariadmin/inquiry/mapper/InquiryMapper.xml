@@ -1,6 +1,11 @@
 <?xml version="1.0" encoding="UTF-8" ?>
 <!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "https://mybatis.org/dtd/mybatis-3-mapper.dtd">
 <mapper namespace="org.sadari.admin.sadariadmin.inquiry.mapper.InquiryMapper">
+    <!-- 고객문의 사용자와 이용정지 상태명 조회에 사용하는 공통코드 그룹을 바인딩한다 -->
+    <sql id="inquiryCodeBindings">
+        <bind name="userStatCode" value="@org.sadari.admin.sadariadmin.common.constant.Constant@USER_STAT"/>
+        <bind name="spndStatCode" value="@org.sadari.admin.sadariadmin.common.constant.Constant@SPND_STAT"/>
+    </sql>
     <sql id="searchConditions">
         <if test="inqrNumb != null"> AND I.INQR_NUMB = #{inqrNumb}</if>
         <if test="inqrCatg != null and inqrCatg != ''"> AND I.INQR_CATG = #{inqrCatg}</if>
@@ -12,16 +17,19 @@
     </sql>
     <sql id="columns">
         I.INQR_NUMB, I.USER_NUMB, U.USER_NICK, U.USER_STAT,
+        FN_GET_CODE_NAME(#{userStatCode}, U.USER_STAT, #{userStatCode}) AS USER_STAT_NAME,
         I.INQR_CATG, FN_GET_CODE_NAME('INQR_CATG', I.INQR_CATG, 'INQR_CATG') AS INQR_CATG_NAME,
         I.INQR_TITL, I.INQR_CNTN, I.INQR_STAT,
         FN_GET_CODE_NAME('INQR_STAT', I.INQR_STAT, 'INQR_STAT') AS INQR_STAT_NAME,
         I.SPND_NUMB, S.SPND_STAT,
+        FN_GET_CODE_NAME(#{spndStatCode}, S.SPND_STAT, #{spndStatCode}) AS SPND_STAT_NAME,
         FN_GET_CODE_NAME('SPND_RSON', S.SPND_RSON, 'SPND_RSON') AS SPND_RSON_NAME,
         S.STRT_DATE AS SPND_STRT_DATE, S.ENDX_DATE AS SPND_ENDX_DATE,
         I.ASGN_ADMN, FN_GET_ADMIN_NAME(I.ASGN_ADMN) AS ASGN_ADMN_NAME,
         I.ANSW_DATE, I.REGI_DATE, I.UPDT_DATE
     </sql>
     <select id="getInquiryList" resultType="org.sadari.admin.sadariadmin.inquiry.vo.InquiryVO">
+        <include refid="inquiryCodeBindings"/>
         SELECT P.* FROM (
             SELECT <include refid="columns"/>,
                    ROW_NUMBER() OVER (ORDER BY I.REGI_DATE DESC, I.INQR_NUMB DESC) AS ROW_NUMB
@@ -39,6 +47,7 @@
         WHERE 1 = 1 <include refid="searchConditions"/>
     </select>
     <select id="getInquiryDtl" resultType="org.sadari.admin.sadariadmin.inquiry.vo.InquiryVO">
+        <include refid="inquiryCodeBindings"/>
         SELECT <include refid="columns"/>
           FROM CT_INQURY I
      LEFT JOIN TM_USERXM U ON U.USER_NUMB = I.USER_NUMB

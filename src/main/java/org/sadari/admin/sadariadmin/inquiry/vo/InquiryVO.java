@@ -13,6 +13,7 @@ import lombok.Data;
  * DATE              AUTHOR             NOTE
  * -----------------------------------------------------------
  * 2026-08-13        SeungHyeon.Kang    최초 생성
+ * 2026-08-14        SeungHyeon.Kang    회원과 연결 이용정지 상태명 추가
  */
 @Data
 public class InquiryVO {
@@ -25,6 +26,8 @@ public class InquiryVO {
     private String userNick;
     // 작성 사용자 상태
     private String userStat;
+    // 작성 사용자 상태명
+    private String userStatName;
     // 문의 카테고리 코드
     private String inqrCatg;
     // 문의 카테고리명
@@ -41,6 +44,8 @@ public class InquiryVO {
     private Long spndNumb;
     // 연결 이용정지 상태
     private String spndStat;
+    // 연결 이용정지 상태명
+    private String spndStatName;
     // 연결 이용정지 사유명
     private String spndRsonName;
     // 연결 이용정지 시작 일시
