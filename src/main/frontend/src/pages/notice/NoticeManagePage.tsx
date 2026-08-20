@@ -301,25 +301,40 @@ export function NoticeManagePage({ currentPath, onMovePath, onError }: NoticeMan
                       </td>
                     </tr>
                   )}
-                  <tr>
-                    <th>카테고리</th>
-                    <td colSpan={isNewPage ? 1 : 5}>
-                      <select value={form.cateCode} onChange={(event) => setForm({ ...form, cateCode: event.target.value })}>
-                        {categoryCodes.map((code) => <option key={code.comdCode} value={code.comdCode}>{code.comdName}</option>)}
-                      </select>
-                    </td>
-                  </tr>
-                  <tr>
-                    <th>제목</th>
-                    <td colSpan={isNewPage ? 1 : 5}><input maxLength={300} value={form.notiTitl} onChange={(event) => setForm({ ...form, notiTitl: event.target.value })} /></td>
-                  </tr>
-                  {isNewPage && (
-                    <tr>
-                      <th>상단 고정</th>
-                      <td className="notice-top-fixed-cell">
-                        <input className="notice-top-fixed-checkbox" type="checkbox" aria-label="상단 고정" checked={form.topxYsno === 'Y'} onChange={(event) => setForm({ ...form, topxYsno: event.target.checked ? 'Y' : 'N' })} />
-                      </td>
-                    </tr>
+                  {isNewPage ? (
+                    <>
+                      {/* 공지사항 등록 카테고리와 제목 및 상단 고정 입력 영역 */}
+                      <tr>
+                        <th>카테고리</th>
+                        <td className="notice-category-cell">
+                          <select value={form.cateCode} onChange={(event) => setForm({ ...form, cateCode: event.target.value })}>
+                            {categoryCodes.map((code) => <option key={code.comdCode} value={code.comdCode}>{code.comdName}</option>)}
+                          </select>
+                        </td>
+                        <th>제목</th>
+                        <td><input maxLength={300} value={form.notiTitl} onChange={(event) => setForm({ ...form, notiTitl: event.target.value })} /></td>
+                        <th>상단 고정</th>
+                        <td className="notice-top-fixed-cell">
+                          <input className="notice-top-fixed-checkbox" type="checkbox" aria-label="상단 고정" checked={form.topxYsno === 'Y'} onChange={(event) => setForm({ ...form, topxYsno: event.target.checked ? 'Y' : 'N' })} />
+                        </td>
+                      </tr>
+                    </>
+                  ) : (
+                    <>
+                      {/* 공지사항 상세 카테고리와 제목 수정 영역 */}
+                      <tr>
+                        <th>카테고리</th>
+                        <td colSpan={5}>
+                          <select value={form.cateCode} onChange={(event) => setForm({ ...form, cateCode: event.target.value })}>
+                            {categoryCodes.map((code) => <option key={code.comdCode} value={code.comdCode}>{code.comdName}</option>)}
+                          </select>
+                        </td>
+                      </tr>
+                      <tr>
+                        <th>제목</th>
+                        <td colSpan={5}><input maxLength={300} value={form.notiTitl} onChange={(event) => setForm({ ...form, notiTitl: event.target.value })} /></td>
+                      </tr>
+                    </>
                   )}
                 </tbody>
               </table>

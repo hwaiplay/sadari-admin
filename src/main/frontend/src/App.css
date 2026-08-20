@@ -2116,6 +2116,10 @@ tbody tr:last-child > td {
   width: 100%;
 }
 
+.notice-category-cell {
+  width: 180px;
+}
+
 .notice-top-fixed-cell {
   width: 72px;
   min-width: 72px;

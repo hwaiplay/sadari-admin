@@ -19,6 +19,7 @@ export type Inquiry = {
   userNumb: number | null
   userNick: string | null
   userStat: string | null
+  userStatName: string | null
   inqrCatg: string
   inqrCatgName: string
   inqrTitl: string
@@ -27,6 +28,7 @@ export type Inquiry = {
   inqrStatName: string
   spndNumb: number | null
   spndStat: string | null
+  spndStatName: string | null
   spndRsonName: string | null
   spndStrtDate: string | null
   spndEndxDate: string | null
