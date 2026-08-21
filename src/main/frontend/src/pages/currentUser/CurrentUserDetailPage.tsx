@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react'
 import {
   setCurrentUserSuspension,
   getCurrentUser,
+  getUserComplaintList,
   getUserLoginHistoryList,
   getUserWithdrawalList,
   getCurrentUserSuspensions,
@@ -14,6 +15,7 @@ import { CURRENT_USER_LIST_PATH } from '../../constants/routes'
 import type { PageData } from '../../types/common'
 import type {
   CurrentUser,
+  CurrentUserComplaint,
   CurrentUserLoginHistory,
   CurrentUserSuspension,
   CurrentUserSuspensionRequest,
@@ -61,23 +63,26 @@ export function CurrentUserDetailPage({
   const [currentUser, setCurrentUser] = useState<CurrentUser | null>(null)
   const [loginHistories, setLoginHistories] = useState<PageData<CurrentUserLoginHistory>>(emptyPage())
   const [withdrawalHistories, setWithdrawalHistories] = useState<PageData<CurrentUserWithdrawalHistory>>(emptyPage())
+  const [complaintHistories, setComplaintHistories] = useState<PageData<CurrentUserComplaint>>(emptyPage())
   const [loading, setLoading] = useState(true)
 
-  // 사용자 번호가 변경되면 상세와 두 이력의 첫 페이지를 함께 조회한다.
+  // 사용자 번호가 변경되면 상세와 세 이력의 첫 페이지를 함께 조회한다.
   useEffect(() => {
     let active = true
-    // 상세 화면에 필요한 사용자 정보와 두 종류의 이력을 병렬로 조회한다.
+    // 상세 화면에 필요한 사용자 정보와 로그인 및 계정 처리 및 받은 신고 이력을 병렬로 조회한다.
     Promise.all([
       getCurrentUser(userNumb),
       getUserLoginHistoryList(userNumb, 1),
       getUserWithdrawalList(userNumb, 1),
+      getUserComplaintList(userNumb, 1),
     ])
-      .then(([user, loginPage, withdrawalPage]) => {
+      .then(([user, loginPage, withdrawalPage, complaintPage]) => {
         // 화면이 유지되는 동안에만 조회 결과를 반영한다.
         if (active) {
           setCurrentUser(user)
           setLoginHistories(loginPage)
           setWithdrawalHistories(withdrawalPage)
+          setComplaintHistories(complaintPage)
           onError(null)
           setLoading(false)
         }
@@ -128,6 +133,29 @@ export function CurrentUserDetailPage({
     } catch (error: unknown) {
       // 이력 조회 실패를 공통 오류 영역에 표시한다.
       onError(error instanceof Error ? error.message : '계정 처리 이력을 불러오지 못했습니다.')
+    }
+  }
+
+  /**
+   * 받은 신고 이력의 지정 페이지를 조회한다.
+   *
+   * @author SeungHyeon.Kang
+   * @param pageNumber 조회할 페이지 번호
+   * @return 반환값이 없다
+   */
+  const loadComplaintHistoryPage = async (pageNumber: number): Promise<void> => {
+    // 신고 대상 소유자 기준으로 연결된 지정 페이지 이력을 조회한다.
+    try {
+      // 선택한 페이지의 받은 신고 이력을 반영한다.
+      setComplaintHistories(await getUserComplaintList(userNumb, pageNumber))
+      // 이전 조회 오류를 제거한다.
+      onError(null)
+    }
+
+    // 받은 신고 이력 조회 실패를 현재 상세 화면에 표시한다.
+    catch (error: unknown) {
+      // 서버가 제공한 안전한 오류 문구를 공통 오류 영역에 표시한다.
+      onError(error instanceof Error ? error.message : '신고 이력을 불러오지 못했습니다.')
     }
   }
 
@@ -214,6 +242,27 @@ export function CurrentUserDetailPage({
       <td className="col-date-time">{formatDate(history.requDate)}</td>
       <td className="col-date-time">{formatDate(history.deltDate)}</td>
       <td className="col-date-time">{formatDate(history.procDate ?? history.rcovDate)}</td>
+    </tr>
+  )
+
+  /**
+   * 현재 사용자와 사용자 작성 대상이 받은 신고 이력 행을 표시한다.
+   *
+   * @author SeungHyeon.Kang
+   * @param complaint 표시할 받은 신고 이력
+   * @return 받은 신고 이력 행
+   */
+  const renderComplaintRow = (complaint: CurrentUserComplaint) => (
+    <tr key={complaint.cmplNumb}>
+      <td className="col-history-number">{complaint.cmplNumb}</td>
+      <td>{complaint.tagtTypeName ?? complaint.tagtType}</td>
+      <td className="complaint-content-cell current-user-complaint-content">{complaint.tagtCntn || '내용 없음'}</td>
+      <td>{complaint.reporterUserNumb ? `${complaint.reporterNick ?? '닉네임 없음'} (${complaint.reporterUserNumb})` : '탈퇴한 사용자'}</td>
+      <td>{complaint.cmplRsonName ?? complaint.cmplRson}</td>
+      <td className="complaint-content-cell current-user-complaint-detail">{complaint.cmplCntn || '-'}</td>
+      <td><span className={`complaint-status ${complaint.cmplStat.toLowerCase()}`}>{complaint.cmplStatName ?? complaint.cmplStat}</span></td>
+      <td className="col-date-time">{formatDate(complaint.regiDate)}</td>
+      <td className="col-date-time">{formatDate(complaint.procDate) || '-'}</td>
     </tr>
   )
 
@@ -342,7 +391,47 @@ export function CurrentUserDetailPage({
           <div><span>팔로워</span><strong>{currentUser.followerCntt.toLocaleString()}</strong></div>
           <div><span>목표</span><strong>{currentUser.goalCntt.toLocaleString()}</strong></div>
           <div><span>푸시 구독</span><strong>{currentUser.pushCntt.toLocaleString()}</strong></div>
+          <div><span>누적 신고</span><strong>{complaintHistories.totalCount.toLocaleString()}</strong></div>
         </div>
+      </section>
+
+      {/* 현재 사용자와 사용자 작성 대상이 받은 신고 누적 횟수와 이력 */}
+      <section className="detail-panel">
+        <div className="detail-title">
+          <div>
+            <h2>신고 이력</h2>
+            <p>사용자 본인과 사용자가 작성한 독후감·댓글이 받은 신고를 접수 당시 내용으로 표시합니다.</p>
+          </div>
+          <div className="status">누적 {complaintHistories.totalCount.toLocaleString()}건</div>
+        </div>
+        {/* 받은 신고 이력 목록 */}
+        <section className="table-wrap current-user-history-table current-user-complaint-table">
+          <table>
+            <thead>
+              <tr>
+                <th className="col-history-number">신고번호</th>
+                <th>대상 유형</th>
+                <th>신고 대상 내용</th>
+                <th>신고자</th>
+                <th>신고 사유</th>
+                <th>신고 내용</th>
+                <th>처리 상태</th>
+                <th className="col-date-time">접수일</th>
+                <th className="col-date-time">처리일</th>
+              </tr>
+            </thead>
+            <tbody>
+              {complaintHistories.items.length === 0 ? (
+                <tr className="empty-row"><td colSpan={9}>신고 이력이 없습니다.</td></tr>
+              ) : complaintHistories.items.map(renderComplaintRow)}
+            </tbody>
+          </table>
+        </section>
+        <Pagination
+          pageNumber={complaintHistories.pageNumber}
+          totalPages={complaintHistories.totalPages}
+          onPageChange={(pageNumber) => void loadComplaintHistoryPage(pageNumber)}
+        />
       </section>
 
       {/* 마스킹된 로그인 이력 */}

@@ -1,5 +1,12 @@
 package org.sadari.admin.sadariadmin.complaint.service.impl;
 
+import java.io.IOException;
+import java.nio.charset.StandardCharsets;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.util.Locale;
+
+import lombok.extern.slf4j.Slf4j;
 import org.sadari.admin.sadariadmin.admin.vo.AdminSessionVO;
 import org.sadari.admin.sadariadmin.common.code.mapper.CodeMapper;
 import org.sadari.admin.sadariadmin.common.constant.Constant;
@@ -12,17 +19,18 @@ import org.sadari.admin.sadariadmin.complaint.mapper.ComplaintMapper;
 import org.sadari.admin.sadariadmin.complaint.service.ComplaintService;
 import org.sadari.admin.sadariadmin.complaint.vo.ComplaintDetailVO;
 import org.sadari.admin.sadariadmin.complaint.vo.ComplaintSearchVO;
+import org.sadari.admin.sadariadmin.complaint.vo.ComplaintTargetFileVO;
 import org.sadari.admin.sadariadmin.complaint.vo.ComplaintUpdateVO;
 import org.sadari.admin.sadariadmin.complaint.vo.ComplaintVO;
 import org.sadari.admin.sadariadmin.currentuser.service.CurrentUserService;
 import org.sadari.admin.sadariadmin.currentuser.vo.CurrentUserSuspensionVO;
 import org.sadari.admin.sadariadmin.currentuser.vo.CurrentUserVO;
+import org.sadari.admin.sadariadmin.file.storage.FileStorage;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-
-import java.nio.charset.StandardCharsets;
-import java.util.Locale;
+import org.springframework.transaction.support.TransactionSynchronization;
+import org.springframework.transaction.support.TransactionSynchronizationManager;
 
 /**
  * fileName       : ComplaintServiceImpl
@@ -36,7 +44,17 @@ import java.util.Locale;
  */
 @Service
 @Transactional(readOnly = true)
+@Slf4j
 public class ComplaintServiceImpl implements ComplaintService {
+
+    // 사용자 업로드 이미지 공개 경로 접두사
+    private static final String UPLOAD_ACCESS_PREFIX = "/uploads/";
+
+    // 프로필 이미지 저장 디렉터리
+    private static final Path PROFILE_IMAGE_ROOT = Paths.get("profile");
+
+    // 배경 이미지 저장 디렉터리
+    private static final Path BACKGROUND_IMAGE_ROOT = Paths.get("background");
 
     // 신고자 회원번호 또는 닉네임 검색어 최대 문자 수
     private static final int REPORTER_KEYWORD_MAX_LENGTH = 100;
@@ -53,6 +71,9 @@ public class ComplaintServiceImpl implements ComplaintService {
     // 사용자 신고 대상 이용정지 서비스
     private final CurrentUserService currentUserService;
 
+    // 피신고자 이미지 물리 파일 저장소
+    private final FileStorage fileStorage;
+
     /**
      * 신고 관리 서비스를 생성한다
      *
@@ -60,13 +81,15 @@ public class ComplaintServiceImpl implements ComplaintService {
      * @param complaintMapper 신고 조회와 처리 Mapper
      * @param codeMapper 신고 검색 코드 검증 Mapper
      * @param currentUserService 사용자 신고 대상 이용정지 서비스
+     * @param fileStorage 피신고자 이미지 물리 파일 저장소
      */
     public ComplaintServiceImpl(ComplaintMapper complaintMapper, CodeMapper codeMapper
-                               , CurrentUserService currentUserService) {
+                               , CurrentUserService currentUserService, FileStorage fileStorage) {
 
         this.complaintMapper = complaintMapper;
         this.codeMapper = codeMapper;
         this.currentUserService = currentUserService;
+        this.fileStorage = fileStorage;
     }
 
     /**
@@ -95,7 +118,7 @@ public class ComplaintServiceImpl implements ComplaintService {
     }
 
     /**
-     * 신고번호로 신고와 동일 대상 신고 및 사용자 신고 대상을 조회한다
+     * 신고번호로 신고와 동일 대상 신고 및 피신고자를 조회한다
      *
      * @author SeungHyeon.Kang
      * @param cmplNumb 신고 번호
@@ -161,6 +184,110 @@ public class ComplaintServiceImpl implements ComplaintService {
     }
 
     /**
+     * 피신고자의 프로필 이미지를 기본 이미지 상태로 변경한다
+     *
+     * @author SeungHyeon.Kang
+     * @param cmplNumb 신고 번호
+     * @param admin 처리 관리자
+     * @return 변경된 신고 상세
+     */
+    @Transactional
+    @Override
+    public ComplaintDetailVO delTargetProfImage(Long cmplNumb, AdminSessionVO admin) {
+        // 프로필 이미지 참조와 저장 파일을 정리한 최신 신고 상세를 반환한다
+        return delTargetUserImage(cmplNumb, admin, true);
+    }
+
+    /**
+     * 피신고자의 배경 이미지를 기본 이미지 상태로 변경한다
+     *
+     * @author SeungHyeon.Kang
+     * @param cmplNumb 신고 번호
+     * @param admin 처리 관리자
+     * @return 변경된 신고 상세
+     */
+    @Transactional
+    @Override
+    public ComplaintDetailVO delTargetBgimImage(Long cmplNumb, AdminSessionVO admin) {
+        // 배경 이미지 참조와 저장 파일을 정리한 최신 신고 상세를 반환한다
+        return delTargetUserImage(cmplNumb, admin, false);
+    }
+
+    /**
+     * 피신고자의 자기소개를 NULL 처리한다
+     *
+     * @author SeungHyeon.Kang
+     * @param cmplNumb 신고 번호
+     * @param admin 처리 관리자
+     * @return 변경된 신고 상세
+     */
+    @Transactional
+    @Override
+    public ComplaintDetailVO delTargetIntroduction(Long cmplNumb, AdminSessionVO admin) {
+        // 현재 신고 행과 접수 시 저장된 피신고자 연결을 잠금 검증한다
+        ComplaintVO complaint = getComplaintForModeration(cmplNumb, admin);
+        // 이미 소개가 없거나 피신고자가 달라진 요청은 삭제 성공으로 오인하지 않는다
+        if (complaintMapper.delTargetUserIntroduction(complaint.getTagtUser()) != 1) {
+            throw new BusinessException(HttpStatus.NOT_FOUND, ResultEnum.COMPLAINT_TARGET_NOT_FOUND);
+        }
+        // 자기소개가 제거된 현재 피신고자 정보를 포함한 신고 상세를 반환한다
+        return createComplaintDetail(cmplNumb, admin);
+    }
+
+    /**
+     * 신고 유형에 맞는 독후감, 댓글 또는 모임 소개를 삭제한다
+     *
+     * @author SeungHyeon.Kang
+     * @param cmplNumb 신고 번호
+     * @param admin 처리 관리자
+     * @return 변경된 신고 상세
+     */
+    @Transactional
+    @Override
+    public ComplaintDetailVO delTargetContent(Long cmplNumb, AdminSessionVO admin) {
+        // 현재 신고 행과 접수 시 저장된 피신고자 연결을 잠금 검증한다
+        ComplaintVO complaint = getComplaintForModeration(cmplNumb, admin);
+        int deleteCount;
+
+        // 서버가 저장한 대상 유형에 따라 원본 보존 또는 삭제 정책을 구분한다
+        switch (complaint.getTagtType()) {
+            // 독후감은 연결 데이터를 외래키 순서에 맞춰 제거한 뒤 원본을 완전 삭제한다
+            case Constant.CMPL_TARGET_BOOK_REPORT:
+                // 독후감 댓글과 답글의 좋아요를 댓글 원본보다 먼저 삭제한다
+                complaintMapper.delTargetReportReplyLikes(complaint.getTagtNumb(), complaint.getTagtUser());
+                // 부모 댓글의 참조 무결성을 위해 대댓글을 먼저 삭제한다
+                complaintMapper.delTagtReportChildReply(complaint.getTagtNumb(), complaint.getTagtUser());
+                // 대댓글 제거 뒤 독후감의 나머지 댓글을 삭제한다
+                complaintMapper.delTargetReportReplies(complaint.getTagtNumb(), complaint.getTagtUser());
+                // 독후감 원본을 참조하는 좋아요를 삭제한다
+                complaintMapper.delTargetReportLikes(complaint.getTagtNumb(), complaint.getTagtUser());
+                // 종속 데이터가 제거된 독후감 원본을 완전 삭제한다
+                deleteCount = complaintMapper.delTargetReport(complaint.getTagtNumb(), complaint.getTagtUser());
+                break;
+            // 댓글과 답글은 계층 구조를 유지하도록 원본 행의 삭제 여부만 변경한다
+            case Constant.CMPL_TARGET_REPLY:
+                // 신고 대상 작성자와 일치하는 현재 댓글을 삭제 상태로 변경한다
+                deleteCount = complaintMapper.delTargetReply(complaint.getTagtNumb(), complaint.getTagtUser());
+                break;
+            // 모임은 운영 정보와 회원 관계를 유지하면서 소개 내용만 제거한다
+            case Constant.CMPL_TARGET_CLUB:
+                // 신고 대상 모임의 현재 소개 내용만 NULL 처리한다
+                deleteCount = complaintMapper.delTargetClubIntroduction(complaint.getTagtNumb());
+                break;
+            // 사용자 신고와 향후 미지원 유형은 콘텐츠 번호를 잘못 변경하지 않도록 거절한다
+            default:
+                throw new BusinessException(HttpStatus.BAD_REQUEST, ResultEnum.COMPLAINT_TARGET_ACTION_INVALID);
+        }
+
+        // 이미 조치됐거나 신고 대상과 일치하지 않는 원본은 중복 삭제로 처리하지 않는다
+        if (deleteCount != 1) {
+            throw new BusinessException(HttpStatus.NOT_FOUND, ResultEnum.COMPLAINT_TARGET_NOT_FOUND);
+        }
+        // 원본 존재 여부가 갱신된 신고 상세를 반환한다
+        return createComplaintDetail(cmplNumb, admin);
+    }
+
+    /**
      * 사용자 신고 대상의 관리자 이용정지 이력을 조회한다
      *
      * @author SeungHyeon.Kang
@@ -218,7 +345,7 @@ public class ComplaintServiceImpl implements ComplaintService {
     }
 
     /**
-     * 신고와 동일 대상 신고 및 사용자 신고 대상을 묶어 상세 응답을 생성한다
+     * 신고와 동일 대상 신고 및 피신고자를 묶어 상세 응답을 생성한다
      *
      * @author SeungHyeon.Kang
      * @param cmplNumb 신고 번호
@@ -244,10 +371,13 @@ public class ComplaintServiceImpl implements ComplaintService {
         detail.setRelatedComplaintCount(complaintMapper.getRelatedComplaintCnt(complaint.getTagtType()
                                                                                     , complaint.getTagtNumb()
                                                                                     , cmplNumb));
-        // 사용자 신고일 때만 신고 대상 번호를 회원번호로 해석한다
-        if (Constant.CMPL_TARGET_USER.equals(complaint.getTagtType())) {
-            // 영구 삭제되지 않은 사용자 신고 대상의 현재 회원 정보를 조회한다
-            setTargetUser(detail, complaint.getTagtNumb(), admin);
+        // 신고 대상 소유 사용자 연결이 남아 있으면 현재 피신고자 정보를 조회한다
+        if (!StringUtil.isEmpty(complaint.getTagtUser())) {
+            // 영구 삭제되지 않은 피신고자의 현재 회원 정보를 조회한다
+            setTargetUser(detail, complaint.getTagtUser(), admin);
+            // 신고 유형에 맞는 원본이 남아 있을 때만 관리자 삭제 조치를 허용한다
+            detail.setTargetContentExists(complaintMapper.getTargetContentCount(
+                    complaint.getTagtType(), complaint.getTagtNumb(), complaint.getTagtUser()) == 1);
         }
 
         // 신고 처리 화면에 필요한 모든 판단 정보를 반환한다
@@ -255,21 +385,24 @@ public class ComplaintServiceImpl implements ComplaintService {
     }
 
     /**
-     * 사용자 신고 대상이 현재 존재하면 신고 상세에 회원 정보를 설정한다
+     * 피신고자가 현재 존재하면 신고 상세에 회원 정보를 설정한다
      *
      * @author SeungHyeon.Kang
      * @param detail 신고 상세 응답
-     * @param userNumb 신고 대상 회원번호
+     * @param userNumb 피신고자 회원번호
      * @param admin 로그인 관리자
      */
     private void setTargetUser(ComplaintDetailVO detail, Long userNumb, AdminSessionVO admin) {
         // 영구 삭제된 신고 대상은 신고 기록만 표시하도록 조회 결과 없음만 분리한다
         try {
-            // 기존 현재 사용자 상세 조회를 재사용해 상태와 Outbox 반영 결과를 일치시킨다
+            // 기존 현재 사용자 상세 조회를 재사용해 계정 상태와 이미지 정보를 일치시킨다
             CurrentUserVO targetUser = currentUserService.getCurrentUserDtl(userNumb, admin);
             // 조회된 현재 회원 정보를 신고 상세에 설정한다
             detail.setTargetUser(targetUser);
-        } catch (BusinessException exception) {
+        }
+
+        // 영구 삭제된 현재 사용자와 그 밖의 업무 오류를 구분한다
+        catch (BusinessException exception) {
             // 현재 사용자 없음 외의 인증 및 업무 오류는 정상적인 삭제 대상 표시로 숨기지 않는다
             if (!ResultEnum.CURRENT_USER_NOT_FOUND.equals(exception.getResultEnum())) {
                 throw exception;
@@ -298,13 +431,186 @@ public class ComplaintServiceImpl implements ComplaintService {
             throw new BusinessException(HttpStatus.NOT_FOUND, ResultEnum.COMPLAINT_NOT_FOUND);
         }
 
-        // 사용자 신고가 아닌 콘텐츠 신고 번호를 회원번호로 오인하지 않도록 차단한다
-        if (!Constant.CMPL_TARGET_USER.equals(complaint.getTagtType())) {
-            throw new BusinessException(HttpStatus.BAD_REQUEST, ResultEnum.COMPLAINT_TARGET_NOT_USER);
+        // 모든 신고 유형에서 접수 시점에 확정한 피신고자 회원번호만 이용정지 대상으로 사용한다
+        if (StringUtil.isEmpty(complaint.getTagtUser())) {
+            throw new BusinessException(HttpStatus.NOT_FOUND, ResultEnum.COMPLAINT_TARGET_NOT_FOUND);
         }
 
-        // 사용자 신고의 대상 번호를 기존 이용정지 서비스에 전달할 회원번호로 반환한다
-        return complaint.getTagtNumb();
+        // 신고 대상 소유 회원번호를 기존 이용정지 서비스에 전달한다
+        return complaint.getTagtUser();
+    }
+
+    /**
+     * 피신고자의 프로필 또는 배경 이미지 참조와 파일 메타정보를 제거한다
+     *
+     * @author SeungHyeon.Kang
+     * @param cmplNumb 신고 번호
+     * @param admin 처리 관리자
+     * @param profileImage 프로필 이미지 여부
+     * @return 변경된 신고 상세
+     */
+    private ComplaintDetailVO delTargetUserImage(Long cmplNumb, AdminSessionVO admin, boolean profileImage) {
+        // 현재 신고 행과 접수 시 저장된 피신고자 연결을 잠금 검증한다
+        ComplaintVO complaint = getComplaintForModeration(cmplNumb, admin);
+        ComplaintTargetFileVO targetFile;
+        int updateCount;
+
+        // 프로필 조치는 현재 프로필 파일 참조를 잠금 조회한다
+        if (profileImage) {
+            // 동시 변경 전 현재 프로필 이미지 파일 메타정보를 조회한다
+            targetFile = complaintMapper.getTagtProfFileForUpdate(complaint.getTagtUser());
+        }
+
+        // 배경 이미지 요청은 프로필 파일과 분리된 현재 참조를 잠금 조회한다
+        else {
+            // 동시 변경 전 현재 배경 이미지 파일 메타정보를 조회한다
+            targetFile = complaintMapper.getTagtBgimFileForUpdate(complaint.getTagtUser());
+        }
+
+        // 현재 이미지가 없으면 다른 파일을 삭제하지 않고 이미 조치된 상태를 알린다
+        if (StringUtil.isEmpty(targetFile)) {
+            throw new BusinessException(HttpStatus.NOT_FOUND, ResultEnum.COMPLAINT_TARGET_NOT_FOUND);
+        }
+
+        // 프로필 이미지 요청은 잠금 조회한 파일번호와 현재 참조가 같은 경우에만 제거한다
+        if (profileImage) {
+            updateCount = complaintMapper.delTargetProfileImage(
+                    complaint.getTagtUser(), targetFile.getFileNumb());
+        }
+
+        // 배경 이미지 요청도 잠금 조회한 파일번호가 유지될 때만 참조를 제거한다
+        else {
+            updateCount = complaintMapper.delTargetBackgroundImage(
+                    complaint.getTagtUser(), targetFile.getFileNumb());
+        }
+
+        // 동시 변경으로 파일 참조가 달라졌으면 최신 이미지를 잘못 삭제하지 않는다
+        if (updateCount != 1) {
+            throw new BusinessException(HttpStatus.CONFLICT, ResultEnum.COMPLAINT_CONFLICT);
+        }
+
+        // 다른 프로필 또는 배경에서 참조하지 않는 파일만 메타정보와 물리 파일을 정리한다
+        if (complaintMapper.delTagtFileIfUnref(targetFile.getFileNumb()) == 1) {
+            setFileCleanupOnCommit(targetFile);
+        }
+        // 이미지 참조가 제거된 현재 피신고자 정보를 포함한 신고 상세를 반환한다
+        return createComplaintDetail(cmplNumb, admin);
+    }
+
+    /**
+     * 신고 조치에 사용할 신고 행을 잠그고 피신고자 연결을 검증한다
+     *
+     * @author SeungHyeon.Kang
+     * @param cmplNumb 신고 번호
+     * @param admin 처리 관리자
+     * @return 잠긴 신고 정보
+     */
+    private ComplaintVO getComplaintForModeration(Long cmplNumb, AdminSessionVO admin) {
+        // 신고 개인정보와 조치 권한의 전제인 관리자 로그인 상태를 확인한다
+        checkLogin(admin);
+        // 다른 신고 행이 변경되지 않도록 양수 신고번호만 허용한다
+        validateComplaintNumb(cmplNumb);
+        // 같은 신고의 동시 조치가 교차하지 않도록 신고 행을 잠근다
+        ComplaintVO complaint = complaintMapper.getComplaintForUpdate(cmplNumb);
+        // 존재하지 않는 신고에서는 피신고자나 콘텐츠 조치를 만들지 않는다
+        if (StringUtil.isEmpty(complaint)) {
+            throw new BusinessException(HttpStatus.NOT_FOUND, ResultEnum.COMPLAINT_NOT_FOUND);
+        }
+        // 물리 삭제된 피신고자는 현재 정보와 콘텐츠 소유자를 안전하게 확정할 수 없다
+        if (StringUtil.isEmpty(complaint.getTagtUser())) {
+            throw new BusinessException(HttpStatus.NOT_FOUND, ResultEnum.COMPLAINT_TARGET_NOT_FOUND);
+        }
+        // 서버가 잠금 조회한 신고만 관리자 조치 조건으로 반환한다
+        return complaint;
+    }
+
+    /**
+     * 이미지 참조와 메타정보 삭제가 커밋된 뒤 물리 파일을 삭제한다
+     *
+     * @author SeungHyeon.Kang
+     * @param targetFile 삭제할 파일 메타정보
+     */
+    private void setFileCleanupOnCommit(ComplaintTargetFileVO targetFile) {
+        // 공개 접근 경로가 허용된 내부 저장소 객체인지 검증한다
+        String objectKey = getStoredObjectKey(targetFile);
+        // 외부 URL과 비정상 경로는 파일 메타정보만 제거하고 저장소 접근을 차단한다
+        if (StringUtil.isEmpty(objectKey)) {
+            // 삭제할 수 없는 저장소 경로의 정리 예약을 종료한다
+            return;
+        }
+        // 트랜잭션 밖의 단위 테스트와 독립 호출에서는 완료된 DB 상태에 맞춰 즉시 정리한다
+        if (!TransactionSynchronizationManager.isSynchronizationActive()) {
+            delPhysicalFile(targetFile, objectKey);
+            // 즉시 물리 파일 정리를 마친다
+            return;
+        }
+        // DB 롤백 시 기존 파일을 유지하도록 트랜잭션 종료 상태 확인 작업을 등록한다
+        TransactionSynchronizationManager.registerSynchronization(new TransactionSynchronization() {
+            /**
+             * DB 커밋이 완료된 경우에만 피신고자 이미지 파일을 삭제한다
+             *
+             * @author SeungHyeon.Kang
+             * @param status 트랜잭션 종료 상태
+             */
+            @Override
+            public void afterCompletion(int status) {
+                // 롤백된 사용자 참조가 기존 파일을 계속 가리킬 수 있으므로 커밋 외 상태는 유지한다
+                if (status != TransactionSynchronization.STATUS_COMMITTED) {
+                    // 기존 물리 파일을 유지하고 정리 콜백을 종료한다
+                    return;
+                }
+                // DB에서 참조와 메타정보가 제거된 저장소 객체를 삭제한다
+                delPhysicalFile(targetFile, objectKey);
+            }
+        });
+    }
+
+    /**
+     * 검증된 저장소 객체 키에 해당하는 피신고자 이미지를 멱등 삭제한다
+     *
+     * @author SeungHyeon.Kang
+     * @param targetFile 운영 로그에 남길 파일 메타정보
+     * @param objectKey 검증된 저장소 객체 키
+     */
+    private void delPhysicalFile(ComplaintTargetFileVO targetFile, String objectKey) {
+        // 물리 파일 실패가 커밋된 데이터베이스 상태를 되돌리지 않도록 예외를 격리한다
+        try {
+            fileStorage.delFile(objectKey);
+        }
+
+        // 커밋 뒤 실패한 파일번호와 객체 키를 재정리 가능한 운영 로그로 남긴다
+        catch (IOException exception) {
+            log.error("Committed complaint target image cleanup failed. fileNumb={}, objectKey={}"
+                    , targetFile.getFileNumb(), objectKey, exception);
+        }
+    }
+
+    /**
+     * 내부 사용자 이미지 공개 경로를 검증된 저장소 객체 키로 변환한다
+     *
+     * @author SeungHyeon.Kang
+     * @param targetFile 파일 메타정보
+     * @return 삭제 가능한 객체 키, 외부 또는 비정상 경로이면 null
+     */
+    private String getStoredObjectKey(ComplaintTargetFileVO targetFile) {
+        // 파일명과 내부 공개 경로가 모두 확인되지 않으면 저장소 삭제를 허용하지 않는다
+        if (StringUtil.isEmpty(targetFile) || StringUtil.hasEmpty(targetFile.getFilePath(), targetFile.getStorName())
+                || !targetFile.getFilePath().startsWith(UPLOAD_ACCESS_PREFIX)) {
+            // 외부 또는 불완전한 파일 메타정보에는 저장소 객체 키가 없음을 반환한다
+            return null;
+        }
+
+        // 상위 디렉터리 이동 문자를 제거한 상대 저장 경로를 생성한다
+        Path storedPath = Paths.get(targetFile.getFilePath().substring(UPLOAD_ACCESS_PREFIX.length())).normalize();
+        // 프로필과 배경의 날짜별 저장 규격에서 벗어난 경로는 파일 시스템 접근 전에 차단한다
+        if (storedPath.isAbsolute() || storedPath.getNameCount() != 3
+                || (!storedPath.startsWith(PROFILE_IMAGE_ROOT) && !storedPath.startsWith(BACKGROUND_IMAGE_ROOT))
+                || !targetFile.getStorName().equals(storedPath.getFileName().toString())) {
+            // 검증되지 않은 공개 경로에는 삭제 가능한 객체 키가 없음을 반환한다
+            return null;
+        }
+        // 운영체제 경로 구분자를 저장소 공통 구분자로 변환한 안전한 객체 키를 반환한다
+        return storedPath.toString().replace('\\', '/');
     }
 
     /**

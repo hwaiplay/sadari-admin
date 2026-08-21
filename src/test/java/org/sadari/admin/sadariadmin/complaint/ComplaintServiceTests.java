@@ -4,29 +4,32 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
+import org.mockito.InOrder;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.sadari.admin.sadariadmin.admin.vo.AdminSessionVO;
 import org.sadari.admin.sadariadmin.common.code.mapper.CodeMapper;
 import org.sadari.admin.sadariadmin.common.constant.Constant;
-import org.sadari.admin.sadariadmin.common.exception.BusinessException;
-import org.sadari.admin.sadariadmin.common.result.ResultEnum;
 import org.sadari.admin.sadariadmin.complaint.mapper.ComplaintMapper;
 import org.sadari.admin.sadariadmin.complaint.service.ComplaintService;
 import org.sadari.admin.sadariadmin.complaint.service.impl.ComplaintServiceImpl;
 import org.sadari.admin.sadariadmin.complaint.vo.ComplaintDetailVO;
 import org.sadari.admin.sadariadmin.complaint.vo.ComplaintUpdateVO;
 import org.sadari.admin.sadariadmin.complaint.vo.ComplaintVO;
+import org.sadari.admin.sadariadmin.complaint.vo.ComplaintTargetFileVO;
 import org.sadari.admin.sadariadmin.currentuser.service.CurrentUserService;
 import org.sadari.admin.sadariadmin.currentuser.vo.CurrentUserSuspensionVO;
+import org.sadari.admin.sadariadmin.currentuser.vo.CurrentUserVO;
+import org.sadari.admin.sadariadmin.file.storage.FileStorage;
 
 import java.time.LocalDateTime;
 import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.inOrder;
 import static org.mockito.Mockito.when;
 
 /**
@@ -54,6 +57,10 @@ class ComplaintServiceTests {
     @Mock
     private CurrentUserService currentUserService;
 
+    // 피신고자 이미지 저장소 대역
+    @Mock
+    private FileStorage fileStorage;
+
     // 테스트할 신고 관리 서비스
     private ComplaintService complaintService;
 
@@ -65,7 +72,7 @@ class ComplaintServiceTests {
     @BeforeEach
     void setUp() {
         // Mapper와 이용정지 서비스 대역으로 신고 관리 서비스를 생성한다
-        complaintService = new ComplaintServiceImpl(complaintMapper, codeMapper, currentUserService);
+        complaintService = new ComplaintServiceImpl(complaintMapper, codeMapper, currentUserService, fileStorage);
     }
 
     /**
@@ -142,24 +149,135 @@ class ComplaintServiceTests {
     }
 
     /**
-     * 콘텐츠 신고 대상 번호를 회원번호로 이용정지하지 못하도록 차단하는지 확인한다
+     * 콘텐츠 신고도 저장된 대상 소유 사용자 번호로 이용정지하는지 확인한다
      *
      * @author SeungHyeon.Kang
      */
     @Test
-    void setSuspRejectsNonUser() {
+    void setContentComplaintTargetSusp() {
         // 독후감 대상 번호 10을 가진 콘텐츠 신고를 생성한다
         ComplaintVO complaint = createComplaint("CMPL_BOOK_REPORT", Constant.CMPL_STATUS_REVIEWING
                                                 , LocalDateTime.now());
+        // 독후감 작성자 회원번호를 신고의 피신고자 연결값으로 설정한다
+        complaint.setTagtUser(77L);
         // 신고번호로 조회되는 독후감 신고 대상을 설정한다
         when(complaintMapper.getComplaintDtl(1L)).thenReturn(complaint);
 
-        // 독후감 번호를 회원번호로 오인하는 이용정지 요청의 예외를 확인한다
-        BusinessException exception = assertThrows(BusinessException.class, () ->
-            complaintService.setTargetUserSuspension(1L, new CurrentUserSuspensionVO(), createAdminSession())
-        );
-        // 사용자 신고 대상 아님 결과가 반환되는지 확인한다
-        assertEquals(ResultEnum.COMPLAINT_TARGET_NOT_USER, exception.getResultEnum());
+        // 독후감 신고에서 저장된 피신고자에게 이용정지를 적용한다
+        complaintService.setTargetUserSuspension(1L, new CurrentUserSuspensionVO(), createAdminSession());
+
+        // 독후감 번호가 아닌 저장된 작성자 회원번호가 정지 서비스에 전달되는지 확인한다
+        verify(currentUserService).setUserSuspension(eq(77L), any(CurrentUserSuspensionVO.class)
+                                                     , any(AdminSessionVO.class));
+    }
+
+    /**
+     * 콘텐츠 신고도 저장된 대상 소유 사용자 번호로 피신고자 정보를 조회하는지 확인한다
+     *
+     * @author SeungHyeon.Kang
+     */
+    @Test
+    void getContentComplaintTargetUser() {
+        // 독후감 번호와 작성자 회원번호가 다른 콘텐츠 신고를 생성한다
+        ComplaintVO complaint = createComplaint("CMPL_BOOK_REPORT", Constant.CMPL_STATUS_RECEIVED
+                                                , LocalDateTime.now());
+        // 신고 대상 소유 사용자 번호를 설정한다
+        complaint.setTagtUser(77L);
+        // 신고 상세 조회 결과를 설정한다
+        when(complaintMapper.getComplaintDtl(1L)).thenReturn(complaint);
+        // 동일 대상의 다른 신고가 없는 상태를 설정한다
+        when(complaintMapper.getRelatedComplaintList("CMPL_BOOK_REPORT", 10L, 1L)).thenReturn(List.of());
+        // 관리자 화면에 표시할 피신고자 현재 정보를 생성한다
+        CurrentUserVO targetUser = new CurrentUserVO();
+        // 조회된 피신고자 회원번호를 설정한다
+        targetUser.setUserNumb(77L);
+        // 피신고자 정보 조회에 사용할 관리자 세션을 생성한다
+        AdminSessionVO admin = createAdminSession();
+        // 저장된 대상 소유 사용자 번호의 현재 사용자 조회 결과를 설정한다
+        when(currentUserService.getCurrentUserDtl(77L, admin)).thenReturn(targetUser);
+
+        // 독후감 신고 상세를 조회한다
+        ComplaintDetailVO detail = complaintService.getComplaintDtl(1L, admin);
+
+        // 독후감 번호가 아닌 저장된 대상 소유 사용자 번호의 회원 정보가 반환되는지 확인한다
+        assertEquals(77L, detail.getTargetUser().getUserNumb());
+        // 현재 사용자 서비스에 저장된 대상 소유 사용자 번호가 전달되는지 확인한다
+        verify(currentUserService).getCurrentUserDtl(77L, admin);
+    }
+
+    /**
+     * 신고 대상 독후감이 사용자 삭제와 같은 종속 데이터 순서로 완전 삭제되는지 확인한다
+     *
+     * @author SeungHyeon.Kang
+     */
+    @Test
+    void delTargetReportCompletely() {
+        ComplaintVO complaint = createComplaint(
+                Constant.CMPL_TARGET_BOOK_REPORT, Constant.CMPL_STATUS_REVIEWING, LocalDateTime.now());
+        complaint.setTagtUser(77L);
+        when(complaintMapper.getComplaintForUpdate(1L)).thenReturn(complaint);
+        when(complaintMapper.delTargetReport(10L, 77L)).thenReturn(1);
+        when(complaintMapper.getComplaintDtl(1L)).thenReturn(complaint);
+        when(complaintMapper.getRelatedComplaintList(Constant.CMPL_TARGET_BOOK_REPORT, 10L, 1L))
+                .thenReturn(List.of());
+
+        ComplaintDetailVO detail = complaintService.delTargetContent(1L, createAdminSession());
+
+        InOrder deletionOrder = inOrder(complaintMapper);
+        deletionOrder.verify(complaintMapper).delTargetReportReplyLikes(10L, 77L);
+        deletionOrder.verify(complaintMapper).delTagtReportChildReply(10L, 77L);
+        deletionOrder.verify(complaintMapper).delTargetReportReplies(10L, 77L);
+        deletionOrder.verify(complaintMapper).delTargetReportLikes(10L, 77L);
+        deletionOrder.verify(complaintMapper).delTargetReport(10L, 77L);
+        assertFalse(detail.isTargetContentExists());
+    }
+
+    /**
+     * 신고 대상 댓글이 원본 행 삭제가 아닌 삭제 상태 변경으로 처리되는지 확인한다
+     *
+     * @author SeungHyeon.Kang
+     */
+    @Test
+    void delTargetReplyLogically() {
+        ComplaintVO complaint = createComplaint(
+                Constant.CMPL_TARGET_REPLY, Constant.CMPL_STATUS_REVIEWING, LocalDateTime.now());
+        complaint.setTagtUser(77L);
+        when(complaintMapper.getComplaintForUpdate(1L)).thenReturn(complaint);
+        when(complaintMapper.delTargetReply(10L, 77L)).thenReturn(1);
+        when(complaintMapper.getComplaintDtl(1L)).thenReturn(complaint);
+        when(complaintMapper.getRelatedComplaintList(Constant.CMPL_TARGET_REPLY, 10L, 1L))
+                .thenReturn(List.of());
+
+        complaintService.delTargetContent(1L, createAdminSession());
+
+        verify(complaintMapper).delTargetReply(10L, 77L);
+    }
+
+    /**
+     * 프로필 참조와 파일 메타정보를 제거한 뒤 검증된 내부 저장소 파일을 삭제하는지 확인한다
+     *
+     * @author SeungHyeon.Kang
+     * @throws Exception 파일 저장소 검증 실패
+     */
+    @Test
+    void delTargetProfileImage() throws Exception {
+        ComplaintVO complaint = createComplaint(
+                Constant.CMPL_TARGET_USER, Constant.CMPL_STATUS_REVIEWING, LocalDateTime.now());
+        ComplaintTargetFileVO targetFile = new ComplaintTargetFileVO();
+        targetFile.setFileNumb(30L);
+        targetFile.setStorName("profile.jpg");
+        targetFile.setFilePath("/uploads/profile/260822/profile.jpg");
+        when(complaintMapper.getComplaintForUpdate(1L)).thenReturn(complaint);
+        when(complaintMapper.getTagtProfFileForUpdate(10L)).thenReturn(targetFile);
+        when(complaintMapper.delTargetProfileImage(10L, 30L)).thenReturn(1);
+        when(complaintMapper.delTagtFileIfUnref(30L)).thenReturn(1);
+        when(complaintMapper.getComplaintDtl(1L)).thenReturn(complaint);
+        when(complaintMapper.getRelatedComplaintList(Constant.CMPL_TARGET_USER, 10L, 1L))
+                .thenReturn(List.of());
+
+        complaintService.delTargetProfImage(1L, createAdminSession());
+
+        verify(fileStorage).delFile("profile/260822/profile.jpg");
     }
 
     /**
@@ -180,6 +298,8 @@ class ComplaintServiceTests {
         complaint.setTagtType(tagtType);
         // 대상 사용자 또는 콘텐츠 번호를 설정한다
         complaint.setTagtNumb(10L);
+        // 사용자 신고 기본값과 콘텐츠 신고의 명시적 작성자 연결에 사용할 피신고자 번호를 설정한다
+        complaint.setTagtUser(10L);
         // 현재 신고 처리 상태를 설정한다
         complaint.setCmplStat(cmplStat);
         // 화면 조회 버전과 비교할 수정 시각을 설정한다

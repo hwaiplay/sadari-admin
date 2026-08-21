@@ -345,6 +345,64 @@
          WHERE USER_NUMB = #{userNumb}
     </select>
 
+    <!-- 현재 사용자와 사용자 작성 대상이 받은 신고 이력을 최신 접수순으로 조회한다 -->
+    <select id="getComplaintHistoryList"
+            resultType="org.sadari.admin.sadariadmin.currentuser.vo.CurrentUserComplaintVO">
+        <bind name="cmplTagt" value="@org.sadari.admin.sadariadmin.common.constant.Constant@CMPL_TAGT"/>
+        <bind name="cmplRson" value="@org.sadari.admin.sadariadmin.common.constant.Constant@CMPL_RSON"/>
+        <bind name="cmplStat" value="@org.sadari.admin.sadariadmin.common.constant.Constant@CMPL_STAT"/>
+        SELECT /* getComplaintHistoryList */
+               P.CMPL_NUMB
+             , P.REPORTER_USER_NUMB
+             , P.REPORTER_NICK
+             , P.TAGT_TYPE
+             , P.TAGT_TYPE_NAME
+             , P.TAGT_NUMB
+             , P.TAGT_CNTN
+             , P.CMPL_RSON
+             , P.CMPL_RSON_NAME
+             , P.CMPL_CNTN
+             , P.CMPL_STAT
+             , P.CMPL_STAT_NAME
+             , P.PROC_ADMN_NAME
+             , P.PROC_DATE
+             , P.REGI_DATE
+          FROM (  SELECT C.CMPL_NUMB
+                       , C.USER_NUMB AS REPORTER_USER_NUMB
+                       , R.USER_NICK AS REPORTER_NICK
+                       , C.TAGT_TYPE
+                       , FN_GET_CODE_NAME(#{cmplTagt}, C.TAGT_TYPE, #{cmplTagt}) AS TAGT_TYPE_NAME
+                       , C.TAGT_NUMB
+                       , C.TAGT_CNTN
+                       , C.CMPL_RSON
+                       , FN_GET_CODE_NAME(#{cmplRson}, C.CMPL_RSON, #{cmplRson}) AS CMPL_RSON_NAME
+                       , C.CMPL_CNTN
+                       , C.CMPL_STAT
+                       , FN_GET_CODE_NAME(#{cmplStat}, C.CMPL_STAT, #{cmplStat}) AS CMPL_STAT_NAME
+                       , FN_GET_ADMIN_NAME(C.PROC_ADMN) AS PROC_ADMN_NAME
+                       , C.PROC_DATE
+                       , C.REGI_DATE
+                       , ROW_NUMBER() OVER (
+                             ORDER BY C.REGI_DATE DESC
+                                    , C.CMPL_NUMB DESC
+                         ) AS ROW_NUMB
+                    FROM TH_CMPLNT C
+               LEFT JOIN TM_USERXM R
+                      ON R.USER_NUMB = C.USER_NUMB
+                   WHERE C.TAGT_USER = #{userNumb}
+               ) P
+         WHERE P.ROW_NUMB BETWEEN #{startRow} AND #{endRow}
+      ORDER BY P.ROW_NUMB
+    </select>
+
+    <!-- 현재 사용자와 사용자 작성 대상이 받은 신고 누적 건수를 조회한다 -->
+    <select id="getComplaintHistoryCnt" resultType="int">
+        SELECT /* getComplaintHistoryCnt */
+               COUNT(1)
+          FROM TH_CMPLNT
+         WHERE TAGT_USER = #{userNumb}
+    </select>
+
     <!-- 동시 정지 등록과 해제를 직렬화하기 위해 회원 행을 잠그고 상태를 조회한다 -->
     <select id="getUserStatusForUpdate" resultType="string">
         SELECT /* getUserStatusForUpdate */

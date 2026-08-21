@@ -10,6 +10,7 @@ import org.sadari.admin.sadariadmin.common.result.ResultEnum;
 import org.sadari.admin.sadariadmin.common.util.StringUtil;
 import org.sadari.admin.sadariadmin.currentuser.mapper.CurrentUserMapper;
 import org.sadari.admin.sadariadmin.currentuser.service.CurrentUserService;
+import org.sadari.admin.sadariadmin.currentuser.vo.CurrentUserComplaintVO;
 import org.sadari.admin.sadariadmin.currentuser.vo.CurrentUserLoginHistoryVO;
 import org.sadari.admin.sadariadmin.currentuser.vo.CurrentUserSearchVO;
 import org.sadari.admin.sadariadmin.currentuser.vo.CurrentUserSuspensionVO;
@@ -37,6 +38,7 @@ import java.util.Locale;
  * 2026-07-30        SeungHyeon.Kang    로그인 제공자 공통코드 검색 검증
  * 2026-07-30        SeungHyeon.Kang    정지 이력 동기화 상태와 임시 Outbox 전달 적용
  * 2026-08-13        SeungHyeon.Kang    삭제 회원의 유효 제재 목록과 관리자 해제 처리 추가
+ * 2026-08-22        SeungHyeon.Kang    현재 사용자의 받은 신고 이력 조회 추가
  */
 @Service
 @Transactional(readOnly = true)
@@ -164,6 +166,30 @@ public class CurrentUserServiceImpl implements CurrentUserService {
         return PageData.of(currentUserMapper.getWithdrawalHistoryList(userNumb, pageRequest.getStartRow()
                                                                      , pageRequest.getEndRow())
                          , currentUserMapper.getWithdrawalHistoryCnt(userNumb), pageRequest);
+    }
+
+    /**
+     * 현재 사용자와 사용자 작성 대상이 받은 신고 누적 건수와 이력을 조회한다
+     *
+     * @author SeungHyeon.Kang
+     * @param userNumb 조회할 회원번호
+     * @param pageNumber 조회할 페이지 번호
+     * @param admin 로그인한 관리자
+     * @return 받은 신고 이력 페이지
+     */
+    @Override
+    public PageData<CurrentUserComplaintVO> getComplaintHistoryList(Long userNumb, int pageNumber
+                                                                  , AdminSessionVO admin) {
+        // 신고 대상 내용과 신고자 정보는 로그인한 관리자만 조회할 수 있도록 인증 상태를 확인한다
+        checkLogin(admin);
+        // 비활성화와 영구 탈퇴 대기를 포함한 현재 회원만 상세 이력에 연결한다
+        checkCurrentUser(userNumb);
+        // 받은 신고 이력의 요청 페이지 범위를 계산한다
+        PageRequest pageRequest = new PageRequest(pageNumber);
+        // 대상 소유자 스냅샷으로 집계한 누적 건수와 신고 이력을 함께 반환한다
+        return PageData.of(currentUserMapper.getComplaintHistoryList(userNumb, pageRequest.getStartRow()
+                                                                    , pageRequest.getEndRow())
+                         , currentUserMapper.getComplaintHistoryCnt(userNumb), pageRequest);
     }
 
     /**

@@ -172,6 +172,12 @@ public enum ResultEnum {
     /** 사용자 신고 대상 아님 */
     COMPLAINT_TARGET_NOT_USER(2009, "complaint.target-not-user"),
 
+    /** 신고 대상 원본 또는 피신고자 없음 */
+    COMPLAINT_TARGET_NOT_FOUND(2004, "complaint.target-not-found"),
+
+    /** 신고 대상 조치 유형 오류 */
+    COMPLAINT_TARGET_ACTION_INVALID(2009, "complaint.target-action.invalid"),
+
     /** 권한그룹 중복 */
     AUTH_GROUP_DUPLICATE(2009, "auth-group.duplicate"),
 

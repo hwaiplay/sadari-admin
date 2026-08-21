@@ -57,6 +57,24 @@ export type CurrentUserWithdrawalHistory = {
   rcovDate: string | null
 }
 
+export type CurrentUserComplaint = {
+  cmplNumb: number
+  reporterUserNumb: number | null
+  reporterNick: string | null
+  tagtType: string
+  tagtTypeName: string | null
+  tagtNumb: number
+  tagtCntn: string | null
+  cmplRson: string
+  cmplRsonName: string | null
+  cmplCntn: string | null
+  cmplStat: string
+  cmplStatName: string | null
+  procAdmnName: string | null
+  procDate: string | null
+  regiDate: string | null
+}
+
 export type CurrentUserSuspension = {
   spndNumb: number
   userNumb: number

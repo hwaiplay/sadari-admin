@@ -2,6 +2,7 @@ import { fetchJson } from './client'
 import type { PageData } from '../types/common'
 import type {
   CurrentUser,
+  CurrentUserComplaint,
   CurrentUserLoginHistory,
   CurrentUserSearch,
   CurrentUserSuspension,
@@ -105,6 +106,26 @@ export const getUserWithdrawalList = (
     `/api/current-users/${userNumb}/withdrawal-histories?page=${pageNumber}`,
     undefined,
     '계정 처리 이력을 불러오지 못했습니다.',
+  )
+}
+
+/**
+ * 현재 사용자와 사용자 작성 대상이 받은 신고 누적 건수와 이력을 조회한다.
+ *
+ * @author SeungHyeon.Kang
+ * @param userNumb 사용자 번호
+ * @param pageNumber 조회할 페이지 번호
+ * @return 받은 신고 이력 페이지
+ */
+export const getUserComplaintList = (
+  userNumb: number,
+  pageNumber: number,
+): Promise<PageData<CurrentUserComplaint>> => {
+  // 대상 소유자 스냅샷으로 연결된 받은 신고 이력을 조회한다.
+  return fetchJson<PageData<CurrentUserComplaint>>(
+    `/api/current-users/${userNumb}/complaints?page=${pageNumber}`,
+    undefined,
+    '신고 이력을 불러오지 못했습니다.',
   )
 }
 

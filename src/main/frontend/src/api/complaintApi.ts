@@ -81,6 +81,74 @@ export const updateComplaint = (cmplNumb: number, update: ComplaintUpdate): Prom
 }
 
 /**
+ * 피신고자 프로필 이미지를 기본 이미지 상태로 변경한다
+ *
+ * @author SeungHyeon.Kang
+ * @param cmplNumb 신고 번호
+ * @return 변경된 신고 상세
+ * @throws 프로필 이미지 삭제 API 실패
+ */
+export const delComplaintProfImage = (cmplNumb: number): Promise<ComplaintDetail> => {
+  // 신고에 저장된 피신고자의 현재 프로필 이미지를 삭제한다
+  return fetchJson<ComplaintDetail>(
+    `/api/complaints/${cmplNumb}/target-user/profile-image`,
+    { method: 'DELETE' },
+    '피신고자 프로필 사진을 삭제하지 못했습니다.',
+  )
+}
+
+/**
+ * 피신고자 배경 이미지를 기본 이미지 상태로 변경한다
+ *
+ * @author SeungHyeon.Kang
+ * @param cmplNumb 신고 번호
+ * @return 변경된 신고 상세
+ * @throws 배경 이미지 삭제 API 실패
+ */
+export const delComplaintBgimImage = (cmplNumb: number): Promise<ComplaintDetail> => {
+  // 신고에 저장된 피신고자의 현재 배경 이미지를 삭제한다
+  return fetchJson<ComplaintDetail>(
+    `/api/complaints/${cmplNumb}/target-user/background-image`,
+    { method: 'DELETE' },
+    '피신고자 배경사진을 삭제하지 못했습니다.',
+  )
+}
+
+/**
+ * 피신고자 자기소개를 NULL 처리한다
+ *
+ * @author SeungHyeon.Kang
+ * @param cmplNumb 신고 번호
+ * @return 변경된 신고 상세
+ * @throws 자기소개 삭제 API 실패
+ */
+export const delComplaintIntroduction = (cmplNumb: number): Promise<ComplaintDetail> => {
+  // 신고에 저장된 피신고자의 현재 자기소개를 삭제한다
+  return fetchJson<ComplaintDetail>(
+    `/api/complaints/${cmplNumb}/target-user/introduction`,
+    { method: 'DELETE' },
+    '피신고자 자기소개를 삭제하지 못했습니다.',
+  )
+}
+
+/**
+ * 신고 대상 유형에 맞는 원본 콘텐츠를 삭제한다
+ *
+ * @author SeungHyeon.Kang
+ * @param cmplNumb 신고 번호
+ * @return 변경된 신고 상세
+ * @throws 신고 대상 원본 삭제 API 실패
+ */
+export const delComplaintTargetContent = (cmplNumb: number): Promise<ComplaintDetail> => {
+  // 서버가 확인한 신고 유형별 보존 정책에 따라 현재 원본을 처리한다
+  return fetchJson<ComplaintDetail>(
+    `/api/complaints/${cmplNumb}/target-content`,
+    { method: 'DELETE' },
+    '신고 대상 원본을 삭제하지 못했습니다.',
+  )
+}
+
+/**
  * 사용자 신고 대상의 이용정지 이력을 조회한다
  *
  * @author SeungHyeon.Kang

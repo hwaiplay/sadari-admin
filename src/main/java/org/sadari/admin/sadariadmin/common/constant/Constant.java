@@ -96,6 +96,21 @@ public final class Constant {
     /** 사용자 신고 대상 유형 */
     public static final String CMPL_TARGET_USER = "CMPL_USER";
 
+    // 독후감 신고 대상 유형
+    public static final String CMPL_TARGET_BOOK_REPORT = "CMPL_BOOK_REPORT";
+
+    // 댓글 또는 답글 신고 대상 유형
+    public static final String CMPL_TARGET_REPLY = "CMPL_REPLY";
+
+    // 독서 모임 신고 대상 유형
+    public static final String CMPL_TARGET_CLUB = "CMPL_CLUB";
+
+    // 독후감 좋아요 대상 유형
+    public static final String LIKE_TARGET_REPORT = "REPORT";
+
+    // 댓글 또는 답글 좋아요 대상 유형
+    public static final String LIKE_TARGET_REPLY = "REPLY";
+
     /** 신고 접수 상태 */
     public static final String CMPL_STATUS_RECEIVED = "CMPL_RECEIVED";
 

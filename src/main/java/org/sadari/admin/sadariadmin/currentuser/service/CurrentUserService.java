@@ -2,6 +2,7 @@ package org.sadari.admin.sadariadmin.currentuser.service;
 
 import org.sadari.admin.sadariadmin.admin.vo.AdminSessionVO;
 import org.sadari.admin.sadariadmin.common.pagination.PageData;
+import org.sadari.admin.sadariadmin.currentuser.vo.CurrentUserComplaintVO;
 import org.sadari.admin.sadariadmin.currentuser.vo.CurrentUserLoginHistoryVO;
 import org.sadari.admin.sadariadmin.currentuser.vo.CurrentUserSearchVO;
 import org.sadari.admin.sadariadmin.currentuser.vo.CurrentUserSuspensionVO;
@@ -18,6 +19,7 @@ import org.sadari.admin.sadariadmin.currentuser.vo.CurrentUserWithdrawalHistoryV
  * -----------------------------------------------------------
  * 2026-07-30        SeungHyeon.Kang    최초 생성
  * 2026-08-13        SeungHyeon.Kang    삭제 회원의 유효 제재 목록과 해제 업무 추가
+ * 2026-08-22        SeungHyeon.Kang    현재 사용자의 받은 신고 이력 업무 추가
  */
 public interface CurrentUserService {
 
@@ -63,6 +65,18 @@ public interface CurrentUserService {
      */
     PageData<CurrentUserWithdrawalHistoryVO> getWithdrawalHistoryList(Long userNumb, int pageNumber
                                                                     , AdminSessionVO admin);
+
+    /**
+     * 현재 사용자와 사용자 작성 대상이 받은 신고 누적 건수와 이력을 조회한다
+     *
+     * @author SeungHyeon.Kang
+     * @param userNumb 조회할 회원번호
+     * @param pageNumber 조회할 페이지 번호
+     * @param admin 로그인한 관리자
+     * @return 받은 신고 이력 페이지
+     */
+    PageData<CurrentUserComplaintVO> getComplaintHistoryList(Long userNumb, int pageNumber
+                                                           , AdminSessionVO admin);
 
     /**
      * 현재 사용자의 관리자 이용 정지 이력을 조회한다

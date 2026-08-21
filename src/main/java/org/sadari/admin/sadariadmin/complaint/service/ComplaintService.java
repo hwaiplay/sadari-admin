@@ -52,6 +52,46 @@ public interface ComplaintService {
     ComplaintDetailVO uptComplaint(Long cmplNumb, ComplaintUpdateVO update, AdminSessionVO admin);
 
     /**
+     * 피신고자의 프로필 이미지를 기본 이미지 상태로 변경한다
+     *
+     * @author SeungHyeon.Kang
+     * @param cmplNumb 신고 번호
+     * @param admin 처리 관리자
+     * @return 변경된 신고 상세
+     */
+    ComplaintDetailVO delTargetProfImage(Long cmplNumb, AdminSessionVO admin);
+
+    /**
+     * 피신고자의 배경 이미지를 기본 이미지 상태로 변경한다
+     *
+     * @author SeungHyeon.Kang
+     * @param cmplNumb 신고 번호
+     * @param admin 처리 관리자
+     * @return 변경된 신고 상세
+     */
+    ComplaintDetailVO delTargetBgimImage(Long cmplNumb, AdminSessionVO admin);
+
+    /**
+     * 피신고자의 자기소개를 삭제한다
+     *
+     * @author SeungHyeon.Kang
+     * @param cmplNumb 신고 번호
+     * @param admin 처리 관리자
+     * @return 변경된 신고 상세
+     */
+    ComplaintDetailVO delTargetIntroduction(Long cmplNumb, AdminSessionVO admin);
+
+    /**
+     * 신고 유형에 맞는 독후감, 댓글 또는 모임 소개를 삭제한다
+     *
+     * @author SeungHyeon.Kang
+     * @param cmplNumb 신고 번호
+     * @param admin 처리 관리자
+     * @return 변경된 신고 상세
+     */
+    ComplaintDetailVO delTargetContent(Long cmplNumb, AdminSessionVO admin);
+
+    /**
      * 사용자 신고 대상의 관리자 이용정지 이력을 조회한다
      *
      * @author SeungHyeon.Kang

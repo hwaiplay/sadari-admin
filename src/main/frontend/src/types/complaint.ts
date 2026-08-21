@@ -20,6 +20,8 @@ export type Complaint = {
   tagtType: string
   tagtTypeName: string | null
   tagtNumb: number
+  tagtUser: number | null
+  tagtCntn: string | null
   targetUserNick: string | null
   cmplRson: string
   cmplRsonName: string | null
@@ -37,6 +39,7 @@ export type Complaint = {
 export type ComplaintDetail = {
   complaint: Complaint
   targetUser: CurrentUser | null
+  targetContentExists: boolean
   relatedComplaints: Complaint[]
   relatedComplaintCount: number
 }

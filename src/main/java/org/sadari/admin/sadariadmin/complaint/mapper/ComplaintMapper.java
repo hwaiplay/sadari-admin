@@ -3,6 +3,7 @@ package org.sadari.admin.sadariadmin.complaint.mapper;
 import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Param;
 import org.sadari.admin.sadariadmin.complaint.vo.ComplaintSearchVO;
+import org.sadari.admin.sadariadmin.complaint.vo.ComplaintTargetFileVO;
 import org.sadari.admin.sadariadmin.complaint.vo.ComplaintUpdateVO;
 import org.sadari.admin.sadariadmin.complaint.vo.ComplaintVO;
 
@@ -95,4 +96,141 @@ public interface ComplaintMapper {
     int uptComplaint(@Param("cmplNumb") Long cmplNumb
                     , @Param("update") ComplaintUpdateVO update
                     , @Param("procAdmn") Long procAdmn);
+
+    /**
+     * 피신고자의 프로필 이미지 파일 메타정보를 잠금 조회한다
+     *
+     * @author SeungHyeon.Kang
+     * @param userNumb 피신고자 회원번호
+     * @return 프로필 이미지 파일 메타정보
+     */
+    ComplaintTargetFileVO getTagtProfFileForUpdate(@Param("userNumb") Long userNumb);
+
+    /**
+     * 피신고자의 배경 이미지 파일 메타정보를 잠금 조회한다
+     *
+     * @author SeungHyeon.Kang
+     * @param userNumb 피신고자 회원번호
+     * @return 배경 이미지 파일 메타정보
+     */
+    ComplaintTargetFileVO getTagtBgimFileForUpdate(@Param("userNumb") Long userNumb);
+
+    /**
+     * 피신고자의 프로필 이미지 참조를 제거한다
+     *
+     * @author SeungHyeon.Kang
+     * @param userNumb 피신고자 회원번호
+     * @param fileNumb 현재 프로필 파일번호
+     * @return 수정 건수
+     */
+    int delTargetProfileImage(@Param("userNumb") Long userNumb, @Param("fileNumb") Long fileNumb);
+
+    /**
+     * 피신고자의 배경 이미지 참조를 제거한다
+     *
+     * @author SeungHyeon.Kang
+     * @param userNumb 피신고자 회원번호
+     * @param fileNumb 현재 배경 파일번호
+     * @return 수정 건수
+     */
+    int delTargetBackgroundImage(@Param("userNumb") Long userNumb, @Param("fileNumb") Long fileNumb);
+
+    /**
+     * 다른 사용자 이미지에서 참조하지 않는 파일 메타정보를 삭제한다
+     *
+     * @author SeungHyeon.Kang
+     * @param fileNumb 삭제할 파일번호
+     * @return 삭제 건수
+     */
+    int delTagtFileIfUnref(@Param("fileNumb") Long fileNumb);
+
+    /**
+     * 피신고자의 자기소개를 NULL 처리한다
+     *
+     * @author SeungHyeon.Kang
+     * @param userNumb 피신고자 회원번호
+     * @return 수정 건수
+     */
+    int delTargetUserIntroduction(@Param("userNumb") Long userNumb);
+
+    /**
+     * 신고 대상 독후감에 연결된 댓글과 답글 좋아요를 삭제한다
+     *
+     * @author SeungHyeon.Kang
+     * @param reptNumb 독후감 번호
+     * @param userNumb 독후감 작성자 회원번호
+     * @return 삭제 건수
+     */
+    int delTargetReportReplyLikes(@Param("reptNumb") Long reptNumb, @Param("userNumb") Long userNumb);
+
+    /**
+     * 신고 대상 독후감에 연결된 대댓글을 삭제한다
+     *
+     * @author SeungHyeon.Kang
+     * @param reptNumb 독후감 번호
+     * @param userNumb 독후감 작성자 회원번호
+     * @return 삭제 건수
+     */
+    int delTagtReportChildReply(@Param("reptNumb") Long reptNumb, @Param("userNumb") Long userNumb);
+
+    /**
+     * 신고 대상 독후감에 연결된 댓글을 삭제한다
+     *
+     * @author SeungHyeon.Kang
+     * @param reptNumb 독후감 번호
+     * @param userNumb 독후감 작성자 회원번호
+     * @return 삭제 건수
+     */
+    int delTargetReportReplies(@Param("reptNumb") Long reptNumb, @Param("userNumb") Long userNumb);
+
+    /**
+     * 신고 대상 독후감 좋아요를 삭제한다
+     *
+     * @author SeungHyeon.Kang
+     * @param reptNumb 독후감 번호
+     * @param userNumb 독후감 작성자 회원번호
+     * @return 삭제 건수
+     */
+    int delTargetReportLikes(@Param("reptNumb") Long reptNumb, @Param("userNumb") Long userNumb);
+
+    /**
+     * 신고 대상 독후감을 완전 삭제한다
+     *
+     * @author SeungHyeon.Kang
+     * @param reptNumb 독후감 번호
+     * @param userNumb 독후감 작성자 회원번호
+     * @return 삭제 건수
+     */
+    int delTargetReport(@Param("reptNumb") Long reptNumb, @Param("userNumb") Long userNumb);
+
+    /**
+     * 신고 대상 댓글 또는 답글을 삭제 상태로 변경한다
+     *
+     * @author SeungHyeon.Kang
+     * @param replNumb 댓글 번호
+     * @param userNumb 댓글 작성자 회원번호
+     * @return 수정 건수
+     */
+    int delTargetReply(@Param("replNumb") Long replNumb, @Param("userNumb") Long userNumb);
+
+    /**
+     * 신고 대상 모임 소개를 NULL 처리한다
+     *
+     * @author SeungHyeon.Kang
+     * @param clubNumb 모임 번호
+     * @return 수정 건수
+     */
+    int delTargetClubIntroduction(@Param("clubNumb") Long clubNumb);
+
+    /**
+     * 신고 대상 콘텐츠 원본이 현재 조치 가능한 상태로 존재하는지 조회한다
+     *
+     * @author SeungHyeon.Kang
+     * @param tagtType 신고 대상 유형
+     * @param tagtNumb 신고 대상 번호
+     * @param userNumb 신고 대상 작성자 회원번호
+     * @return 조치 가능한 원본 건수
+     */
+    int getTargetContentCount(@Param("tagtType") String tagtType, @Param("tagtNumb") Long tagtNumb
+                              , @Param("userNumb") Long userNumb);
 }

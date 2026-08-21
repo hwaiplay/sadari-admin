@@ -27,6 +27,7 @@ import org.springframework.web.bind.annotation.RestController;
  * -----------------------------------------------------------
  * 2026-07-30        SeungHyeon.Kang    최초 생성
  * 2026-08-13        SeungHyeon.Kang    삭제 회원의 유효 제재 목록과 해제 API 추가
+ * 2026-08-22        SeungHyeon.Kang    현재 사용자의 받은 신고 이력 API 추가
  */
 @RestController
 @RequestMapping(Constant.API_CURRENT_USERS_PREFIX)
@@ -115,6 +116,25 @@ public class CurrentUserController {
     ) {
         // 비활성화와 영구탈퇴 계정 처리 이력을 반환한다.
         return ResultData.success(currentUserService.getWithdrawalHistoryList(userNumb, pageNumber, admin));
+    }
+
+    /**
+     * 현재 사용자와 사용자 작성 대상이 받은 신고 이력을 조회한다
+     *
+     * @author SeungHyeon.Kang
+     * @param userNumb 사용자 번호
+     * @param pageNumber 페이지 번호
+     * @param admin 로그인한 관리자
+     * @return 받은 신고 누적 건수와 이력
+     */
+    @GetMapping("/{userNumb}/complaints")
+    public ResultData getComplaintHistoryList(
+        @PathVariable Long userNumb
+        , @RequestParam(name = "page", defaultValue = "1") int pageNumber
+        , @AuthenticationPrincipal AdminSessionVO admin
+    ) {
+        // 대상 소유자 기준으로 연결한 신고 누적 건수와 이력을 반환한다
+        return ResultData.success(currentUserService.getComplaintHistoryList(userNumb, pageNumber, admin));
     }
 
     /**

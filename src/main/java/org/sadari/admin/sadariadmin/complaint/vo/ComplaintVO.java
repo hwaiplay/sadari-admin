@@ -14,6 +14,8 @@ import java.time.LocalDateTime;
  * -----------------------------------------------------------
  * 2026-08-05        SeungHyeon.Kang    최초 생성
  * 2026-08-07        SeungHyeon.Kang    신고자 프로필과 배경 이미지 경로 추가
+ * 2026-08-22        SeungHyeon.Kang    신고 대상 내용 스냅샷 추가
+ * 2026-08-22        SeungHyeon.Kang    신고 대상 소유 사용자 번호 추가
  */
 @Data
 public class ComplaintVO {
@@ -42,7 +44,13 @@ public class ComplaintVO {
     // 신고 대상 번호
     private Long tagtNumb;
 
-    // 사용자 신고 대상 닉네임
+    // 신고 대상 소유 사용자 번호
+    private Long tagtUser;
+
+    // 신고 대상 내용 스냅샷
+    private String tagtCntn;
+
+    // 신고 대상 소유 사용자 닉네임
     private String targetUserNick;
 
     // 신고 사유 세부코드

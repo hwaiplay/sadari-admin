@@ -7,6 +7,7 @@ import org.sadari.admin.sadariadmin.common.pagination.PageData;
 import org.sadari.admin.sadariadmin.common.exception.BusinessException;
 import org.sadari.admin.sadariadmin.common.result.ResultEnum;
 import org.sadari.admin.sadariadmin.currentuser.service.CurrentUserService;
+import org.sadari.admin.sadariadmin.currentuser.vo.CurrentUserComplaintVO;
 import org.sadari.admin.sadariadmin.currentuser.vo.CurrentUserLoginHistoryVO;
 import org.sadari.admin.sadariadmin.currentuser.vo.CurrentUserSearchVO;
 import org.sadari.admin.sadariadmin.currentuser.vo.CurrentUserSuspensionVO;
@@ -38,6 +39,7 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
  * 2026-07-30        SeungHyeon.Kang    사용자 서버 상태 반영 결과 조회 검증
  * 2026-07-30        SeungHyeon.Kang    로그인 제공자 공통코드명 조회 검증
  * 2026-08-13        SeungHyeon.Kang    물리 삭제 회원의 유효 제재 조회와 해제 검증
+ * 2026-08-22        SeungHyeon.Kang    현재 사용자가 받은 신고 누적 건수와 이력 조회 검증
  */
 @SpringBootTest
 @ActiveProfiles("loc")
@@ -52,7 +54,7 @@ class CurrentUserServiceTests {
     private JdbcTemplate jdbcTemplate;
 
     /**
-     * 활성 사용자 검색 결과가 상세와 두 이력 조회로 이어지는지 확인한다.
+     * 활성 사용자 검색 결과가 상세와 세 이력 조회로 이어지는지 확인한다.
      *
      * @author SeungHyeon.Kang
      */
@@ -106,11 +108,74 @@ class CurrentUserServiceTests {
         // 이력 유무와 무관하게 페이지 응답이 생성되는지 확인한다.
         assertNotNull(withdrawalPage.getItems());
 
+        // 사용자 본인과 사용자 작성 대상이 받은 신고 이력 첫 페이지 쿼리를 실행한다.
+        PageData<CurrentUserComplaintVO> complaintPage =
+            currentUserService.getComplaintHistoryList(currentUser.getUserNumb(), 1, createAdminSession());
+        // 이력 유무와 관계없이 누적 건수와 신고 이력 페이지가 생성되는지 확인한다.
+        assertNotNull(complaintPage.getItems());
+
         // 관리자 이용 정지 이력 첫 페이지 쿼리를 실행한다
         PageData<CurrentUserSuspensionVO> suspensionPage =
             currentUserService.getSuspensionHistoryList(currentUser.getUserNumb(), 1, createAdminSession());
         // 이력 유무와 관계없이 정지 이력 페이지가 생성되는지 확인한다
         assertNotNull(suspensionPage.getItems());
+    }
+
+    /**
+     * 사용자가 받은 신고의 누적 건수와 접수 시점 내용을 함께 조회하는지 확인한다.
+     *
+     * @author SeungHyeon.Kang
+     */
+    @Test
+    void getReceivedComplaintHistory() {
+        // 신고 대상 소유자 외래키를 만족하는 활성 사용자를 준비한다.
+        CurrentUserVO currentUser = getActiveCurrentUser();
+        // 테스트 전 해당 사용자가 받은 신고 누적 건수를 DB에서 조회한다.
+        int previousCount = jdbcTemplate.queryForObject(
+            "SELECT COUNT(1) FROM TH_CMPLNT WHERE TAGT_USER = ?"
+            , Integer.class
+            , currentUser.getUserNumb()
+        );
+        // 대상 원본이 삭제된 뒤에도 확인할 수 있는 접수 시점 스냅샷 신고를 생성한다.
+        jdbcTemplate.update(
+            """
+            INSERT INTO TH_CMPLNT (
+                        USER_NUMB
+                      , TAGT_TYPE
+                      , TAGT_NUMB
+                      , TAGT_USER
+                      , TAGT_CNTN
+                      , CMPL_RSON
+                      , CMPL_CNTN
+                      , CMPL_STAT
+            ) VALUES (  NULL
+                      , 'CMPL_USER'
+                      , ?
+                      , ?
+                      , '통합 테스트 대상 내용'
+                      , 'CMPL_OTHER'
+                      , '통합 테스트 신고 상세'
+                      , 'CMPL_RECEIVED'
+            )
+            """
+            , currentUser.getUserNumb(), currentUser.getUserNumb()
+        );
+        // 같은 트랜잭션에서 대상 소유자 연결이 실제 저장되었는지 먼저 확인한다.
+        assertEquals(previousCount + 1, jdbcTemplate.queryForObject(
+            "SELECT COUNT(1) FROM TH_CMPLNT WHERE TAGT_USER = ?"
+            , Integer.class
+            , currentUser.getUserNumb()
+        ));
+
+        // 대상 소유자 기준으로 갱신된 누적 건수와 첫 페이지를 조회한다.
+        PageData<CurrentUserComplaintVO> complaintPage = currentUserService.getComplaintHistoryList(
+            currentUser.getUserNumb(), 1, createAdminSession()
+        );
+        // 신규 신고가 누적 횟수에 정확히 반영되는지 확인한다.
+        assertEquals(previousCount + 1, complaintPage.getTotalCount());
+        // 최신 이력에 접수 당시 대상 내용과 신고 상세가 함께 제공되는지 확인한다.
+        assertEquals("통합 테스트 대상 내용", complaintPage.getItems().get(0).getTagtCntn());
+        assertEquals("통합 테스트 신고 상세", complaintPage.getItems().get(0).getCmplCntn());
     }
 
     /**

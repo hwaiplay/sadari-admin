@@ -9,6 +9,7 @@ import org.sadari.admin.sadariadmin.complaint.vo.ComplaintUpdateVO;
 import org.sadari.admin.sadariadmin.currentuser.vo.CurrentUserSuspensionVO;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -91,6 +92,66 @@ public class ComplaintController {
                                   , @AuthenticationPrincipal AdminSessionVO admin) {
         // 담당자와 처리 상태가 반영된 신고 상세를 반환한다
         return ResultData.success(complaintService.uptComplaint(cmplNumb, update, admin));
+    }
+
+    /**
+     * 피신고자의 프로필 이미지를 기본 이미지 상태로 변경한다
+     *
+     * @author SeungHyeon.Kang
+     * @param cmplNumb 신고 번호
+     * @param admin 처리 관리자
+     * @return 변경된 신고 상세
+     */
+    @DeleteMapping("/{cmplNumb}/target-user/profile-image")
+    public ResultData delTargetProfImage(@PathVariable Long cmplNumb
+                                         , @AuthenticationPrincipal AdminSessionVO admin) {
+        // 프로필 이미지 조치 뒤 현재 피신고자 정보가 갱신된 신고 상세를 반환한다
+        return ResultData.success(complaintService.delTargetProfImage(cmplNumb, admin));
+    }
+
+    /**
+     * 피신고자의 배경 이미지를 기본 이미지 상태로 변경한다
+     *
+     * @author SeungHyeon.Kang
+     * @param cmplNumb 신고 번호
+     * @param admin 처리 관리자
+     * @return 변경된 신고 상세
+     */
+    @DeleteMapping("/{cmplNumb}/target-user/background-image")
+    public ResultData delTargetBgimImage(@PathVariable Long cmplNumb
+                                         , @AuthenticationPrincipal AdminSessionVO admin) {
+        // 배경 이미지 조치 뒤 현재 피신고자 정보가 갱신된 신고 상세를 반환한다
+        return ResultData.success(complaintService.delTargetBgimImage(cmplNumb, admin));
+    }
+
+    /**
+     * 피신고자의 자기소개를 삭제한다
+     *
+     * @author SeungHyeon.Kang
+     * @param cmplNumb 신고 번호
+     * @param admin 처리 관리자
+     * @return 변경된 신고 상세
+     */
+    @DeleteMapping("/{cmplNumb}/target-user/introduction")
+    public ResultData delTargetIntroduction(@PathVariable Long cmplNumb
+                                            , @AuthenticationPrincipal AdminSessionVO admin) {
+        // 자기소개 조치 뒤 현재 피신고자 정보가 갱신된 신고 상세를 반환한다
+        return ResultData.success(complaintService.delTargetIntroduction(cmplNumb, admin));
+    }
+
+    /**
+     * 신고 유형에 맞는 독후감, 댓글 또는 모임 소개를 삭제한다
+     *
+     * @author SeungHyeon.Kang
+     * @param cmplNumb 신고 번호
+     * @param admin 처리 관리자
+     * @return 변경된 신고 상세
+     */
+    @DeleteMapping("/{cmplNumb}/target-content")
+    public ResultData delTargetContent(@PathVariable Long cmplNumb
+                                       , @AuthenticationPrincipal AdminSessionVO admin) {
+        // 유형별 원본 조치 가능 여부가 갱신된 신고 상세를 반환한다
+        return ResultData.success(complaintService.delTargetContent(cmplNumb, admin));
     }
 
     /**

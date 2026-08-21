@@ -1603,7 +1603,7 @@ tbody tr:last-child > td {
 
 .current-user-activity-grid {
   display: grid;
-  grid-template-columns: repeat(7, minmax(110px, 1fr));
+  grid-template-columns: repeat(8, minmax(110px, 1fr));
   gap: 10px;
 }
 
@@ -1639,6 +1639,22 @@ tbody tr:last-child > td {
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
+}
+
+.current-user-complaint-table table {
+  min-width: 1680px;
+}
+
+.current-user-complaint-content {
+  width: 420px;
+  min-width: 320px;
+  max-width: 480px;
+}
+
+.current-user-complaint-detail {
+  width: 280px;
+  min-width: 220px;
+  max-width: 360px;
 }
 
 .current-user-suspended-status {
@@ -1926,14 +1942,40 @@ tbody tr:last-child > td {
   background: #f1f5f9;
 }
 
-.complaint-info-table table,
-.complaint-target-user-table table {
+.complaint-info-table table {
   min-width: 1040px;
+  table-layout: fixed;
 }
 
-.complaint-info-table th,
-.complaint-target-user-table th {
-  width: 126px;
+.complaint-info-table th {
+  width: auto;
+  min-width: 0;
+  white-space: nowrap;
+}
+
+.complaint-info-table td {
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+
+.complaint-info-table .complaint-label-column {
+  width: 13%;
+}
+
+.complaint-info-table .complaint-value-column {
+  width: 16%;
+}
+
+.complaint-info-table .complaint-number-column {
+  width: 10%;
+}
+
+.complaint-info-table .complaint-target-user-column {
+  width: 18%;
+}
+
+.complaint-info-table .complaint-wide-value-column {
+  width: 30%;
 }
 
 .complaint-content-cell {
@@ -1973,6 +2015,21 @@ tbody tr:last-child > td {
   flex-wrap: wrap;
   align-items: center;
   gap: 8px;
+}
+
+.complaint-moderation-content {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.complaint-moderation-content .delete-button,
+.image-preview-actions .delete-button {
+  min-height: 32px;
+  padding: 0 12px;
+  font-size: 12px;
 }
 
 .image-preview-button {

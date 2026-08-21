@@ -2,6 +2,7 @@ package org.sadari.admin.sadariadmin.currentuser.mapper;
 
 import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Param;
+import org.sadari.admin.sadariadmin.currentuser.vo.CurrentUserComplaintVO;
 import org.sadari.admin.sadariadmin.currentuser.vo.CurrentUserLoginHistoryVO;
 import org.sadari.admin.sadariadmin.currentuser.vo.CurrentUserSearchVO;
 import org.sadari.admin.sadariadmin.currentuser.vo.CurrentUserSuspensionVO;
@@ -23,6 +24,7 @@ import java.util.List;
  * 2026-07-30        SeungHyeon.Kang    회원 상태 변경 Outbox 이벤트 등록 추가
  * 2026-07-30        SeungHyeon.Kang    정지 이력 동기화 상태 수정 추가
  * 2026-08-13        SeungHyeon.Kang    삭제 회원의 유효 제재 조회와 잠금 조회 추가
+ * 2026-08-22        SeungHyeon.Kang    현재 사용자의 받은 신고 이력 조회 추가
  */
 @Mapper
 public interface CurrentUserMapper {
@@ -106,6 +108,28 @@ public interface CurrentUserMapper {
      * @return 계정 처리 이력 전체 건수
      */
     int getWithdrawalHistoryCnt(@Param("userNumb") Long userNumb);
+
+    /**
+     * 현재 사용자와 사용자 작성 대상이 받은 신고 이력을 최신순으로 조회한다
+     *
+     * @author SeungHyeon.Kang
+     * @param userNumb 신고 대상 소유 사용자 번호
+     * @param startRow 페이지 시작 행 번호
+     * @param endRow 페이지 종료 행 번호
+     * @return 받은 신고 이력 목록
+     */
+    List<CurrentUserComplaintVO> getComplaintHistoryList(@Param("userNumb") Long userNumb
+                                                        , @Param("startRow") int startRow
+                                                        , @Param("endRow") int endRow);
+
+    /**
+     * 현재 사용자와 사용자 작성 대상이 받은 신고 누적 건수를 조회한다
+     *
+     * @author SeungHyeon.Kang
+     * @param userNumb 신고 대상 소유 사용자 번호
+     * @return 받은 신고 누적 건수
+     */
+    int getComplaintHistoryCnt(@Param("userNumb") Long userNumb);
 
     /**
      * 회원 행을 잠그고 현재 상태를 조회한다
