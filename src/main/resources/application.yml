@@ -1,10 +1,11 @@
-# 로컬 관리자 화면은 사용자 로컬 서버와 같은 2건 임계치를 표시한다.
+# 로컬 관리자 화면은 사용자 로컬 서버와 같은 1건 임계치를 표시한다.
 complaint:
   auto-action:
-    book-report-threshold: 2
-    reply-threshold: 2
-    profile-image-threshold: 2
-    introduction-threshold: 2
+    book-report-threshold: 1
+    reply-threshold: 1
+    profile-image-threshold: 1
+    background-image-threshold: 1
+    introduction-threshold: 1
 
 ---
 spring:
@@ -18,4 +19,5 @@ complaint:
     book-report-threshold: 5
     reply-threshold: 5
     profile-image-threshold: 5
+    background-image-threshold: 5
     introduction-threshold: 5

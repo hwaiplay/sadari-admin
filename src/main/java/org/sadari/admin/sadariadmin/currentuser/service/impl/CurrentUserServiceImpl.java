@@ -46,7 +46,7 @@ import org.springframework.transaction.support.TransactionSynchronizationManager
  * 2026-07-30        SeungHyeon.Kang    로그인 제공자 공통코드 검색 검증
  * 2026-07-30        SeungHyeon.Kang    정지 이력 동기화 상태와 임시 Outbox 전달 적용
  * 2026-08-13        SeungHyeon.Kang    삭제 회원의 유효 제재 목록과 관리자 해제 처리 추가
- * 2026-08-22        SeungHyeon.Kang    신고 이력과 프로필 수동 조치 종결
+ * 2026-08-22        SeungHyeon.Kang    신고 이력과 프로필·배경 수동 조치 종결
  */
 @Service
 @Transactional(readOnly = true)
@@ -72,6 +72,11 @@ public class CurrentUserServiceImpl implements CurrentUserService {
     private static final String PROFILE_COMPLAINT_PROCESS =
             Constant.CMPL_MANUAL_PROCESS_PREFIX
             + " 현 사용자 상세에서 프로필 사진 초기화. 관련 미처리 신고를 일괄 종결함.";
+
+    // 현 사용자 상세에서 배경사진 초기화로 종결할 신고 처리 내용
+    private static final String BACKGROUND_COMPLAINT_PROCESS =
+            Constant.CMPL_MANUAL_PROCESS_PREFIX
+            + " 현 사용자 상세에서 배경사진 초기화. 관련 미처리 신고를 일괄 종결함.";
 
     // 현 사용자 상세에서 한줄소개 초기화로 종결할 신고 처리 내용
     private static final String INTRO_COMPLAINT_PROCESS =
@@ -676,6 +681,13 @@ public class CurrentUserServiceImpl implements CurrentUserService {
             // 배경사진과 무관한 프로필 사진 신고를 관리자 수동 조치 결과로 종결한다
             currentUserMapper.uptUserComplaints(Constant.CMPL_TARGET_PROFILE_IMAGE, userNumb
                                                 , PROFILE_COMPLAINT_PROCESS, admin.getAdmnNumb());
+        }
+
+        // 배경사진 초기화로 해결된 해당 사용자의 배경사진 신고만 함께 종결한다
+        else {
+            // 프로필 사진과 무관한 배경사진 신고를 관리자 수동 조치 결과로 종결한다
+            currentUserMapper.uptUserComplaints(Constant.CMPL_TARGET_BACKGROUND_IMAGE, userNumb
+                                                , BACKGROUND_COMPLAINT_PROCESS, admin.getAdmnNumb());
         }
 
         // 이미지 참조가 제거된 최신 현재 사용자 상세를 반환한다

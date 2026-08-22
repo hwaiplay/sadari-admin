@@ -115,6 +115,9 @@ public final class Constant {
     // 프로필 사진 신고 대상 유형
     public static final String CMPL_TARGET_PROFILE_IMAGE = "CMPL_PROF_IMAGE";
 
+    // 배경사진 신고 대상 유형
+    public static final String CMPL_TARGET_BACKGROUND_IMAGE = "CMPL_BG_IMAGE";
+
     // 한줄소개 신고 대상 유형
     public static final String CMPL_TARGET_INTRODUCTION = "CMPL_INTRO";
 
@@ -126,6 +129,9 @@ public final class Constant {
 
     // 프로필 사진 초기화 자동 조치 유형
     public static final String CMPL_ACTION_RESET_PROFILE = "CMPL_RESET_PROF";
+
+    // 배경사진 초기화 자동 조치 유형
+    public static final String CMPL_ACTION_RESET_BACKGROUND = "CMPL_RESET_BG";
 
     // 한줄소개 초기화 자동 조치 유형
     public static final String CMPL_ACTION_CLEAR_INTRO = "CMPL_CLEAR_INTRO";

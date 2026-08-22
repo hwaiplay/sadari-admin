@@ -143,6 +143,25 @@ class ComplaintMapperTests {
                      , countBoundSql.getAdditionalParameter("cmplRejected"));
     }
 
+    /** 자동 조치 대상 조회 SQL이 배경사진을 독립된 현재 파일로 조회하는지 확인한다. */
+    @Test
+    void getAutoActionTargetIncludesBackgroundImage() throws IOException {
+        // 배경사진 유형으로 자동 조치 대상 조회 SQL을 생성한다
+        java.util.Map<String, Object> parameters = java.util.Map.of(
+                "tagtType", Constant.CMPL_TARGET_BACKGROUND_IMAGE,
+                "tagtNumb", 10L,
+                "userNumb", 10L
+        );
+        BoundSql boundSql = createConfiguration().getMappedStatement(
+                MAPPER_NAMESPACE + "getAutoActionTargetDtl").getBoundSql(parameters);
+        String sql = boundSql.getSql().replaceAll("\\s+", " ").trim();
+
+        // 배경사진 파일 참조와 배경사진 유형 바인딩이 포함되는지 확인한다
+        assertTrue(sql.contains("U.BGIM_NUMB"));
+        assertEquals(Constant.CMPL_TARGET_BACKGROUND_IMAGE,
+                     boundSql.getAdditionalParameter("backgroundImage"));
+    }
+
     /**
      * 관리자 원본 조치가 같은 대상의 미처리 신고를 일괄 종결하는지 확인한다
      *

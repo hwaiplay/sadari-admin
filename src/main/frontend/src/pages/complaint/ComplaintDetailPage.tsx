@@ -29,12 +29,19 @@ type ComplaintDetailPageProps = {
 
 // 신고 대상 유형별로 접수 당시 저장된 스냅샷의 실제 의미를 표시한다
 const TARGET_CONTENT_LABELS: Record<string, string> = {
-  CMPL_USER: '접수 당시 프로필 내용',
+  CMPL_USER: '접수 당시 사용자 계정 정보',
   CMPL_BOOK_REPORT: '접수 당시 독후감 원문',
   CMPL_REPLY: '접수 당시 댓글·답글 원문',
   CMPL_CLUB: '접수 당시 독서 모임 소개',
   CMPL_PROF_IMAGE: '접수 당시 프로필 사진',
+  CMPL_BG_IMAGE: '접수 당시 배경사진',
   CMPL_INTRO: '접수 당시 한줄소개 원문',
+}
+
+// 이미지 신고 유형별 관리자 전용 증거 버튼 문구를 표시한다
+const IMAGE_EVIDENCE_LABELS: Record<string, string> = {
+  CMPL_PROF_IMAGE: '프로필 사진',
+  CMPL_BG_IMAGE: '배경사진',
 }
 
 // 신고 대상 유형별 현재 원본 삭제 버튼 문구를 표시한다
@@ -385,6 +392,7 @@ export function ComplaintDetailPage({
   const canFinish = isReviewing && (complaint.procAdmn === adminNumb || adminAuthCode === 'SUPER')
   // 유형별 명칭이 없는 향후 신고 대상은 범용 스냅샷 명칭으로 표시한다
   const targetContentLabel = TARGET_CONTENT_LABELS[complaint.tagtType] ?? '접수 당시 신고 대상 내용'
+  const imageEvidenceLabel = IMAGE_EVIDENCE_LABELS[complaint.tagtType]
   // 자동 조치 진행과 실행 이력을 한 영역에서 표시할 상세 정보를 분리한다
   const autoAction = detail.autoAction
   // 원본이 신고 당시 버전으로 실제 노출 중인 경우에만 다음 임계치 정보를 표시한다
@@ -562,12 +570,12 @@ export function ComplaintDetailPage({
                   <div className="complaint-moderation-content">
                     {/* "내용 없음" */}
                     <span className="complaint-content-cell">{complaint.tagtCntn || '내용 없음'}</span>
-                    {/* 프로필 사진 신고는 현재 사진이 아닌 접수 시점의 실제 관리자 전용 증거를 표시한다 */}
-                    {complaint.tagtType === 'CMPL_PROF_IMAGE' && (
+                    {/* 이미지 신고는 현재 사진이 아닌 접수 시점의 실제 관리자 전용 증거를 표시한다 */}
+                    {imageEvidenceLabel && (
                       <ImagePreviewButton
                         imagePath={complaint.evidenceAvailable ? `/api/complaints/${complaint.cmplNumb}/evidence` : null}
-                        buttonLabel="접수 당시 프로필 사진 보기"
-                        dialogTitle={`신고 #${complaint.cmplNumb} 접수 당시 프로필 사진`}
+                        buttonLabel={`접수 당시 ${imageEvidenceLabel} 보기`}
+                        dialogTitle={`신고 #${complaint.cmplNumb} 접수 당시 ${imageEvidenceLabel}`}
                         emptyLabel="증거 보존기간 만료 또는 증거 없음"
                       />
                     )}

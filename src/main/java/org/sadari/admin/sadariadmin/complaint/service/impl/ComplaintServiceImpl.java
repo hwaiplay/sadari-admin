@@ -533,7 +533,7 @@ public class ComplaintServiceImpl implements ComplaintService {
             return Constant.CMPL_PROGRESS_TARGET_MISSING;
         }
 
-        // 현재 원문 또는 실제 프로필 이미지 바이트로 신고 접수와 동일한 버전 해시를 계산한다
+        // 현재 원문 또는 실제 이미지 바이트로 신고 접수와 동일한 버전 해시를 계산한다
         String currentHash = getCurrentTargetHash(complaint.getTagtType(), currentTarget);
         // 저장소 원본을 읽지 못하거나 현재 내용이 변경됐으면 과거 버전에 추가 진행 건수를 표시하지 않는다
         if (StringUtil.isEmpty(currentHash) || !complaint.getTagtHash().equals(currentHash)) {
@@ -546,7 +546,7 @@ public class ComplaintServiceImpl implements ComplaintService {
     }
 
     /**
-     * 현재 텍스트 원문 또는 프로필 이미지 바이트로 신고 대상 버전 해시를 생성한다
+     * 현재 텍스트 원문 또는 이미지 바이트로 신고 대상 버전 해시를 생성한다
      *
      * @author SeungHyeon.Kang
      * @param tagtType 신고 대상 유형
@@ -556,9 +556,10 @@ public class ComplaintServiceImpl implements ComplaintService {
     private String getCurrentTargetHash(String tagtType, ComplaintTargetContentVO currentTarget) {
         byte[] targetBytes;
 
-        // 프로필 사진은 파일명이 아닌 현재 저장소의 실제 이미지 바이트를 해시 입력으로 사용한다
-        if (Constant.CMPL_TARGET_PROFILE_IMAGE.equals(tagtType)) {
-            // 검증된 내부 프로필 저장소 객체 키를 조회한다
+        // 이미지 신고는 파일명이 아닌 현재 저장소의 실제 이미지 바이트를 해시 입력으로 사용한다
+        if (Constant.CMPL_TARGET_PROFILE_IMAGE.equals(tagtType)
+                || Constant.CMPL_TARGET_BACKGROUND_IMAGE.equals(tagtType)) {
+            // 검증된 내부 이미지 저장소 객체 키를 조회한다
             String objectKey = getStoredObjectKey(currentTarget);
             // 외부 또는 비정상 경로는 현재 버전 일치를 보장할 수 없으므로 진행 대상에서 제외한다
             if (StringUtil.isEmpty(objectKey)) {
@@ -568,7 +569,7 @@ public class ComplaintServiceImpl implements ComplaintService {
 
             // 저장소 읽기 실패를 신고 상세 전체 실패로 확장하지 않고 버전 확인 불가로 격리한다
             try {
-                // 현재 프로필 이미지 원본을 저장소에서 조회한다
+                // 현재 이미지 원본을 저장소에서 조회한다
                 Optional<StoredFile> storedFile = fileStorage.getFile(objectKey);
                 // 실제 이미지 바이트가 없으면 현재 버전을 확인할 수 없다
                 if (storedFile.isEmpty() || storedFile.get().bytes().length == 0) {
@@ -628,6 +629,8 @@ public class ComplaintServiceImpl implements ComplaintService {
             case Constant.CMPL_TARGET_REPLY -> Constant.CMPL_ACTION_DELETE_REPLY;
             // 프로필 사진 신고는 기본 이미지 초기화 조치를 반환한다
             case Constant.CMPL_TARGET_PROFILE_IMAGE -> Constant.CMPL_ACTION_RESET_PROFILE;
+            // 배경사진 신고는 기본 이미지 초기화 조치를 반환한다
+            case Constant.CMPL_TARGET_BACKGROUND_IMAGE -> Constant.CMPL_ACTION_RESET_BACKGROUND;
             // 한줄소개 신고는 NULL 초기화 조치를 반환한다
             case Constant.CMPL_TARGET_INTRODUCTION -> Constant.CMPL_ACTION_CLEAR_INTRO;
             // 임계치 조회에서 제외된 대상은 실행 코드가 없으므로 NULL을 반환한다
@@ -749,6 +752,12 @@ public class ComplaintServiceImpl implements ComplaintService {
             // 현재 프로필 사진을 제거한 조치로 해결된 프로필 사진 신고를 종결한다
             uptManualComplaints(Constant.CMPL_TARGET_PROFILE_IMAGE, complaint.getTagtUser(), cmplNumb
                                , "피신고자의 프로필 사진을 초기화", admin.getAdmnNumb());
+        }
+        // 배경사진 초기화는 해당 사용자 배경사진의 모든 미처리 신고를 함께 종결한다
+        else {
+            // 현재 배경사진을 제거한 조치로 해결된 배경사진 신고를 종결한다
+            uptManualComplaints(Constant.CMPL_TARGET_BACKGROUND_IMAGE, complaint.getTagtUser(), cmplNumb
+                               , "피신고자의 배경사진을 초기화", admin.getAdmnNumb());
         }
         // 이미지 참조가 제거된 현재 피신고자 정보를 포함한 신고 상세를 반환한다
         return createComplaintDetail(cmplNumb, admin);

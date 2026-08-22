@@ -321,6 +321,8 @@
               value="@org.sadari.admin.sadariadmin.common.constant.Constant@CMPL_TARGET_REPLY"/>
         <bind name="profileImage"
               value="@org.sadari.admin.sadariadmin.common.constant.Constant@CMPL_TARGET_PROFILE_IMAGE"/>
+        <bind name="backgroundImage"
+              value="@org.sadari.admin.sadariadmin.common.constant.Constant@CMPL_TARGET_BACKGROUND_IMAGE"/>
         <bind name="introduction"
               value="@org.sadari.admin.sadariadmin.common.constant.Constant@CMPL_TARGET_INTRODUCTION"/>
         <bind name="yes" value="@org.sadari.admin.sadariadmin.common.constant.Constant@YES"/>
@@ -361,6 +363,17 @@
                     JOIN TM_FILEXM F
                       ON F.FILE_NUMB = U.PROF_NUMB
                    WHERE #{tagtType} = #{profileImage}
+                     AND U.USER_NUMB = #{tagtNumb}
+                     AND U.USER_NUMB = #{userNumb}
+                   UNION ALL
+                  SELECT CONCAT('배경사진: ', COALESCE(F.ORIG_NAME, F.STOR_NAME, '파일명 없음')) AS TAGT_CNTN
+                       , F.FILE_NUMB
+                       , F.STOR_NAME
+                       , F.FILE_PATH
+                    FROM TM_USERXM U
+                    JOIN TM_FILEXM F
+                      ON F.FILE_NUMB = U.BGIM_NUMB
+                   WHERE #{tagtType} = #{backgroundImage}
                      AND U.USER_NUMB = #{tagtNumb}
                      AND U.USER_NUMB = #{userNumb}
                    UNION ALL

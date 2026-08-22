@@ -27,7 +27,7 @@ import static org.mockito.Mockito.when;
  * ===========================================================
  * DATE              AUTHOR             NOTE
  * -----------------------------------------------------------
- * 2026-08-22        SeungHyeon.Kang    프로필 조치와 관련 신고 종결 검증
+ * 2026-08-22        SeungHyeon.Kang    프로필·배경 조치와 관련 신고 종결 검증
  */
 @ExtendWith(MockitoExtension.class)
 class CurrentUserModerationTests {
@@ -97,6 +97,32 @@ class CurrentUserModerationTests {
                 Constant.CMPL_TARGET_PROFILE_IMAGE, 10L,
                 "관리자 원본 수동 조치: 현 사용자 상세에서 프로필 사진 초기화. 관련 미처리 신고를 일괄 종결함.", 1L);
         // 프로필 조치 뒤 같은 회원의 최신 상세가 반환되는지 확인한다
+        assertEquals(10L, result.getUserNumb());
+    }
+
+    /** 배경사진 참조와 파일을 제거하고 배경사진 신고만 종결하는지 확인한다. */
+    @Test
+    void delUserBackgroundImage() throws Exception {
+        // 현재 사용자에게 연결된 배경사진 파일 메타정보를 생성한다
+        CurrentUserFileVO userFile = new CurrentUserFileVO();
+        userFile.setFileNumb(31L);
+        userFile.setStorName("background.jpg");
+        userFile.setFilePath("/uploads/background/260822/background.jpg");
+        CurrentUserVO currentUser = new CurrentUserVO();
+        currentUser.setUserNumb(10L);
+        when(currentUserMapper.getUserBgimFileForUpdate(10L)).thenReturn(userFile);
+        when(currentUserMapper.delUserBackgroundImage(10L, 31L)).thenReturn(1);
+        when(currentUserMapper.delUserFileIfUnref(31L)).thenReturn(1);
+        when(currentUserMapper.getCurrentUserDtl(10L)).thenReturn(currentUser);
+
+        // 현 사용자 상세에서 배경사진 초기화를 실행한다
+        CurrentUserVO result = currentUserService.delUserBgimImage(10L, createAdminSession());
+
+        // 배경사진 파일 정리와 배경사진 신고만의 종결을 확인한다
+        verify(fileStorage).delFile("background/260822/background.jpg");
+        verify(currentUserMapper).uptUserComplaints(
+                Constant.CMPL_TARGET_BACKGROUND_IMAGE, 10L,
+                "관리자 원본 수동 조치: 현 사용자 상세에서 배경사진 초기화. 관련 미처리 신고를 일괄 종결함.", 1L);
         assertEquals(10L, result.getUserNumb());
     }
 

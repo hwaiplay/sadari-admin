@@ -31,6 +31,9 @@ public class ComplaintAutoActionProperties {
     // 프로필 사진 자동 초기화 신고 임계치
     private int profileImageThreshold = 5;
 
+    // 배경사진 자동 초기화 신고 임계치
+    private int backgroundImageThreshold = 5;
+
     // 한줄소개 자동 초기화 신고 임계치
     private int introductionThreshold = 5;
 
@@ -50,6 +53,8 @@ public class ComplaintAutoActionProperties {
             case Constant.CMPL_TARGET_REPLY -> replyThreshold;
             // 프로필 사진은 기본 이미지 초기화 기준을 반환한다
             case Constant.CMPL_TARGET_PROFILE_IMAGE -> profileImageThreshold;
+            // 배경사진은 기본 이미지 초기화 기준을 반환한다
+            case Constant.CMPL_TARGET_BACKGROUND_IMAGE -> backgroundImageThreshold;
             // 한줄소개는 NULL 초기화 기준을 반환한다
             case Constant.CMPL_TARGET_INTRODUCTION -> introductionThreshold;
             // 사용자 전체와 모임은 관리자 수동 검토 대상으로 구분한다

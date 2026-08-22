@@ -426,6 +426,34 @@ class ComplaintServiceTests {
                 "관리자 원본 수동 조치: 피신고자의 프로필 사진을 초기화. 관련 미처리 신고를 일괄 종결함. 기준 신고번호: 1", 1L);
     }
 
+    /** 배경사진 초기화가 프로필 사진과 분리된 신고 유형만 종결하는지 확인한다. */
+    @Test
+    void delTargetBackgroundImage() throws Exception {
+        // 신고에 연결된 피신고자와 현재 배경사진 파일을 생성한다
+        ComplaintVO complaint = createComplaint(
+                Constant.CMPL_TARGET_USER, Constant.CMPL_STATUS_REVIEWING, LocalDateTime.now());
+        ComplaintTargetFileVO targetFile = new ComplaintTargetFileVO();
+        targetFile.setFileNumb(31L);
+        targetFile.setStorName("background.jpg");
+        targetFile.setFilePath("/uploads/background/260822/background.jpg");
+        when(complaintMapper.getComplaintForUpdate(1L)).thenReturn(complaint);
+        when(complaintMapper.getTagtBgimFileForUpdate(10L)).thenReturn(targetFile);
+        when(complaintMapper.delTargetBackgroundImage(10L, 31L)).thenReturn(1);
+        when(complaintMapper.delTagtFileIfUnref(31L)).thenReturn(1);
+        when(complaintMapper.getComplaintDtl(1L)).thenReturn(complaint);
+        when(complaintMapper.getRelatedComplaintList(
+                Constant.CMPL_TARGET_USER, 10L, TEST_TARGET_HASH, 1L)).thenReturn(List.of());
+
+        // 신고 상세에서 피신고자의 배경사진 초기화를 실행한다
+        complaintService.delTargetBgimImage(1L, createAdminSession());
+
+        // 배경사진 파일 정리와 배경사진 신고만의 종결을 확인한다
+        verify(fileStorage).delFile("background/260822/background.jpg");
+        verify(complaintMapper).uptManualComplaints(
+                Constant.CMPL_TARGET_BACKGROUND_IMAGE, 10L,
+                "관리자 원본 수동 조치: 피신고자의 배경사진을 초기화. 관련 미처리 신고를 일괄 종결함. 기준 신고번호: 1", 1L);
+    }
+
     /**
      * 신고 접수와 같은 유형 구분자 및 원문으로 테스트 대상 버전 해시를 생성한다
      *
