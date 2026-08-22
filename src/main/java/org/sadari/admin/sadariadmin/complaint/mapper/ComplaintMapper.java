@@ -3,6 +3,7 @@ package org.sadari.admin.sadariadmin.complaint.mapper;
 import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Param;
 import org.sadari.admin.sadariadmin.complaint.vo.ComplaintSearchVO;
+import org.sadari.admin.sadariadmin.complaint.vo.ComplaintActionVO;
 import org.sadari.admin.sadariadmin.complaint.vo.ComplaintTargetFileVO;
 import org.sadari.admin.sadariadmin.complaint.vo.ComplaintUpdateVO;
 import org.sadari.admin.sadariadmin.complaint.vo.ComplaintVO;
@@ -18,6 +19,7 @@ import java.util.List;
  * DATE              AUTHOR             NOTE
  * -----------------------------------------------------------
  * 2026-08-05        SeungHyeon.Kang    최초 생성
+ * 2026-08-22        SeungHyeon.Kang    자동 조치 누적과 실행 이력 조회 추가
  */
 @Mapper
 public interface ComplaintMapper {
@@ -83,6 +85,28 @@ public interface ComplaintMapper {
     int getRelatedComplaintCnt(@Param("tagtType") String tagtType
                                     , @Param("tagtNumb") Long tagtNumb
                                     , @Param("cmplNumb") Long cmplNumb);
+
+    /**
+     * 동일 대상의 반려를 제외한 유효 신고 누적 건수를 조회한다
+     *
+     * @author SeungHyeon.Kang
+     * @param tagtType 신고 대상 유형
+     * @param tagtNumb 신고 대상 번호
+     * @return 자동 조치 판단에 포함되는 신고 건수
+     */
+    int getAutoActionCmplCnt(@Param("tagtType") String tagtType
+                             , @Param("tagtNumb") Long tagtNumb);
+
+    /**
+     * 동일 대상에 실제 실행된 자동 조치 이력을 조회한다
+     *
+     * @author SeungHyeon.Kang
+     * @param tagtType 신고 대상 유형
+     * @param tagtNumb 신고 대상 번호
+     * @return 최신 자동 조치 순서의 실행 이력
+     */
+    List<ComplaintActionVO> getAutoActionList(@Param("tagtType") String tagtType
+                                               , @Param("tagtNumb") Long tagtNumb);
 
     /**
      * 신고 담당자와 처리 상태 및 처리 내용을 수정한다

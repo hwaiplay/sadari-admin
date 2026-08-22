@@ -25,8 +25,13 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
  * DATE              AUTHOR             NOTE
  * -----------------------------------------------------------
  * 2026-08-22        SeungHyeon.Kang    최초 생성
+ * 2026-08-22        SeungHyeon.Kang    자동 조치 진행과 실행 이력 SQL 검증 추가
  */
 class ComplaintMapperTests {
+
+    // 운영과 동일한 신고 Mapper XML의 전체 네임스페이스
+    private static final String MAPPER_NAMESPACE =
+            "org.sadari.admin.sadariadmin.complaint.mapper.ComplaintMapper.";
 
     /**
      * 빈 검색 조건이 공통코드 그룹 바인딩으로 오염되지 않는지 확인한다
@@ -79,5 +84,60 @@ class ComplaintMapperTests {
         assertTrue(sql.contains("P.TAGT_USER"));
         // 대상 유형과 무관하게 저장된 소유 사용자 번호로 피신고자 닉네임을 조회하는지 확인한다
         assertTrue(sql.contains("T.USER_NUMB = C.TAGT_USER"));
+    }
+
+    /**
+     * 자동 조치 진행 건수와 실행 이력이 정책 테이블 및 공통코드명을 조회하는지 확인한다
+     *
+     * @author SeungHyeon.Kang
+     * @throws IOException Mapper XML을 읽을 수 없을 때 발생
+     */
+    @Test
+    void getAutoActionStatus() throws IOException {
+        // 자동 조치 SQL을 검증할 MyBatis 설정을 생성한다
+        Configuration configuration = createConfiguration();
+        // 반려 제외 누적 건수 SQL을 조회한다
+        BoundSql countBoundSql = configuration.getMappedStatement(
+                MAPPER_NAMESPACE + "getAutoActionCmplCnt").getBoundSql(new java.util.HashMap<>());
+        // 실행 이력 SQL을 조회한다
+        BoundSql historyBoundSql = configuration.getMappedStatement(
+                MAPPER_NAMESPACE + "getAutoActionList").getBoundSql(new java.util.HashMap<>());
+        // SQL 공백 차이와 무관하게 대상 테이블과 조건을 확인하도록 정규화한다
+        String countSql = countBoundSql.getSql().replaceAll("\\s+", " ").trim();
+        // SQL 공백 차이와 무관하게 실행 이력 조회식을 정규화한다
+        String historySql = historyBoundSql.getSql().replaceAll("\\s+", " ").trim();
+
+        // 누적 신고 건수에서 반려 상태를 제외하는지 확인한다
+        assertTrue(countSql.contains("C.CMPL_STAT != ?"));
+        // 실제 자동 조치 결과 테이블을 조회하는지 확인한다
+        assertTrue(historySql.contains("FROM TH_CMACTN A"));
+        // 자동 조치와 결과 명칭을 공통코드 함수로 조회하는지 확인한다
+        assertTrue(historySql.contains("FN_GET_CODE_NAME"));
+        // 반려 제외 바인딩이 공통 상수를 사용하는지 확인한다
+        assertEquals(Constant.CMPL_STATUS_REJECTED
+                     , countBoundSql.getAdditionalParameter("cmplRejected"));
+    }
+
+    /**
+     * 운영과 동일한 신고 Mapper XML을 해석한 설정을 생성한다
+     *
+     * @author SeungHyeon.Kang
+     * @return 신고 Mapper 구문이 등록된 MyBatis 설정
+     * @throws IOException Mapper XML을 읽을 수 없을 때 발생
+     */
+    private Configuration createConfiguration() throws IOException {
+        // 신고 Mapper XML을 해석할 MyBatis 설정을 생성한다
+        Configuration configuration = new Configuration();
+        // 운영과 동일한 Mapper XML에서 실제 동적 SQL을 구성한다
+        try (InputStream mapperStream = Resources.getResourceAsStream(
+                "org/sadari/admin/sadariadmin/complaint/mapper/ComplaintMapper.xml")) {
+            // 신고 SQL 조각과 구문을 MyBatis 설정에 등록한다
+            XMLMapperBuilder mapperBuilder = new XMLMapperBuilder(
+                    mapperStream, configuration, "ComplaintMapper.xml", configuration.getSqlFragments());
+            // 동적 SQL 검증에 사용할 Mapper 구문을 해석한다
+            mapperBuilder.parse();
+        }
+        // 해석된 신고 Mapper 설정을 반환한다
+        return configuration;
     }
 }

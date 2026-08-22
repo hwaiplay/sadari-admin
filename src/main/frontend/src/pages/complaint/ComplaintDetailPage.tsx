@@ -15,7 +15,7 @@ import { UserSuspensionPanel } from '../../components/UserSuspensionPanel'
 import { COMPLAINT_LIST_PATH } from '../../constants/routes'
 import { useMenuPermission } from '../../contexts/useMenuPermission'
 import type { PageData } from '../../types/common'
-import type { Complaint, ComplaintDetail } from '../../types/complaint'
+import type { Complaint, ComplaintAction, ComplaintDetail } from '../../types/complaint'
 import type { CurrentUserSuspension, CurrentUserSuspensionRequest } from '../../types/currentUser'
 import { formatDate } from '../../utils/code'
 
@@ -325,6 +325,25 @@ export function ComplaintDetailPage({
     </tr>
   )
 
+  /**
+   * 동일 대상에 실제 실행된 자동 조치 결과 행을 표시한다
+   *
+   * @author SeungHyeon.Kang
+   * @param action 표시할 자동 조치 실행 이력
+   * @return 자동 조치 실행 이력 행
+   */
+  const renderAutoActionRow = (action: ComplaintAction) => (
+    <tr key={action.actnNumb}>
+      <td>{action.actnOrdr}차</td>
+      <td>{action.actnTypeName ?? action.actnType}</td>
+      <td>{action.rsltCodeName ?? action.rsltCode}</td>
+      <td>{action.cmplCntt.toLocaleString()}건 / {action.thrsCntt.toLocaleString()}건</td>
+      <td>{action.trigCmpl ?? '-'}</td>
+      <td className="complaint-content-cell">{action.rsltCntn || '-'}</td>
+      <td className="col-date-time">{formatDate(action.regiDate)}</td>
+    </tr>
+  )
+
   // 신고 상세가 도착하기 전에는 고정 높이 안내를 표시한다
   if (loading) {
     // 신고 상세 로딩 화면을 반환한다
@@ -350,6 +369,8 @@ export function ComplaintDetailPage({
   const canFinish = isReviewing && (complaint.procAdmn === adminNumb || adminAuthCode === 'SUPER')
   // 유형별 명칭이 없는 향후 신고 대상은 범용 스냅샷 명칭으로 표시한다
   const targetContentLabel = TARGET_CONTENT_LABELS[complaint.tagtType] ?? '접수 당시 신고 대상 내용'
+  // 자동 조치 진행과 실행 이력을 한 영역에서 표시할 상세 정보를 분리한다
+  const autoAction = detail.autoAction
 
   // 신고 접수 정보와 처리 영역 및 조건부 이용정지 기능을 반환한다
   return (
@@ -580,6 +601,100 @@ export function ComplaintDetailPage({
             </tbody>
           </table>
         </section>
+      </section>
+
+      {/* 동일 대상의 자동 조치 적용 기준과 현재 진행 및 실행 결과 */}
+      <section className="detail-panel complaint-auto-action-panel">
+        <div className="detail-title">
+          <div>
+            {/* "자동조치 현황" */}
+            <h2>자동조치 현황</h2>
+            {/* "반려를 제외한 동일 대상 신고 누적을 기준으로 자동조치 진행 상태를 표시합니다." */}
+            <p>반려를 제외한 동일 대상 신고 누적을 기준으로 자동조치 진행 상태를 표시합니다.</p>
+          </div>
+          {/* 자동조치 대상 여부와 다음 실행까지 남은 건수 */}
+          <div className="status">
+            {autoAction.autoActionTarget ? (
+              <>
+                {/* "다음 자동조치까지 N건" */}
+                다음 자동조치까지 {autoAction.remainingCount.toLocaleString()}건
+              </>
+            ) : (
+              <>
+                {/* "자동조치 미적용" */}
+                자동조치 미적용
+              </>
+            )}
+          </div>
+        </div>
+
+        {autoAction.autoActionTarget ? (
+          <>
+            {/* 자동조치 기준과 누적 진행 요약 */}
+            <div className="complaint-auto-action-summary">
+              <div>
+                {/* "예정 자동조치" */}
+                <span>예정 자동조치</span>
+                <strong>{autoAction.actnTypeName ?? autoAction.actnType}</strong>
+              </div>
+              <div>
+                {/* "유효 신고 누적" */}
+                <span>유효 신고 누적</span>
+                <strong>{autoAction.complaintCount.toLocaleString()}건</strong>
+              </div>
+              <div>
+                {/* "실행 기준" */}
+                <span>실행 기준</span>
+                <strong>{autoAction.threshold.toLocaleString()}건마다</strong>
+              </div>
+              <div>
+                {/* "다음 실행 시점" */}
+                <span>다음 실행 시점</span>
+                <strong>누적 {autoAction.nextActionCount.toLocaleString()}건</strong>
+              </div>
+              <div>
+                {/* "실행 이력" */}
+                <span>실행 이력</span>
+                <strong>{autoAction.actionHistories.length.toLocaleString()}회</strong>
+              </div>
+            </div>
+
+            {/* 실제 자동조치 실행 결과 이력 */}
+            <section className="table-wrap complaint-auto-action-table">
+              <table>
+                <thead>
+                  <tr>
+                    {/* "조치 순번" */}
+                    <th>조치 순번</th>
+                    {/* "자동조치" */}
+                    <th>자동조치</th>
+                    {/* "실행 결과" */}
+                    <th>실행 결과</th>
+                    {/* "당시 누적 / 기준" */}
+                    <th>당시 누적 / 기준</th>
+                    {/* "발생 신고번호" */}
+                    <th>발생 신고번호</th>
+                    {/* "결과 상세" */}
+                    <th>결과 상세</th>
+                    {/* "실행일시" */}
+                    <th className="col-date-time">실행일시</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {autoAction.actionHistories.length === 0 ? (
+                    /* "아직 실행된 자동조치가 없습니다." */
+                    <tr className="empty-row"><td colSpan={7}>아직 실행된 자동조치가 없습니다.</td></tr>
+                  ) : autoAction.actionHistories.map(renderAutoActionRow)}
+                </tbody>
+              </table>
+            </section>
+          </>
+        ) : (
+          /* "이 신고 대상 유형은 자동조치 대상이 아니며 관리자 검토와 수동 조치로 처리합니다." */
+          <p className="complaint-auto-action-empty">
+            이 신고 대상 유형은 자동조치 대상이 아니며 관리자 검토와 수동 조치로 처리합니다.
+          </p>
+        )}
       </section>
 
       {/* 신고 검토 시작과 최종 처리 */}

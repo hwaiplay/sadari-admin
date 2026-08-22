@@ -4,6 +4,7 @@ import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.List;
 import java.util.Locale;
 
 import lombok.extern.slf4j.Slf4j;
@@ -15,8 +16,11 @@ import org.sadari.admin.sadariadmin.common.pagination.PageData;
 import org.sadari.admin.sadariadmin.common.pagination.PageRequest;
 import org.sadari.admin.sadariadmin.common.result.ResultEnum;
 import org.sadari.admin.sadariadmin.common.util.StringUtil;
+import org.sadari.admin.sadariadmin.complaint.config.ComplaintAutoActionProperties;
 import org.sadari.admin.sadariadmin.complaint.mapper.ComplaintMapper;
 import org.sadari.admin.sadariadmin.complaint.service.ComplaintService;
+import org.sadari.admin.sadariadmin.complaint.vo.ComplaintActionVO;
+import org.sadari.admin.sadariadmin.complaint.vo.ComplaintAutoActionVO;
 import org.sadari.admin.sadariadmin.complaint.vo.ComplaintDetailVO;
 import org.sadari.admin.sadariadmin.complaint.vo.ComplaintSearchVO;
 import org.sadari.admin.sadariadmin.complaint.vo.ComplaintTargetFileVO;
@@ -41,6 +45,7 @@ import org.springframework.transaction.support.TransactionSynchronizationManager
  * DATE              AUTHOR             NOTE
  * -----------------------------------------------------------
  * 2026-08-05        SeungHyeon.Kang    최초 생성
+ * 2026-08-22        SeungHyeon.Kang    자동 조치 진행 상태와 실행 이력 제공
  */
 @Service
 @Transactional(readOnly = true)
@@ -74,6 +79,9 @@ public class ComplaintServiceImpl implements ComplaintService {
     // 피신고자 이미지 물리 파일 저장소
     private final FileStorage fileStorage;
 
+    // 사용자 서버와 동일한 신고 자동 조치 임계치 설정
+    private final ComplaintAutoActionProperties autoActionProperties;
+
     /**
      * 신고 관리 서비스를 생성한다
      *
@@ -82,14 +90,17 @@ public class ComplaintServiceImpl implements ComplaintService {
      * @param codeMapper 신고 검색 코드 검증 Mapper
      * @param currentUserService 사용자 신고 대상 이용정지 서비스
      * @param fileStorage 피신고자 이미지 물리 파일 저장소
+     * @param autoActionProperties 신고 자동 조치 임계치 설정
      */
     public ComplaintServiceImpl(ComplaintMapper complaintMapper, CodeMapper codeMapper
-                               , CurrentUserService currentUserService, FileStorage fileStorage) {
+                               , CurrentUserService currentUserService, FileStorage fileStorage
+                               , ComplaintAutoActionProperties autoActionProperties) {
 
         this.complaintMapper = complaintMapper;
         this.codeMapper = codeMapper;
         this.currentUserService = currentUserService;
         this.fileStorage = fileStorage;
+        this.autoActionProperties = autoActionProperties;
     }
 
     /**
@@ -364,6 +375,8 @@ public class ComplaintServiceImpl implements ComplaintService {
         ComplaintDetailVO detail = new ComplaintDetailVO();
         // 신고 접수와 현재 처리 상태를 상세 응답에 설정한다
         detail.setComplaint(complaint);
+        // 동일 대상의 현재 자동 조치 진행 상태와 실제 실행 이력을 설정한다
+        detail.setAutoAction(createAutoAction(complaint));
         // 동일 대상의 최근 다른 신고를 상세 응답에 설정한다
         detail.setRelatedComplaints(complaintMapper.getRelatedComplaintList(complaint.getTagtType()
                                                                            , complaint.getTagtNumb(), cmplNumb));
@@ -382,6 +395,80 @@ public class ComplaintServiceImpl implements ComplaintService {
 
         // 신고 처리 화면에 필요한 모든 판단 정보를 반환한다
         return detail;
+    }
+
+    /**
+     * 신고 대상의 현재 자동 조치 진행 상태와 실제 실행 이력을 생성한다
+     *
+     * @author SeungHyeon.Kang
+     * @param complaint 자동 조치 상태를 조회할 신고
+     * @return 자동 조치 적용 여부와 누적 진행 및 실행 이력
+     */
+    private ComplaintAutoActionVO createAutoAction(ComplaintVO complaint) {
+        // 대상 유형별 자동 조치 진행 정보를 담을 응답을 생성한다
+        ComplaintAutoActionVO autoAction = new ComplaintAutoActionVO();
+        // 사용자 서버와 같은 YML 설정에서 현재 대상의 임계치를 조회한다
+        int threshold = autoActionProperties.getThreshold(complaint.getTagtType());
+        // 임계치가 설정된 대상만 자동 조치 적용 대상으로 표시한다
+        autoAction.setAutoActionTarget(threshold > 0);
+        // 관리자 화면에 현재 적용 중인 임계치를 전달한다
+        autoAction.setThreshold(threshold);
+
+        // 사용자 전체와 모임 신고는 자동 조치 진행 건수를 계산하지 않는다
+        if (threshold == 0) {
+            // 미적용 대상도 프런트에서 반복 분기하지 않도록 빈 이력 목록을 설정한다
+            autoAction.setActionHistories(List.of());
+            // 자동 조치 미적용 상태 응답을 반환한다
+            return autoAction;
+        }
+
+        // 자동 조치 대상 유형에 대응하는 예정 조치 코드를 설정한다
+        String actionType = getAutoActionType(complaint.getTagtType());
+        // 화면에서 코드 대신 실제 조치 명칭을 표시할 수 있도록 예정 조치 코드를 설정한다
+        autoAction.setActnType(actionType);
+        // 공통코드에 등록된 자동 조치 명칭을 조회해 설정한다
+        autoAction.setActnTypeName(codeMapper.getCodeName(Constant.CMPL_ACTN, actionType));
+        // 반려를 제외한 동일 대상 신고 누적 건수를 조회한다
+        int complaintCount = complaintMapper.getAutoActionCmplCnt(
+                complaint.getTagtType(), complaint.getTagtNumb());
+        // 현재 유효 신고 누적 건수를 설정한다
+        autoAction.setComplaintCount(complaintCount);
+        // 현재 누적 뒤 다음 임계치 배수의 실행 건수를 계산한다
+        int nextActionCount = ((complaintCount / threshold) + 1) * threshold;
+        // 다음 자동 조치가 발생하는 유효 신고 누적 건수를 설정한다
+        autoAction.setNextActionCount(nextActionCount);
+        // 다음 자동 조치까지 새로 필요한 유효 신고 건수를 설정한다
+        autoAction.setRemainingCount(nextActionCount - complaintCount);
+        // 동일 대상에 확정 저장된 실제 자동 조치 이력을 최신 순으로 조회해 설정한다
+        List<ComplaintActionVO> actionHistories = complaintMapper.getAutoActionList(
+                complaint.getTagtType(), complaint.getTagtNumb());
+        // Mapper가 빈 결과를 NULL로 반환하더라도 API 목록 계약을 유지한다
+        autoAction.setActionHistories(StringUtil.isEmpty(actionHistories) ? List.of() : actionHistories);
+        // 자동 조치 적용 대상의 진행 상태와 이력을 반환한다
+        return autoAction;
+    }
+
+    /**
+     * 신고 대상 유형에 대응하는 자동 조치 유형을 조회한다
+     *
+     * @author SeungHyeon.Kang
+     * @param tagtType 신고 대상 유형
+     * @return 자동 조치 유형 코드
+     */
+    private String getAutoActionType(String tagtType) {
+        // 자동 조치 대상별 실행 코드를 사용자 서버 정책과 같은 기준으로 반환한다
+        return switch (tagtType) {
+            // 독후감 신고는 원본 완전 삭제 조치를 반환한다
+            case Constant.CMPL_TARGET_BOOK_REPORT -> Constant.CMPL_ACTION_DELETE_REPORT;
+            // 댓글 신고는 원본 논리 삭제 조치를 반환한다
+            case Constant.CMPL_TARGET_REPLY -> Constant.CMPL_ACTION_DELETE_REPLY;
+            // 프로필 사진 신고는 기본 이미지 초기화 조치를 반환한다
+            case Constant.CMPL_TARGET_PROFILE_IMAGE -> Constant.CMPL_ACTION_RESET_PROFILE;
+            // 한줄소개 신고는 NULL 초기화 조치를 반환한다
+            case Constant.CMPL_TARGET_INTRODUCTION -> Constant.CMPL_ACTION_CLEAR_INTRO;
+            // 임계치 조회에서 제외된 대상은 실행 코드가 없으므로 NULL을 반환한다
+            default -> null;
+        };
     }
 
     /**

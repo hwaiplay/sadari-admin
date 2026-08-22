@@ -9,10 +9,12 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import org.sadari.admin.sadariadmin.admin.vo.AdminSessionVO;
 import org.sadari.admin.sadariadmin.common.code.mapper.CodeMapper;
 import org.sadari.admin.sadariadmin.common.constant.Constant;
+import org.sadari.admin.sadariadmin.complaint.config.ComplaintAutoActionProperties;
 import org.sadari.admin.sadariadmin.complaint.mapper.ComplaintMapper;
 import org.sadari.admin.sadariadmin.complaint.service.ComplaintService;
 import org.sadari.admin.sadariadmin.complaint.service.impl.ComplaintServiceImpl;
 import org.sadari.admin.sadariadmin.complaint.vo.ComplaintDetailVO;
+import org.sadari.admin.sadariadmin.complaint.vo.ComplaintActionVO;
 import org.sadari.admin.sadariadmin.complaint.vo.ComplaintUpdateVO;
 import org.sadari.admin.sadariadmin.complaint.vo.ComplaintVO;
 import org.sadari.admin.sadariadmin.complaint.vo.ComplaintTargetFileVO;
@@ -26,6 +28,7 @@ import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.verify;
@@ -41,6 +44,7 @@ import static org.mockito.Mockito.when;
  * DATE              AUTHOR             NOTE
  * -----------------------------------------------------------
  * 2026-08-05        SeungHyeon.Kang    최초 생성
+ * 2026-08-22        SeungHyeon.Kang    자동 조치 상세 응답 검증 추가
  */
 @ExtendWith(MockitoExtension.class)
 class ComplaintServiceTests {
@@ -72,7 +76,53 @@ class ComplaintServiceTests {
     @BeforeEach
     void setUp() {
         // Mapper와 이용정지 서비스 대역으로 신고 관리 서비스를 생성한다
-        complaintService = new ComplaintServiceImpl(complaintMapper, codeMapper, currentUserService, fileStorage);
+        complaintService = new ComplaintServiceImpl(complaintMapper, codeMapper, currentUserService, fileStorage
+                                                     , new ComplaintAutoActionProperties());
+    }
+
+    /**
+     * 자동 조치 대상의 유효 신고 누적과 다음 기준 및 실행 이력이 상세에 포함되는지 확인한다
+     *
+     * @author SeungHyeon.Kang
+     */
+    @Test
+    void getComplaintAutoAction() {
+        // 5건마다 완전 삭제하는 독후감 신고를 생성한다
+        ComplaintVO complaint = createComplaint(Constant.CMPL_TARGET_BOOK_REPORT
+                                                , Constant.CMPL_STATUS_RECEIVED, LocalDateTime.now());
+        // 신고 상세 조회 결과를 설정한다
+        when(complaintMapper.getComplaintDtl(1L)).thenReturn(complaint);
+        // 반려를 제외한 동일 대상 유효 신고가 현재 7건임을 설정한다
+        when(complaintMapper.getAutoActionCmplCnt(Constant.CMPL_TARGET_BOOK_REPORT, 10L)).thenReturn(7);
+        // 예정 자동 조치의 공통코드 명칭을 설정한다
+        when(codeMapper.getCodeName(Constant.CMPL_ACTN, Constant.CMPL_ACTION_DELETE_REPORT))
+                .thenReturn("독후감 완전 삭제");
+        // 첫 번째 자동 조치 실행 이력을 생성한다
+        ComplaintActionVO action = new ComplaintActionVO();
+        // 실행 이력의 자동 조치 순번을 설정한다
+        action.setActnOrdr(1);
+        // 동일 대상의 자동 조치 실행 이력을 설정한다
+        when(complaintMapper.getAutoActionList(Constant.CMPL_TARGET_BOOK_REPORT, 10L))
+                .thenReturn(List.of(action));
+        // 동일 대상의 다른 신고가 없는 상태를 설정한다
+        when(complaintMapper.getRelatedComplaintList(Constant.CMPL_TARGET_BOOK_REPORT, 10L, 1L))
+                .thenReturn(List.of());
+
+        // 관리자 신고 상세를 조회한다
+        ComplaintDetailVO detail = complaintService.getComplaintDtl(1L, createAdminSession());
+
+        // 독후감 신고가 자동 조치 대상으로 표시되는지 확인한다
+        assertTrue(detail.getAutoAction().isAutoActionTarget());
+        // YML 기본 임계치 5건이 표시되는지 확인한다
+        assertEquals(5, detail.getAutoAction().getThreshold());
+        // 반려 제외 누적 7건이 표시되는지 확인한다
+        assertEquals(7, detail.getAutoAction().getComplaintCount());
+        // 다음 자동 조치가 누적 10건에 실행되는지 확인한다
+        assertEquals(10, detail.getAutoAction().getNextActionCount());
+        // 다음 자동 조치까지 3건이 남았는지 확인한다
+        assertEquals(3, detail.getAutoAction().getRemainingCount());
+        // 실제 실행 이력 한 건이 상세에 포함되는지 확인한다
+        assertEquals(1, detail.getAutoAction().getActionHistories().size());
     }
 
     /**

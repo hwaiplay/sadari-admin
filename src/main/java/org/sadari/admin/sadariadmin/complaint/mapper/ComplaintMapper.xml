@@ -215,6 +215,47 @@
            AND C.CMPL_NUMB != #{cmplNumb}
     </select>
 
+    <!-- 동일 대상의 반려를 제외한 유효 신고 누적 건수를 자동 조치 진행 정보로 조회한다 -->
+    <select id="getAutoActionCmplCnt" resultType="int">
+        <bind name="cmplRejected"
+              value="@org.sadari.admin.sadariadmin.common.constant.Constant@CMPL_STATUS_REJECTED"/>
+        SELECT /* getAutoActionCmplCnt */
+               COUNT(1)
+          FROM TH_CMPLNT C
+         WHERE C.TAGT_TYPE = #{tagtType}
+           AND C.TAGT_NUMB = #{tagtNumb}
+           AND C.CMPL_STAT != #{cmplRejected}
+    </select>
+
+    <!-- 동일 대상에 실제 실행된 자동 조치 결과를 최신 조치 순서로 조회한다 -->
+    <select id="getAutoActionList"
+            resultType="org.sadari.admin.sadariadmin.complaint.vo.ComplaintActionVO">
+        <bind name="cmplActnGroup"
+              value="@org.sadari.admin.sadariadmin.common.constant.Constant@CMPL_ACTN"/>
+        <bind name="cmplRsltGroup"
+              value="@org.sadari.admin.sadariadmin.common.constant.Constant@CMPL_RSLT"/>
+        SELECT /* getAutoActionList */
+               A.ACTN_NUMB
+             , A.TAGT_TYPE
+             , A.TAGT_NUMB
+             , A.TAGT_USER
+             , A.ACTN_TYPE
+             , FN_GET_CODE_NAME(#{cmplActnGroup}, A.ACTN_TYPE, #{cmplActnGroup}) AS ACTN_TYPE_NAME
+             , A.RSLT_CODE
+             , FN_GET_CODE_NAME(#{cmplRsltGroup}, A.RSLT_CODE, #{cmplRsltGroup}) AS RSLT_CODE_NAME
+             , A.THRS_CNTT
+             , A.CMPL_CNTT
+             , A.ACTN_ORDR
+             , A.TRIG_CMPL
+             , A.RSLT_CNTN
+             , A.REGI_DATE
+          FROM TH_CMACTN A
+         WHERE A.TAGT_TYPE = #{tagtType}
+           AND A.TAGT_NUMB = #{tagtNumb}
+      ORDER BY A.ACTN_ORDR DESC
+             , A.ACTN_NUMB DESC
+    </select>
+
     <!-- 신고 검토 담당자와 처리 결과를 하나의 상태 변경으로 저장한다 -->
     <update id="uptComplaint">
         <bind name="cmplActioned" value="@org.sadari.admin.sadariadmin.common.constant.Constant@CMPL_STATUS_ACTIONED"/>

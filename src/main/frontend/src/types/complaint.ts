@@ -36,10 +36,39 @@ export type Complaint = {
   updtDate: string
 }
 
+export type ComplaintAction = {
+  actnNumb: number
+  tagtType: string
+  tagtNumb: number
+  tagtUser: number | null
+  actnType: string
+  actnTypeName: string | null
+  rsltCode: string
+  rsltCodeName: string | null
+  thrsCntt: number
+  cmplCntt: number
+  actnOrdr: number
+  trigCmpl: number | null
+  rsltCntn: string | null
+  regiDate: string
+}
+
+export type ComplaintAutoAction = {
+  autoActionTarget: boolean
+  actnType: string | null
+  actnTypeName: string | null
+  threshold: number
+  complaintCount: number
+  nextActionCount: number
+  remainingCount: number
+  actionHistories: ComplaintAction[]
+}
+
 export type ComplaintDetail = {
   complaint: Complaint
   targetUser: CurrentUser | null
   targetContentExists: boolean
+  autoAction: ComplaintAutoAction
   relatedComplaints: Complaint[]
   relatedComplaintCount: number
 }

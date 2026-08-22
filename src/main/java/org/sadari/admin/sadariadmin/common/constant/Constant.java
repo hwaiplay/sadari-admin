@@ -21,6 +21,7 @@ package org.sadari.admin.sadariadmin.common.constant;
  * 2026-08-12        SeungHyeon.Kang    알림 아이콘 관리 API 경로 추가
  * 2026-08-13        SeungHyeon.Kang    사용자 통계 API 경로 추가
  * 2026-08-13        SeungHyeon.Kang    사용자 이탈 추세 처리 유형 추가
+ * 2026-08-22        SeungHyeon.Kang    신고 자동 조치 조회 공통코드 추가
  */
 public final class Constant {
 
@@ -93,6 +94,12 @@ public final class Constant {
     /** 신고 처리 상태 공통코드 */
     public static final String CMPL_STAT = "CMPL_STAT";
 
+    /** 신고 자동 조치 유형 공통코드 */
+    public static final String CMPL_ACTN = "CMPL_ACTN";
+
+    /** 신고 자동 조치 결과 공통코드 */
+    public static final String CMPL_RSLT = "CMPL_RSLT";
+
     /** 사용자 신고 대상 유형 */
     public static final String CMPL_TARGET_USER = "CMPL_USER";
 
@@ -104,6 +111,24 @@ public final class Constant {
 
     // 독서 모임 신고 대상 유형
     public static final String CMPL_TARGET_CLUB = "CMPL_CLUB";
+
+    // 프로필 사진 신고 대상 유형
+    public static final String CMPL_TARGET_PROFILE_IMAGE = "CMPL_PROF_IMAGE";
+
+    // 한줄소개 신고 대상 유형
+    public static final String CMPL_TARGET_INTRODUCTION = "CMPL_INTRO";
+
+    // 독후감 완전 삭제 자동 조치 유형
+    public static final String CMPL_ACTION_DELETE_REPORT = "CMPL_DEL_REPORT";
+
+    // 댓글 논리 삭제 자동 조치 유형
+    public static final String CMPL_ACTION_DELETE_REPLY = "CMPL_DEL_REPLY";
+
+    // 프로필 사진 초기화 자동 조치 유형
+    public static final String CMPL_ACTION_RESET_PROFILE = "CMPL_RESET_PROF";
+
+    // 한줄소개 초기화 자동 조치 유형
+    public static final String CMPL_ACTION_CLEAR_INTRO = "CMPL_CLEAR_INTRO";
 
     // 독후감 좋아요 대상 유형
     public static final String LIKE_TARGET_REPORT = "REPORT";
