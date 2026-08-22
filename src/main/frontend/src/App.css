@@ -2012,7 +2012,7 @@ tbody tr:last-child > td {
 
 .complaint-auto-action-summary {
   display: grid;
-  grid-template-columns: repeat(5, minmax(0, 1fr));
+  grid-template-columns: repeat(6, minmax(0, 1fr));
   gap: 10px;
   margin-bottom: 18px;
 }
