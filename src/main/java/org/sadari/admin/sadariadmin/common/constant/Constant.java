@@ -21,7 +21,7 @@ package org.sadari.admin.sadariadmin.common.constant;
  * 2026-08-12        SeungHyeon.Kang    알림 아이콘 관리 API 경로 추가
  * 2026-08-13        SeungHyeon.Kang    사용자 통계 API 경로 추가
  * 2026-08-13        SeungHyeon.Kang    사용자 이탈 추세 처리 유형 추가
- * 2026-08-22        SeungHyeon.Kang    신고 자동 조치 조회 공통코드 추가
+ * 2026-08-22        SeungHyeon.Kang    신고 자동 조치 조회 상태 추가
  */
 public final class Constant {
 
@@ -118,8 +118,8 @@ public final class Constant {
     // 한줄소개 신고 대상 유형
     public static final String CMPL_TARGET_INTRODUCTION = "CMPL_INTRO";
 
-    // 독후감 완전 삭제 자동 조치 유형
-    public static final String CMPL_ACTION_DELETE_REPORT = "CMPL_DEL_REPORT";
+    // 독후감 비공개 전환 자동 조치 유형
+    public static final String CMPL_ACTION_HIDE_REPORT = "CMPL_HIDE_REPORT";
 
     // 댓글 논리 삭제 자동 조치 유형
     public static final String CMPL_ACTION_DELETE_REPLY = "CMPL_DEL_REPLY";
@@ -147,6 +147,24 @@ public final class Constant {
 
     /** 신고 반려 상태 */
     public static final String CMPL_STATUS_REJECTED = "CMPL_REJECTED";
+
+    // 현재 대상 버전의 자동 조치 진행 상태
+    public static final String CMPL_PROGRESS_PENDING = "PENDING";
+
+    // 자동 조치로 대상 원본이 비노출된 진행 상태
+    public static final String CMPL_PROGRESS_AUTO_ACTIONED = "AUTO_ACTIONED";
+
+    // 관리자 수동 조치로 대상 원본이 비노출된 진행 상태
+    public static final String CMPL_PROGRESS_MANUAL_ACTIONED = "MANUAL_ACTIONED";
+
+    // 신고 당시 버전과 현재 대상 버전이 다른 진행 상태
+    public static final String CMPL_PROGRESS_VERSION_CHANGED = "VERSION_CHANGED";
+
+    // 현재 신고 대상 원본이 존재하지 않는 진행 상태
+    public static final String CMPL_PROGRESS_TARGET_MISSING = "TARGET_MISSING";
+
+    /** 관리자 원본 수동 조치 처리 내용 식별 접두사 */
+    public static final String CMPL_MANUAL_PROCESS_PREFIX = "관리자 원본 수동 조치:";
 
     /** 정지 회원 상태 */
     public static final String USER_STAT_SUSPENDED = "SUSPENDED";

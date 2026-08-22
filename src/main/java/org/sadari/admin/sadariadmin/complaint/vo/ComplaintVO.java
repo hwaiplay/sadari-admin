@@ -16,6 +16,7 @@ import java.time.LocalDateTime;
  * 2026-08-07        SeungHyeon.Kang    신고자 프로필과 배경 이미지 경로 추가
  * 2026-08-22        SeungHyeon.Kang    신고 대상 내용 스냅샷 추가
  * 2026-08-22        SeungHyeon.Kang    신고 대상 소유 사용자 번호 추가
+ * 2026-08-22        SeungHyeon.Kang    신고자 이미지 비노출 정책 반영
  */
 @Data
 public class ComplaintVO {
@@ -29,12 +30,6 @@ public class ComplaintVO {
     // 신고자 닉네임
     private String reporterNick;
 
-    // 신고자 프로필 이미지 경로
-    private String reporterProfPath;
-
-    // 신고자 배경 이미지 경로
-    private String reporterBgimPath;
-
     // 신고 대상 유형 세부코드
     private String tagtType;
 
@@ -44,11 +39,17 @@ public class ComplaintVO {
     // 신고 대상 번호
     private Long tagtNumb;
 
+    // 신고 대상 버전 SHA-256 해시
+    private String tagtHash;
+
     // 신고 대상 소유 사용자 번호
     private Long tagtUser;
 
     // 신고 대상 내용 스냅샷
     private String tagtCntn;
+
+    // 관리자 전용 이미지 증거 원본 조회 가능 여부
+    private Boolean evidenceAvailable;
 
     // 신고 대상 소유 사용자 닉네임
     private String targetUserNick;

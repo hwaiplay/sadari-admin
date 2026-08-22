@@ -4,8 +4,12 @@ import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.security.MessageDigest;
+import java.security.NoSuchAlgorithmException;
+import java.util.HexFormat;
 import java.util.List;
 import java.util.Locale;
+import java.util.Optional;
 
 import lombok.extern.slf4j.Slf4j;
 import org.sadari.admin.sadariadmin.admin.vo.AdminSessionVO;
@@ -22,14 +26,17 @@ import org.sadari.admin.sadariadmin.complaint.service.ComplaintService;
 import org.sadari.admin.sadariadmin.complaint.vo.ComplaintActionVO;
 import org.sadari.admin.sadariadmin.complaint.vo.ComplaintAutoActionVO;
 import org.sadari.admin.sadariadmin.complaint.vo.ComplaintDetailVO;
+import org.sadari.admin.sadariadmin.complaint.vo.ComplaintEvidenceVO;
 import org.sadari.admin.sadariadmin.complaint.vo.ComplaintSearchVO;
 import org.sadari.admin.sadariadmin.complaint.vo.ComplaintTargetFileVO;
+import org.sadari.admin.sadariadmin.complaint.vo.ComplaintTargetContentVO;
 import org.sadari.admin.sadariadmin.complaint.vo.ComplaintUpdateVO;
 import org.sadari.admin.sadariadmin.complaint.vo.ComplaintVO;
 import org.sadari.admin.sadariadmin.currentuser.service.CurrentUserService;
 import org.sadari.admin.sadariadmin.currentuser.vo.CurrentUserSuspensionVO;
 import org.sadari.admin.sadariadmin.currentuser.vo.CurrentUserVO;
 import org.sadari.admin.sadariadmin.file.storage.FileStorage;
+import org.sadari.admin.sadariadmin.file.storage.StoredFile;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -45,7 +52,7 @@ import org.springframework.transaction.support.TransactionSynchronizationManager
  * DATE              AUTHOR             NOTE
  * -----------------------------------------------------------
  * 2026-08-05        SeungHyeon.Kang    최초 생성
- * 2026-08-22        SeungHyeon.Kang    자동 조치 진행 상태와 실행 이력 제공
+ * 2026-08-22        SeungHyeon.Kang    자동 조치 현황과 수동 조치 일괄 종결
  */
 @Service
 @Transactional(readOnly = true)
@@ -66,6 +73,10 @@ public class ComplaintServiceImpl implements ComplaintService {
 
     // 관리자 신고 처리 내용 최대 저장 바이트
     private static final int PROCESS_CONTENT_MAX_BYTES = 1000;
+
+    // 관리자 수동 조치 결과에 기준 신고번호를 연결할 공통 문구
+    private static final String MANUAL_PROCESS_FORMAT =
+            Constant.CMPL_MANUAL_PROCESS_PREFIX + " %s. 관련 미처리 신고를 일괄 종결함. 기준 신고번호: %d";
 
     // 신고 조회와 처리 Mapper
     private final ComplaintMapper complaintMapper;
@@ -144,6 +155,30 @@ public class ComplaintServiceImpl implements ComplaintService {
         validateComplaintNumb(cmplNumb);
         // 신고와 동일 대상 신고 및 사용자 신고 대상을 묶은 상세를 생성한다
         return createComplaintDetail(cmplNumb, admin);
+    }
+
+    /**
+     * 신고번호에 연결된 프로필 사진 신고 증거 원본을 관리자에게 제공한다
+     *
+     * @author SeungHyeon.Kang
+     * @param cmplNumb 신고 번호
+     * @param admin 로그인 관리자
+     * @return 관리자 전용 이미지 증거 원본
+     */
+    @Override
+    public ComplaintEvidenceVO getComplaintEvidence(Long cmplNumb, AdminSessionVO admin) {
+        // 일반 사용자에게 증거 원본이 노출되지 않도록 관리자 로그인 상태를 확인한다
+        checkLogin(admin);
+        // 양수 신고번호만 증거 조회에 사용하도록 검증한다
+        validateComplaintNumb(cmplNumb);
+        // 신고번호와 연결된 만료 전 이미지 증거 원본을 조회한다
+        ComplaintEvidenceVO evidence = complaintMapper.getComplaintEvidence(cmplNumb);
+        if (StringUtil.isEmpty(evidence) || StringUtil.isEmpty(evidence.getEvdcData())) {
+            // 증거가 없거나 보존기간이 끝난 신고는 대상 없음으로 응답한다
+            throw new BusinessException(HttpStatus.NOT_FOUND, ResultEnum.COMPLAINT_TARGET_NOT_FOUND);
+        }
+        // 관리자 인증을 통과한 요청에만 이미지 원본과 MIME 유형을 반환한다
+        return evidence;
     }
 
     /**
@@ -241,6 +276,9 @@ public class ComplaintServiceImpl implements ComplaintService {
         if (complaintMapper.delTargetUserIntroduction(complaint.getTagtUser()) != 1) {
             throw new BusinessException(HttpStatus.NOT_FOUND, ResultEnum.COMPLAINT_TARGET_NOT_FOUND);
         }
+        // 현재 한줄소개를 제거한 조치로 해결된 모든 미처리 한줄소개 신고를 함께 종결한다
+        uptManualComplaints(Constant.CMPL_TARGET_INTRODUCTION, complaint.getTagtUser(), cmplNumb
+                           , "피신고자의 한줄소개를 초기화", admin.getAdmnNumb());
         // 자기소개가 제거된 현재 피신고자 정보를 포함한 신고 상세를 반환한다
         return createComplaintDetail(cmplNumb, admin);
     }
@@ -294,6 +332,9 @@ public class ComplaintServiceImpl implements ComplaintService {
         if (deleteCount != 1) {
             throw new BusinessException(HttpStatus.NOT_FOUND, ResultEnum.COMPLAINT_TARGET_NOT_FOUND);
         }
+        // 대상 번호 전체가 비노출된 조치로 해결된 모든 버전의 미처리 신고를 함께 종결한다
+        uptManualComplaints(complaint.getTagtType(), complaint.getTagtNumb(), cmplNumb
+                           , getManualActionName(complaint.getTagtType()), admin.getAdmnNumb());
         // 원본 존재 여부가 갱신된 신고 상세를 반환한다
         return createComplaintDetail(cmplNumb, admin);
     }
@@ -379,10 +420,12 @@ public class ComplaintServiceImpl implements ComplaintService {
         detail.setAutoAction(createAutoAction(complaint));
         // 동일 대상의 최근 다른 신고를 상세 응답에 설정한다
         detail.setRelatedComplaints(complaintMapper.getRelatedComplaintList(complaint.getTagtType()
-                                                                           , complaint.getTagtNumb(), cmplNumb));
+                                                                           , complaint.getTagtNumb()
+                                                                           , complaint.getTagtHash(), cmplNumb));
         // 동일 대상의 전체 다른 신고 건수를 상세 응답에 설정한다
         detail.setRelatedComplaintCount(complaintMapper.getRelatedComplaintCnt(complaint.getTagtType()
                                                                                     , complaint.getTagtNumb()
+                                                                                    , complaint.getTagtHash()
                                                                                     , cmplNumb));
         // 신고 대상 소유 사용자 연결이 남아 있으면 현재 피신고자 정보를 조회한다
         if (!StringUtil.isEmpty(complaint.getTagtUser())) {
@@ -430,22 +473,143 @@ public class ComplaintServiceImpl implements ComplaintService {
         autoAction.setActnTypeName(codeMapper.getCodeName(Constant.CMPL_ACTN, actionType));
         // 반려를 제외한 동일 대상 신고 누적 건수를 조회한다
         int complaintCount = complaintMapper.getAutoActionCmplCnt(
-                complaint.getTagtType(), complaint.getTagtNumb());
+                complaint.getTagtType(), complaint.getTagtNumb(), complaint.getTagtHash());
         // 현재 유효 신고 누적 건수를 설정한다
         autoAction.setComplaintCount(complaintCount);
-        // 현재 누적 뒤 다음 임계치 배수의 실행 건수를 계산한다
-        int nextActionCount = ((complaintCount / threshold) + 1) * threshold;
-        // 다음 자동 조치가 발생하는 유효 신고 누적 건수를 설정한다
-        autoAction.setNextActionCount(nextActionCount);
-        // 다음 자동 조치까지 새로 필요한 유효 신고 건수를 설정한다
-        autoAction.setRemainingCount(nextActionCount - complaintCount);
         // 동일 대상에 확정 저장된 실제 자동 조치 이력을 최신 순으로 조회해 설정한다
         List<ComplaintActionVO> actionHistories = complaintMapper.getAutoActionList(
-                complaint.getTagtType(), complaint.getTagtNumb());
+                complaint.getTagtType(), complaint.getTagtNumb(), complaint.getTagtHash());
         // Mapper가 빈 결과를 NULL로 반환하더라도 API 목록 계약을 유지한다
         autoAction.setActionHistories(StringUtil.isEmpty(actionHistories) ? List.of() : actionHistories);
+        // 신고 당시 버전과 현재 서비스에 노출된 대상 버전의 관계를 계산한다
+        String progressStatus = getAutoProgressStatus(complaint, autoAction.getActionHistories());
+        // 원본 상태를 반영한 자동 조치 진행 상태를 설정한다
+        autoAction.setProgressStatus(progressStatus);
+
+        // 현재 신고 버전이 실제 노출 중일 때만 다음 자동 조치까지의 진행 건수를 계산한다
+        if (Constant.CMPL_PROGRESS_PENDING.equals(progressStatus)) {
+            // 현재 누적 뒤 다음 임계치 배수의 실행 건수를 계산한다
+            int nextActionCount = ((complaintCount / threshold) + 1) * threshold;
+            // 다음 자동 조치가 발생하는 유효 신고 누적 건수를 설정한다
+            autoAction.setNextActionCount(nextActionCount);
+            // 다음 자동 조치까지 새로 필요한 유효 신고 건수를 설정한다
+            autoAction.setRemainingCount(nextActionCount - complaintCount);
+        }
         // 자동 조치 적용 대상의 진행 상태와 이력을 반환한다
         return autoAction;
+    }
+
+    /**
+     * 신고 당시 버전과 현재 원본 및 처리 이력을 기준으로 자동 조치 진행 상태를 결정한다
+     *
+     * @author SeungHyeon.Kang
+     * @param complaint 자동 조치 상태를 조회할 신고
+     * @param actionHistories 동일 대상 버전의 자동 조치 이력
+     * @return 현재 대상 버전의 자동 조치 진행 상태
+     */
+    private String getAutoProgressStatus(ComplaintVO complaint, List<ComplaintActionVO> actionHistories) {
+        // 현재 서비스에 노출되어 추가 자동 조치가 가능한 원문 또는 파일 정보를 조회한다
+        ComplaintTargetContentVO currentTarget = complaintMapper.getAutoActionTargetDtl(
+                complaint.getTagtType(), complaint.getTagtNumb(), complaint.getTagtUser());
+
+        // 현재 원본이 없으면 확정 이력과 처리자를 기준으로 완료 원인을 구분한다
+        if (StringUtil.isEmpty(currentTarget)) {
+            // 자동 조치 이력이 있으면 임계치 조치로 원본이 비노출된 상태를 반환한다
+            if (!StringUtil.isEmpty(actionHistories)) {
+                // 자동 조치 완료 상태를 반환한다
+                return Constant.CMPL_PROGRESS_AUTO_ACTIONED;
+            }
+
+            // 표준 수동 원본 조치 처리 내용이 있는 신고만 관리자 수동 조치 완료로 판정한다
+            if (Constant.CMPL_STATUS_ACTIONED.equals(complaint.getCmplStat())
+                    && !StringUtil.isEmpty(complaint.getProcAdmn())
+                    && !StringUtil.isEmpty(complaint.getProcCntn())
+                    && complaint.getProcCntn().startsWith(Constant.CMPL_MANUAL_PROCESS_PREFIX)) {
+                // 관리자 수동 조치 완료 상태를 반환한다
+                return Constant.CMPL_PROGRESS_MANUAL_ACTIONED;
+            }
+
+            // 원본 삭제 주체를 확정할 수 없는 과거 또는 물리 탈퇴 데이터는 미존재 상태를 반환한다
+            return Constant.CMPL_PROGRESS_TARGET_MISSING;
+        }
+
+        // 현재 원문 또는 실제 프로필 이미지 바이트로 신고 접수와 동일한 버전 해시를 계산한다
+        String currentHash = getCurrentTargetHash(complaint.getTagtType(), currentTarget);
+        // 저장소 원본을 읽지 못하거나 현재 내용이 변경됐으면 과거 버전에 추가 진행 건수를 표시하지 않는다
+        if (StringUtil.isEmpty(currentHash) || !complaint.getTagtHash().equals(currentHash)) {
+            // 현재 노출 버전이 신고 당시 버전과 다름을 반환한다
+            return Constant.CMPL_PROGRESS_VERSION_CHANGED;
+        }
+
+        // 신고 당시 버전이 현재 노출 중이므로 다음 자동 조치 진행 상태를 반환한다
+        return Constant.CMPL_PROGRESS_PENDING;
+    }
+
+    /**
+     * 현재 텍스트 원문 또는 프로필 이미지 바이트로 신고 대상 버전 해시를 생성한다
+     *
+     * @author SeungHyeon.Kang
+     * @param tagtType 신고 대상 유형
+     * @param currentTarget 현재 서비스에 노출 중인 대상 정보
+     * @return 소문자 64자리 SHA-256 해시, 이미지 원본을 읽지 못하면 null
+     */
+    private String getCurrentTargetHash(String tagtType, ComplaintTargetContentVO currentTarget) {
+        byte[] targetBytes;
+
+        // 프로필 사진은 파일명이 아닌 현재 저장소의 실제 이미지 바이트를 해시 입력으로 사용한다
+        if (Constant.CMPL_TARGET_PROFILE_IMAGE.equals(tagtType)) {
+            // 검증된 내부 프로필 저장소 객체 키를 조회한다
+            String objectKey = getStoredObjectKey(currentTarget);
+            // 외부 또는 비정상 경로는 현재 버전 일치를 보장할 수 없으므로 진행 대상에서 제외한다
+            if (StringUtil.isEmpty(objectKey)) {
+                // 현재 이미지 버전을 확인할 수 없음을 반환한다
+                return null;
+            }
+
+            // 저장소 읽기 실패를 신고 상세 전체 실패로 확장하지 않고 버전 확인 불가로 격리한다
+            try {
+                // 현재 프로필 이미지 원본을 저장소에서 조회한다
+                Optional<StoredFile> storedFile = fileStorage.getFile(objectKey);
+                // 실제 이미지 바이트가 없으면 현재 버전을 확인할 수 없다
+                if (storedFile.isEmpty() || storedFile.get().bytes().length == 0) {
+                    // 현재 이미지 버전을 확인할 수 없음을 반환한다
+                    return null;
+                }
+
+                // 신고 접수와 동일한 실제 이미지 바이트를 해시 입력으로 설정한다
+                targetBytes = storedFile.get().bytes();
+            }
+
+            // 저장소 장애 시 잘못된 다음 자동 조치 건수를 표시하지 않도록 버전 확인 불가로 처리한다
+            catch (IOException exception) {
+                // 현재 이미지 버전을 확인할 수 없음을 반환한다
+                return null;
+            }
+        }
+
+        // 텍스트 대상은 현재 데이터베이스 원문 전체를 해시 입력으로 사용한다
+        else {
+            // 대상 유형 구분자 뒤에 현재 원문을 결합할 바이트를 설정한다
+            targetBytes = Optional.ofNullable(currentTarget.getTagtCntn()).orElse("")
+                    .getBytes(StandardCharsets.UTF_8);
+        }
+
+        // 모든 지원 JDK에서 동일한 SHA-256 결과를 생성한다
+        try {
+            // 신고 대상 버전 해시 계산 객체를 생성한다
+            MessageDigest digest = MessageDigest.getInstance("SHA-256");
+            // 유형이 다른 대상의 동일 원문이 같은 버전으로 표현되지 않도록 구분자를 반영한다
+            digest.update((tagtType + "\u0000").getBytes(StandardCharsets.UTF_8));
+            // 현재 실제 원문 또는 이미지 바이트를 해시에 반영한다
+            digest.update(targetBytes);
+            // 신고 테이블과 비교할 소문자 64자리 해시를 반환한다
+            return HexFormat.of().formatHex(digest.digest());
+        }
+
+        // 필수 SHA-256 알고리즘을 사용할 수 없으면 버전 비교 데이터 무결성을 보장할 수 없다
+        catch (NoSuchAlgorithmException exception) {
+            throw new IllegalStateException("SHA-256 is not available.", exception);
+        }
     }
 
     /**
@@ -458,8 +622,8 @@ public class ComplaintServiceImpl implements ComplaintService {
     private String getAutoActionType(String tagtType) {
         // 자동 조치 대상별 실행 코드를 사용자 서버 정책과 같은 기준으로 반환한다
         return switch (tagtType) {
-            // 독후감 신고는 원본 완전 삭제 조치를 반환한다
-            case Constant.CMPL_TARGET_BOOK_REPORT -> Constant.CMPL_ACTION_DELETE_REPORT;
+            // 독후감 신고는 원본 보존 비공개 전환 조치를 반환한다
+            case Constant.CMPL_TARGET_BOOK_REPORT -> Constant.CMPL_ACTION_HIDE_REPORT;
             // 댓글 신고는 원본 논리 삭제 조치를 반환한다
             case Constant.CMPL_TARGET_REPLY -> Constant.CMPL_ACTION_DELETE_REPLY;
             // 프로필 사진 신고는 기본 이미지 초기화 조치를 반환한다
@@ -580,8 +744,54 @@ public class ComplaintServiceImpl implements ComplaintService {
         if (complaintMapper.delTagtFileIfUnref(targetFile.getFileNumb()) == 1) {
             setFileCleanupOnCommit(targetFile);
         }
+        // 프로필 사진 초기화는 해당 사용자 프로필 사진의 모든 미처리 신고를 함께 종결한다
+        if (profileImage) {
+            // 현재 프로필 사진을 제거한 조치로 해결된 프로필 사진 신고를 종결한다
+            uptManualComplaints(Constant.CMPL_TARGET_PROFILE_IMAGE, complaint.getTagtUser(), cmplNumb
+                               , "피신고자의 프로필 사진을 초기화", admin.getAdmnNumb());
+        }
         // 이미지 참조가 제거된 현재 피신고자 정보를 포함한 신고 상세를 반환한다
         return createComplaintDetail(cmplNumb, admin);
+    }
+
+    /**
+     * 관리자 수동 조치로 해결된 동일 대상의 미처리 신고를 조치 완료 상태로 종결한다
+     *
+     * @author SeungHyeon.Kang
+     * @param tagtType 종결할 신고 대상 유형
+     * @param tagtNumb 종결할 신고 대상 번호
+     * @param cmplNumb 수동 조치의 기준 신고번호
+     * @param actionName 관리자 수동 조치 명칭
+     * @param adminNumb 수동 조치 관리자 번호
+     */
+    private void uptManualComplaints(String tagtType, Long tagtNumb, Long cmplNumb
+                                    , String actionName, Long adminNumb) {
+        // 관련 신고마다 같은 최종 처리 근거를 남길 관리자 수동 조치 내용을 생성한다
+        String processContent = String.format(MANUAL_PROCESS_FORMAT, actionName, cmplNumb);
+        // 원본 비노출로 해결된 모든 접수와 검토 중 신고를 같은 관리자 처리 결과로 종결한다
+        complaintMapper.uptManualComplaints(tagtType, tagtNumb, processContent, adminNumb);
+    }
+
+    /**
+     * 신고 대상 유형에 대응하는 관리자 수동 원본 조치 명칭을 조회한다
+     *
+     * @author SeungHyeon.Kang
+     * @param tagtType 신고 대상 유형
+     * @return 관리자 처리 내용에 기록할 수동 조치 명칭
+     */
+    private String getManualActionName(String tagtType) {
+        // 대상 유형별 실제 데이터 보존 정책과 일치하는 수동 조치 명칭을 반환한다
+        return switch (tagtType) {
+            // 독후감은 연결 데이터와 원본을 완전 삭제한 조치 명칭을 반환한다
+            case Constant.CMPL_TARGET_BOOK_REPORT -> "신고 대상 독후감을 완전 삭제";
+            // 댓글은 원본 행을 보존하며 삭제 상태로 변경한 조치 명칭을 반환한다
+            case Constant.CMPL_TARGET_REPLY -> "신고 대상 댓글을 삭제 상태로 변경";
+            // 모임은 운영 관계를 유지하며 소개만 초기화한 조치 명칭을 반환한다
+            case Constant.CMPL_TARGET_CLUB -> "신고 대상 모임 소개를 초기화";
+            // 수동 콘텐츠 조치에서 허용하지 않는 유형은 잘못된 처리 내용이 저장되지 않도록 거절한다
+            default -> throw new BusinessException(HttpStatus.BAD_REQUEST
+                                                   , ResultEnum.COMPLAINT_TARGET_ACTION_INVALID);
+        };
     }
 
     /**

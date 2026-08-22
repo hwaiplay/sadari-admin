@@ -46,8 +46,7 @@ import org.springframework.transaction.support.TransactionSynchronizationManager
  * 2026-07-30        SeungHyeon.Kang    로그인 제공자 공통코드 검색 검증
  * 2026-07-30        SeungHyeon.Kang    정지 이력 동기화 상태와 임시 Outbox 전달 적용
  * 2026-08-13        SeungHyeon.Kang    삭제 회원의 유효 제재 목록과 관리자 해제 처리 추가
- * 2026-08-22        SeungHyeon.Kang    현재 사용자의 받은 신고 이력 조회 추가
- * 2026-08-22        SeungHyeon.Kang    현재 사용자 프로필 정보 삭제 처리 추가
+ * 2026-08-22        SeungHyeon.Kang    신고 이력과 프로필 수동 조치 종결
  */
 @Service
 @Transactional(readOnly = true)
@@ -68,6 +67,16 @@ public class CurrentUserServiceImpl implements CurrentUserService {
 
     // 관리자 내부 정지 및 해제 메모 최대 저장 바이트
     private static final int SUSPENSION_CONTENT_MAX_BYTES = 1000;
+
+    // 현 사용자 상세에서 프로필 사진 초기화로 종결할 신고 처리 내용
+    private static final String PROFILE_COMPLAINT_PROCESS =
+            Constant.CMPL_MANUAL_PROCESS_PREFIX
+            + " 현 사용자 상세에서 프로필 사진 초기화. 관련 미처리 신고를 일괄 종결함.";
+
+    // 현 사용자 상세에서 한줄소개 초기화로 종결할 신고 처리 내용
+    private static final String INTRO_COMPLAINT_PROCESS =
+            Constant.CMPL_MANUAL_PROCESS_PREFIX
+            + " 현 사용자 상세에서 한줄소개 초기화. 관련 미처리 신고를 일괄 종결함.";
 
     // 현재 사용자 조회 Mapper
     private final CurrentUserMapper currentUserMapper;
@@ -194,6 +203,9 @@ public class CurrentUserServiceImpl implements CurrentUserService {
         if (currentUserMapper.delUserIntroduction(userNumb) != 1) {
             throw new BusinessException(HttpStatus.NOT_FOUND, ResultEnum.CURRENT_USER_NOT_FOUND);
         }
+        // 한줄소개 초기화로 해결된 해당 사용자의 모든 미처리 한줄소개 신고를 함께 종결한다
+        currentUserMapper.uptUserComplaints(Constant.CMPL_TARGET_INTRODUCTION, userNumb
+                                            , INTRO_COMPLAINT_PROCESS, admin.getAdmnNumb());
         // 한줄 소개가 제거된 최신 현재 사용자 상세를 반환한다
         return getCurrentUserDtl(userNumb, admin);
     }
@@ -659,6 +671,13 @@ public class CurrentUserServiceImpl implements CurrentUserService {
             setFileCleanupOnCommit(userFile);
         }
 
+        // 프로필 사진 초기화로 해결된 해당 사용자의 프로필 사진 신고만 함께 종결한다
+        if (profileImage) {
+            // 배경사진과 무관한 프로필 사진 신고를 관리자 수동 조치 결과로 종결한다
+            currentUserMapper.uptUserComplaints(Constant.CMPL_TARGET_PROFILE_IMAGE, userNumb
+                                                , PROFILE_COMPLAINT_PROCESS, admin.getAdmnNumb());
+        }
+
         // 이미지 참조가 제거된 최신 현재 사용자 상세를 반환한다
         return getCurrentUserDtl(userNumb, admin);
     }
@@ -722,7 +741,8 @@ public class CurrentUserServiceImpl implements CurrentUserService {
 
         // 커밋 뒤 실패한 파일번호와 객체 키를 재정리 가능한 운영 로그로 남긴다
         catch (IOException exception) {
-            log.error("Committed current user image cleanup failed. fileNumb={}, objectKey={}", userFile.getFileNumb(), objectKey, exception);
+            log.error("Committed current user image cleanup failed. fileNumb={}, objectKey={}"
+                    , userFile.getFileNumb(), objectKey, exception);
         }
     }
 

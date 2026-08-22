@@ -33,6 +33,8 @@ const TARGET_CONTENT_LABELS: Record<string, string> = {
   CMPL_BOOK_REPORT: '접수 당시 독후감 원문',
   CMPL_REPLY: '접수 당시 댓글·답글 원문',
   CMPL_CLUB: '접수 당시 독서 모임 소개',
+  CMPL_PROF_IMAGE: '접수 당시 프로필 사진',
+  CMPL_INTRO: '접수 당시 한줄소개 원문',
 }
 
 // 신고 대상 유형별 현재 원본 삭제 버튼 문구를 표시한다
@@ -47,6 +49,20 @@ const TARGET_DELETE_CONFIRM_MESSAGES: Record<string, string> = {
   CMPL_BOOK_REPORT: '신고 대상 독후감과 연결된 댓글 및 좋아요를 완전히 삭제하시겠습니까? 이 작업은 복구할 수 없습니다.',
   CMPL_REPLY: '신고 대상 댓글을 삭제 상태로 변경하시겠습니까?',
   CMPL_CLUB: '신고 대상 모임의 소개 내용을 삭제하시겠습니까?',
+}
+
+// 현재 원본과 처리 이력을 반영한 자동조치 진행 상태를 관리자용 문구로 표시한다
+const AUTO_ACTION_PROGRESS_LABELS: Record<string, string> = {
+  // "자동조치 누적 진행 중"
+  PENDING: '자동조치 누적 진행 중',
+  // "자동조치 완료"
+  AUTO_ACTIONED: '자동조치 완료',
+  // "관리자 수동조치 완료"
+  MANUAL_ACTIONED: '관리자 수동조치 완료',
+  // "신고 당시 대상 버전 비노출"
+  VERSION_CHANGED: '신고 당시 대상 버전 비노출',
+  // "신고 대상 원본 없음"
+  TARGET_MISSING: '신고 대상 원본 없음',
 }
 
 /**
@@ -371,6 +387,12 @@ export function ComplaintDetailPage({
   const targetContentLabel = TARGET_CONTENT_LABELS[complaint.tagtType] ?? '접수 당시 신고 대상 내용'
   // 자동 조치 진행과 실행 이력을 한 영역에서 표시할 상세 정보를 분리한다
   const autoAction = detail.autoAction
+  // 원본이 신고 당시 버전으로 실제 노출 중인 경우에만 다음 임계치 정보를 표시한다
+  const isAutoActionPending = autoAction.progressStatus === 'PENDING'
+  // 서버가 판정한 현재 자동조치 진행 상태를 관리자에게 명확한 문구로 표시한다
+  const autoActionProgressLabel = autoAction.progressStatus
+    ? AUTO_ACTION_PROGRESS_LABELS[autoAction.progressStatus] ?? autoAction.progressStatus
+    : '자동조치 상태 확인 불가'
 
   // 신고 접수 정보와 처리 영역 및 조건부 이용정지 기능을 반환한다
   return (
@@ -409,32 +431,10 @@ export function ComplaintDetailPage({
                 <td>{formatDate(complaint.regiDate)}</td>
               </tr>
 
-              {/* 신고자 기본정보와 이미지 */}
+              {/* 신고자 기본정보 */}
               <tr>
                 <th>신고자</th>
                 <td colSpan={5}>{complaint.userNumb ? `${complaint.reporterNick ?? '닉네임 없음'} (${complaint.userNumb})` : '탈퇴한 사용자'}</td>
-              </tr>
-              <tr>
-                <th>신고자 이미지</th>
-                <td colSpan={5}>
-                  {/* 신고자 프로필 사진과 배경화면 보기 버튼 영역 */}
-                  <div className="image-preview-actions">
-                    {/* "프로필 사진 보기" */}
-                    <ImagePreviewButton
-                      imagePath={complaint.reporterProfPath}
-                      buttonLabel="프로필 사진 보기"
-                      dialogTitle={`${complaint.reporterNick ?? '탈퇴한 사용자'} 프로필 사진`}
-                      emptyLabel="프로필 미등록"
-                    />
-                    {/* "배경화면 보기" */}
-                    <ImagePreviewButton
-                      imagePath={complaint.reporterBgimPath}
-                      buttonLabel="배경화면 보기"
-                      dialogTitle={`${complaint.reporterNick ?? '탈퇴한 사용자'} 배경화면`}
-                      emptyLabel="배경 미등록"
-                    />
-                  </div>
-                </td>
               </tr>
 
               {/* 신고 사유와 신고자가 작성한 보충 설명 */}
@@ -558,9 +558,20 @@ export function ComplaintDetailPage({
               </tr>
               <tr>
                 <th>{targetContentLabel}</th>
-                <td colSpan={5} className="complaint-content-cell">
-                  {/* "내용 없음" */}
-                  {complaint.tagtCntn || '내용 없음'}
+                <td colSpan={5}>
+                  <div className="complaint-moderation-content">
+                    {/* "내용 없음" */}
+                    <span className="complaint-content-cell">{complaint.tagtCntn || '내용 없음'}</span>
+                    {/* 프로필 사진 신고는 현재 사진이 아닌 접수 시점의 실제 관리자 전용 증거를 표시한다 */}
+                    {complaint.tagtType === 'CMPL_PROF_IMAGE' && (
+                      <ImagePreviewButton
+                        imagePath={complaint.evidenceAvailable ? `/api/complaints/${complaint.cmplNumb}/evidence` : null}
+                        buttonLabel="접수 당시 프로필 사진 보기"
+                        dialogTitle={`신고 #${complaint.cmplNumb} 접수 당시 프로필 사진`}
+                        emptyLabel="증거 보존기간 만료 또는 증거 없음"
+                      />
+                    )}
+                  </div>
                 </td>
               </tr>
               {TARGET_DELETE_LABELS[complaint.tagtType] && (
@@ -609,16 +620,18 @@ export function ComplaintDetailPage({
           <div>
             {/* "자동조치 현황" */}
             <h2>자동조치 현황</h2>
-            {/* "반려를 제외한 동일 대상 신고 누적을 기준으로 자동조치 진행 상태를 표시합니다." */}
-            <p>반려를 제외한 동일 대상 신고 누적을 기준으로 자동조치 진행 상태를 표시합니다.</p>
+            {/* "반려를 제외한 동일 대상 버전 신고 누적을 기준으로 자동조치 진행 상태를 표시합니다." */}
+            <p>반려를 제외한 동일 대상 버전 신고만 합산해 자동조치 진행 상태를 표시합니다.</p>
           </div>
-          {/* 자동조치 대상 여부와 다음 실행까지 남은 건수 */}
+          {/* 자동조치 대상 여부와 현재 원본 상태를 반영한 진행 결과 */}
           <div className="status">
-            {autoAction.autoActionTarget ? (
+            {autoAction.autoActionTarget && isAutoActionPending ? (
               <>
                 {/* "다음 자동조치까지 N건" */}
                 다음 자동조치까지 {autoAction.remainingCount.toLocaleString()}건
               </>
+            ) : autoAction.autoActionTarget ? (
+              <>{autoActionProgressLabel}</>
             ) : (
               <>
                 {/* "자동조치 미적용" */}
@@ -632,6 +645,11 @@ export function ComplaintDetailPage({
           <>
             {/* 자동조치 기준과 누적 진행 요약 */}
             <div className="complaint-auto-action-summary">
+              <div>
+                {/* "대상 버전" */}
+                <span>대상 버전</span>
+                <strong>{complaint.tagtHash.slice(0, 12)}</strong>
+              </div>
               <div>
                 {/* "예정 자동조치" */}
                 <span>예정 자동조치</span>
@@ -647,11 +665,19 @@ export function ComplaintDetailPage({
                 <span>실행 기준</span>
                 <strong>{autoAction.threshold.toLocaleString()}건마다</strong>
               </div>
-              <div>
-                {/* "다음 실행 시점" */}
-                <span>다음 실행 시점</span>
-                <strong>누적 {autoAction.nextActionCount.toLocaleString()}건</strong>
-              </div>
+              {isAutoActionPending ? (
+                <div>
+                  {/* "다음 실행 시점" */}
+                  <span>다음 실행 시점</span>
+                  <strong>누적 {autoAction.nextActionCount.toLocaleString()}건</strong>
+                </div>
+              ) : (
+                <div>
+                  {/* "현재 진행 상태" */}
+                  <span>현재 진행 상태</span>
+                  <strong>{autoActionProgressLabel}</strong>
+                </div>
+              )}
               <div>
                 {/* "실행 이력" */}
                 <span>실행 이력</span>
@@ -755,11 +781,11 @@ export function ComplaintDetailPage({
         />
       )}
 
-      {/* 동일 대상의 최근 다른 신고 */}
+      {/* 동일 대상 버전의 최근 다른 신고 */}
       <section className="detail-panel">
         <div className="detail-title">
           <div>
-            <h2>동일 대상 신고</h2>
+            <h2>동일 대상 버전 신고</h2>
             <p>현재 신고를 제외한 최근 10건을 표시합니다.</p>
           </div>
           <div className="status">총 {detail.relatedComplaintCount.toLocaleString()}건</div>
@@ -777,7 +803,7 @@ export function ComplaintDetailPage({
             </thead>
             <tbody>
               {detail.relatedComplaints.length === 0 ? (
-                <tr className="empty-row"><td colSpan={5}>동일 대상의 다른 신고가 없습니다.</td></tr>
+                <tr className="empty-row"><td colSpan={5}>동일 대상 버전의 다른 신고가 없습니다.</td></tr>
               ) : detail.relatedComplaints.map(renderRelatedComplaintRow)}
             </tbody>
           </table>

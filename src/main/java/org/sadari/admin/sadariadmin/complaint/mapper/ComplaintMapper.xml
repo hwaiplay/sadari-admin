@@ -50,8 +50,10 @@
         , C.TAGT_TYPE
         , FN_GET_CODE_NAME(#{cmplTagt}, C.TAGT_TYPE, #{cmplTagt}) AS TAGT_TYPE_NAME
         , C.TAGT_NUMB
+        , C.TAGT_HASH
         , C.TAGT_USER
         , C.TAGT_CNTN
+        , CASE WHEN C.EVDC_NUMB IS NULL THEN 0 ELSE 1 END AS EVIDENCE_AVAILABLE
         , T.USER_NICK AS TARGET_USER_NICK
         , C.CMPL_RSON
         , FN_GET_CODE_NAME(#{cmplRsonGroup}, C.CMPL_RSON, #{cmplRsonGroup}) AS CMPL_RSON_NAME
@@ -74,8 +76,10 @@
         , P.TAGT_TYPE
         , P.TAGT_TYPE_NAME
         , P.TAGT_NUMB
+        , P.TAGT_HASH
         , P.TAGT_USER
         , P.TAGT_CNTN
+        , P.EVIDENCE_AVAILABLE
         , P.TARGET_USER_NICK
         , P.CMPL_RSON
         , P.CMPL_RSON_NAME
@@ -102,8 +106,10 @@
                        , Q.TAGT_TYPE
                        , Q.TAGT_TYPE_NAME
                        , Q.TAGT_NUMB
+                       , Q.TAGT_HASH
                        , Q.TAGT_USER
                        , Q.TAGT_CNTN
+                       , Q.EVIDENCE_AVAILABLE
                        , Q.TARGET_USER_NICK
                        , Q.CMPL_RSON
                        , Q.CMPL_RSON_NAME
@@ -151,15 +157,9 @@
         <include refid="complaintCodeBindings"/>
         SELECT /* getComplaintDtl */
                <include refid="complaintColumns"/>
-             , RPF.FILE_PATH AS REPORTER_PROF_PATH
-             , RBF.FILE_PATH AS REPORTER_BGIM_PATH
           FROM TH_CMPLNT C
      LEFT JOIN TM_USERXM R
             ON R.USER_NUMB = C.USER_NUMB
-     LEFT JOIN TM_FILEXM RPF
-            ON RPF.FILE_NUMB = R.PROF_NUMB
-     LEFT JOIN TM_FILEXM RBF
-            ON RBF.FILE_NUMB = R.BGIM_NUMB
      LEFT JOIN TM_USERXM T
             ON T.USER_NUMB = C.TAGT_USER
          WHERE C.CMPL_NUMB = #{cmplNumb}
@@ -172,6 +172,7 @@
              , C.USER_NUMB
              , C.TAGT_TYPE
              , C.TAGT_NUMB
+             , C.TAGT_HASH
              , C.TAGT_USER
              , C.TAGT_CNTN
              , C.CMPL_RSON
@@ -199,6 +200,7 @@
             ON T.USER_NUMB = C.TAGT_USER
          WHERE C.TAGT_TYPE = #{tagtType}
            AND C.TAGT_NUMB = #{tagtNumb}
+           AND C.TAGT_HASH = #{tagtHash}
            AND C.CMPL_NUMB != #{cmplNumb}
       ORDER BY C.REGI_DATE DESC
              , C.CMPL_NUMB DESC
@@ -212,6 +214,7 @@
           FROM TH_CMPLNT C
          WHERE C.TAGT_TYPE = #{tagtType}
            AND C.TAGT_NUMB = #{tagtNumb}
+           AND C.TAGT_HASH = #{tagtHash}
            AND C.CMPL_NUMB != #{cmplNumb}
     </select>
 
@@ -224,6 +227,7 @@
           FROM TH_CMPLNT C
          WHERE C.TAGT_TYPE = #{tagtType}
            AND C.TAGT_NUMB = #{tagtNumb}
+           AND C.TAGT_HASH = #{tagtHash}
            AND C.CMPL_STAT != #{cmplRejected}
     </select>
 
@@ -238,6 +242,7 @@
                A.ACTN_NUMB
              , A.TAGT_TYPE
              , A.TAGT_NUMB
+             , A.TAGT_HASH
              , A.TAGT_USER
              , A.ACTN_TYPE
              , FN_GET_CODE_NAME(#{cmplActnGroup}, A.ACTN_TYPE, #{cmplActnGroup}) AS ACTN_TYPE_NAME
@@ -252,8 +257,22 @@
           FROM TH_CMACTN A
          WHERE A.TAGT_TYPE = #{tagtType}
            AND A.TAGT_NUMB = #{tagtNumb}
+           AND A.TAGT_HASH = #{tagtHash}
       ORDER BY A.ACTN_ORDR DESC
              , A.ACTN_NUMB DESC
+    </select>
+
+    <!-- 신고번호로 연결된 관리자 전용 프로필 사진 증거 원본만 조회한다 -->
+    <select id="getComplaintEvidence"
+            resultType="org.sadari.admin.sadariadmin.complaint.vo.ComplaintEvidenceVO">
+        SELECT /* getComplaintEvidence */
+               E.ORIG_NAME
+             , E.MIME_TYPE
+             , E.EVDC_DATA
+          FROM TH_CMPLNT C
+    INNER JOIN TH_CMEVDC E
+            ON E.EVDC_NUMB = C.EVDC_NUMB
+         WHERE C.CMPL_NUMB = #{cmplNumb}
     </select>
 
     <!-- 신고 검토 담당자와 처리 결과를 하나의 상태 변경으로 저장한다 -->
@@ -272,6 +291,91 @@
              , UPDT_DATE = CURRENT_TIMESTAMP(6)
          WHERE CMPL_NUMB = #{cmplNumb}
     </update>
+
+    <!-- 관리자 수동 원본 조치로 해결된 동일 대상의 접수 또는 검토 중 신고를 일괄 종결한다 -->
+    <update id="uptManualComplaints">
+        <bind name="cmplReceived"
+              value="@org.sadari.admin.sadariadmin.common.constant.Constant@CMPL_STATUS_RECEIVED"/>
+        <bind name="cmplReviewing"
+              value="@org.sadari.admin.sadariadmin.common.constant.Constant@CMPL_STATUS_REVIEWING"/>
+        <bind name="cmplActioned"
+              value="@org.sadari.admin.sadariadmin.common.constant.Constant@CMPL_STATUS_ACTIONED"/>
+        UPDATE /* uptManualComplaints */
+               TH_CMPLNT
+           SET CMPL_STAT = #{cmplActioned}
+             , PROC_CNTN = #{procCntn}
+             , PROC_ADMN = #{procAdmn}
+             , PROC_DATE = CURRENT_TIMESTAMP(6)
+             , UPDT_DATE = CURRENT_TIMESTAMP(6)
+         WHERE TAGT_TYPE = #{tagtType}
+           AND TAGT_NUMB = #{tagtNumb}
+           AND CMPL_STAT IN (#{cmplReceived}, #{cmplReviewing})
+    </update>
+
+    <!-- 신고 당시 버전과 비교할 현재 자동 조치 대상 원문 또는 파일 정보를 조회한다 -->
+    <select id="getAutoActionTargetDtl"
+            resultType="org.sadari.admin.sadariadmin.complaint.vo.ComplaintTargetContentVO">
+        <bind name="bookReport"
+              value="@org.sadari.admin.sadariadmin.common.constant.Constant@CMPL_TARGET_BOOK_REPORT"/>
+        <bind name="reply"
+              value="@org.sadari.admin.sadariadmin.common.constant.Constant@CMPL_TARGET_REPLY"/>
+        <bind name="profileImage"
+              value="@org.sadari.admin.sadariadmin.common.constant.Constant@CMPL_TARGET_PROFILE_IMAGE"/>
+        <bind name="introduction"
+              value="@org.sadari.admin.sadariadmin.common.constant.Constant@CMPL_TARGET_INTRODUCTION"/>
+        <bind name="yes" value="@org.sadari.admin.sadariadmin.common.constant.Constant@YES"/>
+        <bind name="no" value="@org.sadari.admin.sadariadmin.common.constant.Constant@NO"/>
+        SELECT /* getAutoActionTargetDtl */
+               X.TAGT_CNTN
+             , X.FILE_NUMB
+             , X.STOR_NAME
+             , X.FILE_PATH
+          FROM (  SELECT COALESCE(P.REPT_CNTN, '') AS TAGT_CNTN
+                       , NULL AS FILE_NUMB
+                       , NULL AS STOR_NAME
+                       , NULL AS FILE_PATH
+                    FROM TM_REPORT P
+                   WHERE #{tagtType} = #{bookReport}
+                     AND P.REPT_NUMB = #{tagtNumb}
+                     AND P.USER_NUMB = #{userNumb}
+                     AND P.PUBC_YSNO = #{yes}
+                   UNION ALL
+                  SELECT COALESCE(R.REPL_CNTN, '') AS TAGT_CNTN
+                       , NULL AS FILE_NUMB
+                       , NULL AS STOR_NAME
+                       , NULL AS FILE_PATH
+                    FROM TB_REPLXX R
+                    JOIN TM_REPORT P
+                      ON P.REPT_NUMB = R.REPT_NUMB
+                     AND P.PUBC_YSNO = #{yes}
+                   WHERE #{tagtType} = #{reply}
+                     AND R.REPL_NUMB = #{tagtNumb}
+                     AND R.USER_NUMB = #{userNumb}
+                     AND COALESCE(R.DELT_YSNO, #{no}) = #{no}
+                   UNION ALL
+                  SELECT CONCAT('프로필 사진: ', COALESCE(F.ORIG_NAME, F.STOR_NAME, '파일명 없음')) AS TAGT_CNTN
+                       , F.FILE_NUMB
+                       , F.STOR_NAME
+                       , F.FILE_PATH
+                    FROM TM_USERXM U
+                    JOIN TM_FILEXM F
+                      ON F.FILE_NUMB = U.PROF_NUMB
+                   WHERE #{tagtType} = #{profileImage}
+                     AND U.USER_NUMB = #{tagtNumb}
+                     AND U.USER_NUMB = #{userNumb}
+                   UNION ALL
+                  SELECT U.INTR_CNTN AS TAGT_CNTN
+                       , NULL AS FILE_NUMB
+                       , NULL AS STOR_NAME
+                       , NULL AS FILE_PATH
+                    FROM TM_USERXM U
+                   WHERE #{tagtType} = #{introduction}
+                     AND U.USER_NUMB = #{tagtNumb}
+                     AND U.USER_NUMB = #{userNumb}
+                     AND NULLIF(TRIM(U.INTR_CNTN), '') IS NOT NULL
+               ) X
+         LIMIT 1
+    </select>
 
     <!-- 피신고자의 현재 프로필 이미지 파일 메타정보를 참조 제거 전 잠금 조회한다 -->
     <select id="getTagtProfFileForUpdate"

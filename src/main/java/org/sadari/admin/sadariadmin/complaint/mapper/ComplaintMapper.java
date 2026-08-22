@@ -4,7 +4,9 @@ import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Param;
 import org.sadari.admin.sadariadmin.complaint.vo.ComplaintSearchVO;
 import org.sadari.admin.sadariadmin.complaint.vo.ComplaintActionVO;
+import org.sadari.admin.sadariadmin.complaint.vo.ComplaintEvidenceVO;
 import org.sadari.admin.sadariadmin.complaint.vo.ComplaintTargetFileVO;
+import org.sadari.admin.sadariadmin.complaint.vo.ComplaintTargetContentVO;
 import org.sadari.admin.sadariadmin.complaint.vo.ComplaintUpdateVO;
 import org.sadari.admin.sadariadmin.complaint.vo.ComplaintVO;
 
@@ -19,7 +21,7 @@ import java.util.List;
  * DATE              AUTHOR             NOTE
  * -----------------------------------------------------------
  * 2026-08-05        SeungHyeon.Kang    최초 생성
- * 2026-08-22        SeungHyeon.Kang    자동 조치 누적과 실행 이력 조회 추가
+ * 2026-08-22        SeungHyeon.Kang    자동·수동 조치와 증거 원본 조회
  */
 @Mapper
 public interface ComplaintMapper {
@@ -66,11 +68,13 @@ public interface ComplaintMapper {
      * @author SeungHyeon.Kang
      * @param tagtType 신고 대상 유형
      * @param tagtNumb 신고 대상 번호
+     * @param tagtHash 신고 대상 버전 SHA-256 해시
      * @param cmplNumb 현재 신고 번호
      * @return 동일 대상의 최근 다른 신고 목록
      */
     List<ComplaintVO> getRelatedComplaintList(@Param("tagtType") String tagtType
                                              , @Param("tagtNumb") Long tagtNumb
+                                             , @Param("tagtHash") String tagtHash
                                              , @Param("cmplNumb") Long cmplNumb);
 
     /**
@@ -79,11 +83,13 @@ public interface ComplaintMapper {
      * @author SeungHyeon.Kang
      * @param tagtType 신고 대상 유형
      * @param tagtNumb 신고 대상 번호
+     * @param tagtHash 신고 대상 버전 SHA-256 해시
      * @param cmplNumb 현재 신고 번호
      * @return 동일 대상의 다른 신고 건수
      */
     int getRelatedComplaintCnt(@Param("tagtType") String tagtType
                                     , @Param("tagtNumb") Long tagtNumb
+                                    , @Param("tagtHash") String tagtHash
                                     , @Param("cmplNumb") Long cmplNumb);
 
     /**
@@ -92,10 +98,12 @@ public interface ComplaintMapper {
      * @author SeungHyeon.Kang
      * @param tagtType 신고 대상 유형
      * @param tagtNumb 신고 대상 번호
+     * @param tagtHash 신고 대상 버전 SHA-256 해시
      * @return 자동 조치 판단에 포함되는 신고 건수
      */
     int getAutoActionCmplCnt(@Param("tagtType") String tagtType
-                             , @Param("tagtNumb") Long tagtNumb);
+                             , @Param("tagtNumb") Long tagtNumb
+                             , @Param("tagtHash") String tagtHash);
 
     /**
      * 동일 대상에 실제 실행된 자동 조치 이력을 조회한다
@@ -103,10 +111,21 @@ public interface ComplaintMapper {
      * @author SeungHyeon.Kang
      * @param tagtType 신고 대상 유형
      * @param tagtNumb 신고 대상 번호
+     * @param tagtHash 신고 대상 버전 SHA-256 해시
      * @return 최신 자동 조치 순서의 실행 이력
      */
     List<ComplaintActionVO> getAutoActionList(@Param("tagtType") String tagtType
-                                               , @Param("tagtNumb") Long tagtNumb);
+                                               , @Param("tagtNumb") Long tagtNumb
+                                               , @Param("tagtHash") String tagtHash);
+
+    /**
+     * 신고번호에 연결된 관리자 전용 프로필 사진 증거 원본을 조회한다
+     *
+     * @author SeungHyeon.Kang
+     * @param cmplNumb 신고 번호
+     * @return 이미지 증거 원본 또는 만료·미존재 시 null
+     */
+    ComplaintEvidenceVO getComplaintEvidence(@Param("cmplNumb") Long cmplNumb);
 
     /**
      * 신고 담당자와 처리 상태 및 처리 내용을 수정한다
@@ -120,6 +139,32 @@ public interface ComplaintMapper {
     int uptComplaint(@Param("cmplNumb") Long cmplNumb
                     , @Param("update") ComplaintUpdateVO update
                     , @Param("procAdmn") Long procAdmn);
+
+    /**
+     * 관리자 수동 원본 조치로 해결된 동일 대상의 미처리 신고를 일괄 종결한다
+     *
+     * @author SeungHyeon.Kang
+     * @param tagtType 종결할 신고 대상 유형
+     * @param tagtNumb 종결할 신고 대상 번호
+     * @param procCntn 관리자 수동 조치 결과 내용
+     * @param procAdmn 수동 조치 관리자 번호
+     * @return 종결된 미처리 신고 건수
+     */
+    int uptManualComplaints(@Param("tagtType") String tagtType, @Param("tagtNumb") Long tagtNumb
+                           , @Param("procCntn") String procCntn, @Param("procAdmn") Long procAdmn);
+
+    /**
+     * 신고 당시 버전과 비교할 현재 자동 조치 대상 원문 또는 파일 정보를 조회한다
+     *
+     * @author SeungHyeon.Kang
+     * @param tagtType 신고 대상 유형
+     * @param tagtNumb 신고 대상 번호
+     * @param userNumb 신고 대상 소유 사용자 번호
+     * @return 현재 서비스에 노출되어 자동 조치 가능한 대상 정보
+     */
+    ComplaintTargetContentVO getAutoActionTargetDtl(@Param("tagtType") String tagtType
+                                                    , @Param("tagtNumb") Long tagtNumb
+                                                    , @Param("userNumb") Long userNumb);
 
     /**
      * 피신고자의 프로필 이미지 파일 메타정보를 잠금 조회한다

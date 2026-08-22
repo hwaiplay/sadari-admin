@@ -1,4 +1,18 @@
-# 신고 대상 원본은 반려를 제외한 유효 신고가 5건 누적될 때 자동 조치한다.
+# 로컬 관리자 화면은 사용자 로컬 서버와 같은 2건 임계치를 표시한다.
+complaint:
+  auto-action:
+    book-report-threshold: 2
+    reply-threshold: 2
+    profile-image-threshold: 2
+    introduction-threshold: 2
+
+---
+spring:
+  config:
+    activate:
+      on-profile: prod
+
+# 운영 관리자 화면은 사용자 운영 서버와 같은 5건 임계치를 표시한다.
 complaint:
   auto-action:
     book-report-threshold: 5

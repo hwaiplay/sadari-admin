@@ -4,10 +4,14 @@ import org.sadari.admin.sadariadmin.admin.vo.AdminSessionVO;
 import org.sadari.admin.sadariadmin.common.constant.Constant;
 import org.sadari.admin.sadariadmin.common.result.ResultData;
 import org.sadari.admin.sadariadmin.complaint.service.ComplaintService;
+import org.sadari.admin.sadariadmin.complaint.vo.ComplaintEvidenceVO;
 import org.sadari.admin.sadariadmin.complaint.vo.ComplaintSearchVO;
 import org.sadari.admin.sadariadmin.complaint.vo.ComplaintUpdateVO;
 import org.sadari.admin.sadariadmin.currentuser.vo.CurrentUserSuspensionVO;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.http.CacheControl;
+import org.springframework.http.MediaType;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.ModelAttribute;
@@ -32,6 +36,9 @@ import org.springframework.web.bind.annotation.RestController;
 @RestController
 @RequestMapping(Constant.API_COMPLAINTS_PREFIX)
 public class ComplaintController {
+
+    // MIME 스니핑을 차단하는 표준 보안 응답 헤더명
+    private static final String HEADER_X_CONTENT_TYPE_OPTIONS = "X-Content-Type-Options";
 
     // 신고 조회와 처리 서비스
     private final ComplaintService complaintService;
@@ -75,6 +82,42 @@ public class ComplaintController {
                                     , @AuthenticationPrincipal AdminSessionVO admin) {
         // 신고 처리와 동일 대상 판단 정보를 포함한 상세를 반환한다
         return ResultData.success(complaintService.getComplaintDtl(cmplNumb, admin));
+    }
+
+    /**
+     * 신고번호에 연결된 프로필 사진 신고 증거 원본을 관리자에게 제공한다
+     *
+     * @author SeungHyeon.Kang
+     * @param cmplNumb 신고 번호
+     * @param admin 로그인 관리자
+     * @return 캐시를 금지한 이미지 증거 원본 응답
+     */
+    @GetMapping("/{cmplNumb}/evidence")
+    public ResponseEntity<byte[]> getComplaintEvidence(@PathVariable Long cmplNumb
+                                                      , @AuthenticationPrincipal AdminSessionVO admin) {
+        // 관리자 권한으로 신고번호에 연결된 만료 전 이미지 증거를 조회한다
+        ComplaintEvidenceVO evidence = complaintService.getComplaintEvidence(cmplNumb, admin);
+        // 비정상 MIME 값은 브라우저 실행 가능 형식으로 해석되지 않도록 일반 바이너리로 제한한다
+        MediaType mediaType;
+        try {
+            // 저장 당시 검증한 MIME 유형을 응답 Content-Type으로 변환한다
+            mediaType = MediaType.parseMediaType(evidence.getMimeType());
+            // 사용자 업로드 정책에서 허용한 JPEG와 PNG만 브라우저 표시 이미지로 응답한다
+            if (!MediaType.IMAGE_JPEG.isCompatibleWith(mediaType)
+                    && !MediaType.IMAGE_PNG.isCompatibleWith(mediaType)) {
+                // 그 외 MIME 유형은 실행 또는 스니핑되지 않는 일반 바이너리로 제한한다
+                mediaType = MediaType.APPLICATION_OCTET_STREAM;
+            }
+        } catch (IllegalArgumentException e) {
+            // 이전 데이터의 잘못된 MIME 값은 다운로드 가능한 일반 바이너리로 응답한다
+            mediaType = MediaType.APPLICATION_OCTET_STREAM;
+        }
+        // 관리자 브라우저와 중간 캐시에 민감한 신고 증거가 남지 않도록 no-store를 적용한다
+        return ResponseEntity.ok()
+                .cacheControl(CacheControl.noStore())
+                .header(HEADER_X_CONTENT_TYPE_OPTIONS, "nosniff")
+                .contentType(mediaType)
+                .body(evidence.getEvdcData());
     }
 
     /**

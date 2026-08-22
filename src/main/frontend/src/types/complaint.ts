@@ -15,13 +15,13 @@ export type Complaint = {
   cmplNumb: number
   userNumb: number | null
   reporterNick: string | null
-  reporterProfPath: string | null
-  reporterBgimPath: string | null
   tagtType: string
   tagtTypeName: string | null
   tagtNumb: number
+  tagtHash: string
   tagtUser: number | null
   tagtCntn: string | null
+  evidenceAvailable: boolean
   targetUserNick: string | null
   cmplRson: string
   cmplRsonName: string | null
@@ -40,6 +40,7 @@ export type ComplaintAction = {
   actnNumb: number
   tagtType: string
   tagtNumb: number
+  tagtHash: string
   tagtUser: number | null
   actnType: string
   actnTypeName: string | null
@@ -55,6 +56,7 @@ export type ComplaintAction = {
 
 export type ComplaintAutoAction = {
   autoActionTarget: boolean
+  progressStatus: 'PENDING' | 'AUTO_ACTIONED' | 'MANUAL_ACTIONED' | 'VERSION_CHANGED' | 'TARGET_MISSING' | null
   actnType: string | null
   actnTypeName: string | null
   threshold: number

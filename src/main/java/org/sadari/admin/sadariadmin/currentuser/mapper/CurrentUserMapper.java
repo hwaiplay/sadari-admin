@@ -25,8 +25,7 @@ import java.util.List;
  * 2026-07-30        SeungHyeon.Kang    회원 상태 변경 Outbox 이벤트 등록 추가
  * 2026-07-30        SeungHyeon.Kang    정지 이력 동기화 상태 수정 추가
  * 2026-08-13        SeungHyeon.Kang    삭제 회원의 유효 제재 조회와 잠금 조회 추가
- * 2026-08-22        SeungHyeon.Kang    현재 사용자의 받은 신고 이력 조회 추가
- * 2026-08-22        SeungHyeon.Kang    현재 사용자 프로필 정보 삭제 SQL 추가
+ * 2026-08-22        SeungHyeon.Kang    신고 이력과 프로필 수동 조치 SQL
  */
 @Mapper
 public interface CurrentUserMapper {
@@ -113,6 +112,19 @@ public interface CurrentUserMapper {
      * @return 수정 건수
      */
     int delUserIntroduction(@Param("userNumb") Long userNumb);
+
+    /**
+     * 현 사용자 프로필 조치로 해결된 미처리 신고를 일괄 종결한다
+     *
+     * @author SeungHyeon.Kang
+     * @param tagtType 종결할 사용자 프로필 신고 대상 유형
+     * @param userNumb 신고 대상 사용자 번호
+     * @param procCntn 관리자 수동 조치 내용
+     * @param procAdmn 처리 관리자 번호
+     * @return 종결된 미처리 신고 건수
+     */
+    int uptUserComplaints(@Param("tagtType") String tagtType, @Param("userNumb") Long userNumb
+                          , @Param("procCntn") String procCntn, @Param("procAdmn") Long procAdmn);
 
     /**
      * 회원번호에 해당하는 현재 사용자 존재 여부를 조회한다

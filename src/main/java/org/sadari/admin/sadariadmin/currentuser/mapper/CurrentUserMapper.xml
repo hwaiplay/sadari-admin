@@ -343,6 +343,26 @@
            AND INTR_CNTN IS NOT NULL
     </update>
 
+    <!-- 현 사용자 프로필 조치로 해결된 접수 또는 검토 중 신고를 관리자 처리로 일괄 종결한다 -->
+    <update id="uptUserComplaints">
+        <bind name="cmplReceived"
+              value="@org.sadari.admin.sadariadmin.common.constant.Constant@CMPL_STATUS_RECEIVED"/>
+        <bind name="cmplReviewing"
+              value="@org.sadari.admin.sadariadmin.common.constant.Constant@CMPL_STATUS_REVIEWING"/>
+        <bind name="cmplActioned"
+              value="@org.sadari.admin.sadariadmin.common.constant.Constant@CMPL_STATUS_ACTIONED"/>
+        UPDATE /* uptUserComplaints */
+               TH_CMPLNT
+           SET CMPL_STAT = #{cmplActioned}
+             , PROC_CNTN = #{procCntn}
+             , PROC_ADMN = #{procAdmn}
+             , PROC_DATE = CURRENT_TIMESTAMP(6)
+             , UPDT_DATE = CURRENT_TIMESTAMP(6)
+         WHERE TAGT_TYPE = #{tagtType}
+           AND TAGT_NUMB = #{userNumb}
+           AND CMPL_STAT IN (#{cmplReceived}, #{cmplReviewing})
+    </update>
+
     <!-- 현재 사용자의 로그인 이력 전체 건수를 조회한다 -->
     <select id="getLoginHistoryListCount" resultType="int">
         SELECT /* getLoginHistoryListCount */

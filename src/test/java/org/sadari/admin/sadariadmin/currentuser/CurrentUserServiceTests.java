@@ -143,6 +143,7 @@ class CurrentUserServiceTests {
                         USER_NUMB
                       , TAGT_TYPE
                       , TAGT_NUMB
+                      , TAGT_HASH
                       , TAGT_USER
                       , TAGT_CNTN
                       , CMPL_RSON
@@ -151,6 +152,7 @@ class CurrentUserServiceTests {
             ) VALUES (  NULL
                       , 'CMPL_USER'
                       , ?
+                      , SHA2(CONCAT('CMPL_USER', CHAR(0), '통합 테스트 대상 내용'), 256)
                       , ?
                       , '통합 테스트 대상 내용'
                       , 'CMPL_OTHER'

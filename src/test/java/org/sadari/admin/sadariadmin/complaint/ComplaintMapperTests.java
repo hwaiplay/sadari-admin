@@ -24,8 +24,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
  * ===========================================================
  * DATE              AUTHOR             NOTE
  * -----------------------------------------------------------
- * 2026-08-22        SeungHyeon.Kang    최초 생성
- * 2026-08-22        SeungHyeon.Kang    자동 조치 진행과 실행 이력 SQL 검증 추가
+ * 2026-08-22        SeungHyeon.Kang    신고 조회와 자동·수동 조치 SQL 검증
  */
 class ComplaintMapperTests {
 
@@ -87,6 +86,32 @@ class ComplaintMapperTests {
     }
 
     /**
+     * 신고 상세가 신고자 이미지 파일 경로를 조회하지 않는지 확인한다
+     *
+     * @author SeungHyeon.Kang
+     * @throws IOException Mapper XML을 읽을 수 없을 때 발생
+     */
+    @Test
+    void getDtlHidesReporterImages() throws IOException {
+        // 운영과 동일한 신고 Mapper XML을 해석한다
+        Configuration configuration = createConfiguration();
+        // 신고번호로 실행될 상세 조회 SQL을 생성한다
+        BoundSql boundSql = configuration.getMappedStatement(
+                MAPPER_NAMESPACE + "getComplaintDtl").getBoundSql(1L);
+        // 대소문자와 공백 차이에 영향받지 않도록 SQL을 정규화한다
+        String sql = boundSql.getSql().replaceAll("\\s+", " ").trim().toUpperCase();
+
+        // 신고자 프로필 파일 경로가 상세 응답 SQL에서 제외되는지 확인한다
+        assertFalse(sql.contains("REPORTER_PROF_PATH"));
+        // 신고자 배경 파일 경로가 상세 응답 SQL에서 제외되는지 확인한다
+        assertFalse(sql.contains("REPORTER_BGIM_PATH"));
+        // 신고자 프로필 파일 테이블 조인이 상세 응답 SQL에서 제외되는지 확인한다
+        assertFalse(sql.contains("TM_FILEXM RPF"));
+        // 신고자 배경 파일 테이블 조인이 상세 응답 SQL에서 제외되는지 확인한다
+        assertFalse(sql.contains("TM_FILEXM RBF"));
+    }
+
+    /**
      * 자동 조치 진행 건수와 실행 이력이 정책 테이블 및 공통코드명을 조회하는지 확인한다
      *
      * @author SeungHyeon.Kang
@@ -116,6 +141,31 @@ class ComplaintMapperTests {
         // 반려 제외 바인딩이 공통 상수를 사용하는지 확인한다
         assertEquals(Constant.CMPL_STATUS_REJECTED
                      , countBoundSql.getAdditionalParameter("cmplRejected"));
+    }
+
+    /**
+     * 관리자 원본 조치가 같은 대상의 미처리 신고를 일괄 종결하는지 확인한다
+     *
+     * @author SeungHyeon.Kang
+     * @throws IOException Mapper XML을 읽을 수 없을 때 발생
+     */
+    @Test
+    void uptManualComplaintStatus() throws IOException {
+        // 운영과 동일한 신고 Mapper XML을 해석한다
+        Configuration configuration = createConfiguration();
+        // 관리자 수동 조치 일괄 종결 SQL을 생성한다
+        BoundSql boundSql = configuration.getMappedStatement(
+                MAPPER_NAMESPACE + "uptManualComplaints").getBoundSql(new java.util.HashMap<>());
+        // 공백 차이와 무관하게 상태와 대상 범위 조건을 검증하도록 SQL을 정규화한다
+        String sql = boundSql.getSql().replaceAll("\\s+", " ").trim();
+
+        // 같은 대상 유형과 번호만 종결 범위로 제한하는지 확인한다
+        assertTrue(sql.contains("WHERE TAGT_TYPE = ? AND TAGT_NUMB = ?"));
+        // 접수와 검토 중 신고만 조치 완료로 전환하는지 확인한다
+        assertTrue(sql.contains("CMPL_STAT IN (?, ?)"));
+        // 처리 관리자와 완료 일시를 함께 저장하는지 확인한다
+        assertTrue(sql.contains("PROC_ADMN = ?"));
+        assertTrue(sql.contains("PROC_DATE = CURRENT_TIMESTAMP(6)"));
     }
 
     /**

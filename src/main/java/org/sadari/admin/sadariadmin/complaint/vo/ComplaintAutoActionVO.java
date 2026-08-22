@@ -12,13 +12,16 @@ import java.util.List;
  * ===========================================================
  * DATE              AUTHOR             NOTE
  * -----------------------------------------------------------
- * 2026-08-22        SeungHyeon.Kang    최초 생성
+ * 2026-08-22        SeungHyeon.Kang    최초 생성 및 원본 상태 진행 표시
  */
 @Data
 public class ComplaintAutoActionVO {
 
     // 현재 신고 대상 유형의 자동 조치 적용 여부
     private boolean autoActionTarget;
+
+    // 현재 대상 버전의 자동 조치 진행 상태
+    private String progressStatus;
 
     // 예정된 자동 조치 유형 코드
     private String actnType;

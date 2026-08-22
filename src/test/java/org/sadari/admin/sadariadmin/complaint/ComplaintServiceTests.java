@@ -14,19 +14,26 @@ import org.sadari.admin.sadariadmin.complaint.mapper.ComplaintMapper;
 import org.sadari.admin.sadariadmin.complaint.service.ComplaintService;
 import org.sadari.admin.sadariadmin.complaint.service.impl.ComplaintServiceImpl;
 import org.sadari.admin.sadariadmin.complaint.vo.ComplaintDetailVO;
+import org.sadari.admin.sadariadmin.complaint.vo.ComplaintEvidenceVO;
 import org.sadari.admin.sadariadmin.complaint.vo.ComplaintActionVO;
 import org.sadari.admin.sadariadmin.complaint.vo.ComplaintUpdateVO;
 import org.sadari.admin.sadariadmin.complaint.vo.ComplaintVO;
+import org.sadari.admin.sadariadmin.complaint.vo.ComplaintTargetContentVO;
 import org.sadari.admin.sadariadmin.complaint.vo.ComplaintTargetFileVO;
 import org.sadari.admin.sadariadmin.currentuser.service.CurrentUserService;
 import org.sadari.admin.sadariadmin.currentuser.vo.CurrentUserSuspensionVO;
 import org.sadari.admin.sadariadmin.currentuser.vo.CurrentUserVO;
 import org.sadari.admin.sadariadmin.file.storage.FileStorage;
 
+import java.nio.charset.StandardCharsets;
+import java.security.MessageDigest;
+import java.security.NoSuchAlgorithmException;
 import java.time.LocalDateTime;
+import java.util.HexFormat;
 import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertArrayEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
@@ -44,10 +51,13 @@ import static org.mockito.Mockito.when;
  * DATE              AUTHOR             NOTE
  * -----------------------------------------------------------
  * 2026-08-05        SeungHyeon.Kang    최초 생성
- * 2026-08-22        SeungHyeon.Kang    자동 조치 상세 응답 검증 추가
+ * 2026-08-22        SeungHyeon.Kang    자동·수동 조치와 이미지 증거 검증
  */
 @ExtendWith(MockitoExtension.class)
 class ComplaintServiceTests {
+
+    // 동일 대상 버전 조회에 사용할 테스트 SHA-256 해시
+    private static final String TEST_TARGET_HASH = "a".repeat(64);
 
     // 신고 조회와 처리 Mapper 대역
     @Mock
@@ -81,31 +91,62 @@ class ComplaintServiceTests {
     }
 
     /**
+     * 관리자 로그인 상태에서 신고번호에 연결된 실제 프로필 이미지 증거를 조회하는지 확인한다
+     *
+     * @author SeungHyeon.Kang
+     */
+    @Test
+    void getComplaintEvidenceReturnsStoredOriginal() {
+        // 관리자 전용으로 저장된 이미지 원본과 MIME 유형을 생성한다
+        ComplaintEvidenceVO evidence = new ComplaintEvidenceVO();
+        evidence.setOrigName("reported-profile.jpg");
+        evidence.setMimeType("image/jpeg");
+        evidence.setEvdcData(new byte[]{1, 2, 3});
+        // 신고번호로 이미지 증거가 조회되도록 설정한다
+        when(complaintMapper.getComplaintEvidence(1L)).thenReturn(evidence);
+
+        // 관리자 세션으로 신고 이미지 증거를 조회한다
+        ComplaintEvidenceVO result = complaintService.getComplaintEvidence(1L, createAdminSession());
+
+        // 저장된 MIME 유형과 실제 원본 바이트가 변경 없이 반환되는지 확인한다
+        assertEquals("image/jpeg", result.getMimeType());
+        assertArrayEquals(new byte[]{1, 2, 3}, result.getEvdcData());
+    }
+
+    /**
      * 자동 조치 대상의 유효 신고 누적과 다음 기준 및 실행 이력이 상세에 포함되는지 확인한다
      *
      * @author SeungHyeon.Kang
      */
     @Test
     void getComplaintAutoAction() {
-        // 5건마다 완전 삭제하는 독후감 신고를 생성한다
+        // 5건마다 비공개 전환하는 독후감 신고를 생성한다
         ComplaintVO complaint = createComplaint(Constant.CMPL_TARGET_BOOK_REPORT
                                                 , Constant.CMPL_STATUS_RECEIVED, LocalDateTime.now());
+        // 현재 노출 중인 독후감과 같은 신고 대상 버전 해시를 설정한다
+        complaint.setTagtHash(getTargetHash(Constant.CMPL_TARGET_BOOK_REPORT, "현재 독후감"));
+        // 신고 당시 버전과 비교할 현재 독후감 원문을 생성한다
+        ComplaintTargetContentVO currentTarget = new ComplaintTargetContentVO();
+        // 현재 서비스에 노출 중인 독후감 원문을 설정한다
+        currentTarget.setTagtCntn("현재 독후감");
         // 신고 상세 조회 결과를 설정한다
         when(complaintMapper.getComplaintDtl(1L)).thenReturn(complaint);
-        // 반려를 제외한 동일 대상 유효 신고가 현재 7건임을 설정한다
-        when(complaintMapper.getAutoActionCmplCnt(Constant.CMPL_TARGET_BOOK_REPORT, 10L)).thenReturn(7);
+        // 신고 당시 버전과 동일한 현재 독후감 원문이 조회되도록 설정한다
+        when(complaintMapper.getAutoActionTargetDtl(
+                Constant.CMPL_TARGET_BOOK_REPORT, 10L, 10L)).thenReturn(currentTarget);
+        // 반려를 제외한 동일 대상 유효 신고가 현재 3건임을 설정한다
+        when(complaintMapper.getAutoActionCmplCnt(
+                Constant.CMPL_TARGET_BOOK_REPORT, 10L, complaint.getTagtHash())).thenReturn(3);
         // 예정 자동 조치의 공통코드 명칭을 설정한다
-        when(codeMapper.getCodeName(Constant.CMPL_ACTN, Constant.CMPL_ACTION_DELETE_REPORT))
-                .thenReturn("독후감 완전 삭제");
-        // 첫 번째 자동 조치 실행 이력을 생성한다
-        ComplaintActionVO action = new ComplaintActionVO();
-        // 실행 이력의 자동 조치 순번을 설정한다
-        action.setActnOrdr(1);
-        // 동일 대상의 자동 조치 실행 이력을 설정한다
-        when(complaintMapper.getAutoActionList(Constant.CMPL_TARGET_BOOK_REPORT, 10L))
-                .thenReturn(List.of(action));
+        when(codeMapper.getCodeName(Constant.CMPL_ACTN, Constant.CMPL_ACTION_HIDE_REPORT))
+                .thenReturn("독후감 비공개 전환");
+        // 아직 실행되지 않은 자동 조치 이력을 설정한다
+        when(complaintMapper.getAutoActionList(
+                Constant.CMPL_TARGET_BOOK_REPORT, 10L, complaint.getTagtHash()))
+                .thenReturn(List.of());
         // 동일 대상의 다른 신고가 없는 상태를 설정한다
-        when(complaintMapper.getRelatedComplaintList(Constant.CMPL_TARGET_BOOK_REPORT, 10L, 1L))
+        when(complaintMapper.getRelatedComplaintList(
+                Constant.CMPL_TARGET_BOOK_REPORT, 10L, complaint.getTagtHash(), 1L))
                 .thenReturn(List.of());
 
         // 관리자 신고 상세를 조회한다
@@ -115,14 +156,53 @@ class ComplaintServiceTests {
         assertTrue(detail.getAutoAction().isAutoActionTarget());
         // YML 기본 임계치 5건이 표시되는지 확인한다
         assertEquals(5, detail.getAutoAction().getThreshold());
-        // 반려 제외 누적 7건이 표시되는지 확인한다
-        assertEquals(7, detail.getAutoAction().getComplaintCount());
-        // 다음 자동 조치가 누적 10건에 실행되는지 확인한다
-        assertEquals(10, detail.getAutoAction().getNextActionCount());
-        // 다음 자동 조치까지 3건이 남았는지 확인한다
-        assertEquals(3, detail.getAutoAction().getRemainingCount());
-        // 실제 실행 이력 한 건이 상세에 포함되는지 확인한다
-        assertEquals(1, detail.getAutoAction().getActionHistories().size());
+        // 반려 제외 누적 3건이 표시되는지 확인한다
+        assertEquals(3, detail.getAutoAction().getComplaintCount());
+        // 다음 자동 조치가 누적 5건에 실행되는지 확인한다
+        assertEquals(5, detail.getAutoAction().getNextActionCount());
+        // 다음 자동 조치까지 2건이 남았는지 확인한다
+        assertEquals(2, detail.getAutoAction().getRemainingCount());
+        // 아직 실행된 자동 조치 이력이 없는지 확인한다
+        assertTrue(detail.getAutoAction().getActionHistories().isEmpty());
+        // 신고 당시 버전 원본이 노출 중인 자동조치 진행 상태인지 확인한다
+        assertEquals(Constant.CMPL_PROGRESS_PENDING, detail.getAutoAction().getProgressStatus());
+    }
+
+    /**
+     * 자동조치로 원본이 비노출된 대상에는 다음 임계치를 표시하지 않는지 확인한다
+     *
+     * @author SeungHyeon.Kang
+     */
+    @Test
+    void getComplaintAutoActionCompleted() {
+        // 자동 비공개 전환이 완료된 독후감 신고를 생성한다
+        ComplaintVO complaint = createComplaint(Constant.CMPL_TARGET_BOOK_REPORT
+                                                , Constant.CMPL_STATUS_ACTIONED, LocalDateTime.now());
+        // 신고 상세 조회 결과를 설정한다
+        when(complaintMapper.getComplaintDtl(1L)).thenReturn(complaint);
+        // 자동조치 실행 당시 유효 신고 누적 건수를 설정한다
+        when(complaintMapper.getAutoActionCmplCnt(
+                Constant.CMPL_TARGET_BOOK_REPORT, 10L, TEST_TARGET_HASH)).thenReturn(5);
+        // 첫 번째 자동 조치 실행 이력을 생성한다
+        ComplaintActionVO action = new ComplaintActionVO();
+        // 실행 이력의 자동 조치 순번을 설정한다
+        action.setActnOrdr(1);
+        // 원본이 비공개된 대상의 자동 조치 실행 이력을 설정한다
+        when(complaintMapper.getAutoActionList(
+                Constant.CMPL_TARGET_BOOK_REPORT, 10L, TEST_TARGET_HASH)).thenReturn(List.of(action));
+        // 동일 대상의 다른 신고가 없는 상태를 설정한다
+        when(complaintMapper.getRelatedComplaintList(
+                Constant.CMPL_TARGET_BOOK_REPORT, 10L, TEST_TARGET_HASH, 1L)).thenReturn(List.of());
+
+        // 자동조치가 완료된 신고 상세를 조회한다
+        ComplaintDetailVO detail = complaintService.getComplaintDtl(1L, createAdminSession());
+
+        // 원본이 사라진 원인을 자동조치 이력으로 판정하는지 확인한다
+        assertEquals(Constant.CMPL_PROGRESS_AUTO_ACTIONED, detail.getAutoAction().getProgressStatus());
+        // 완료된 대상에는 다음 자동조치 누적 건수를 표시하지 않는지 확인한다
+        assertEquals(0, detail.getAutoAction().getNextActionCount());
+        // 완료된 대상에는 남은 신고 건수를 표시하지 않는지 확인한다
+        assertEquals(0, detail.getAutoAction().getRemainingCount());
     }
 
     /**
@@ -143,7 +223,8 @@ class ComplaintServiceTests {
         // 수정 뒤 상세 조회 결과를 설정한다
         when(complaintMapper.getComplaintDtl(1L)).thenReturn(complaint);
         // 동일 대상의 다른 신고가 없는 상태를 설정한다
-        when(complaintMapper.getRelatedComplaintList(Constant.CMPL_TARGET_USER, 10L, 1L))
+        when(complaintMapper.getRelatedComplaintList(
+                Constant.CMPL_TARGET_USER, 10L, TEST_TARGET_HASH, 1L))
             .thenReturn(List.of());
 
         // 검토 시작 상태와 화면 조회 버전을 요청값에 설정한다
@@ -236,7 +317,8 @@ class ComplaintServiceTests {
         // 신고 상세 조회 결과를 설정한다
         when(complaintMapper.getComplaintDtl(1L)).thenReturn(complaint);
         // 동일 대상의 다른 신고가 없는 상태를 설정한다
-        when(complaintMapper.getRelatedComplaintList("CMPL_BOOK_REPORT", 10L, 1L)).thenReturn(List.of());
+        when(complaintMapper.getRelatedComplaintList(
+                "CMPL_BOOK_REPORT", 10L, TEST_TARGET_HASH, 1L)).thenReturn(List.of());
         // 관리자 화면에 표시할 피신고자 현재 정보를 생성한다
         CurrentUserVO targetUser = new CurrentUserVO();
         // 조회된 피신고자 회원번호를 설정한다
@@ -268,7 +350,8 @@ class ComplaintServiceTests {
         when(complaintMapper.getComplaintForUpdate(1L)).thenReturn(complaint);
         when(complaintMapper.delTargetReport(10L, 77L)).thenReturn(1);
         when(complaintMapper.getComplaintDtl(1L)).thenReturn(complaint);
-        when(complaintMapper.getRelatedComplaintList(Constant.CMPL_TARGET_BOOK_REPORT, 10L, 1L))
+        when(complaintMapper.getRelatedComplaintList(
+                Constant.CMPL_TARGET_BOOK_REPORT, 10L, TEST_TARGET_HASH, 1L))
                 .thenReturn(List.of());
 
         ComplaintDetailVO detail = complaintService.delTargetContent(1L, createAdminSession());
@@ -279,6 +362,9 @@ class ComplaintServiceTests {
         deletionOrder.verify(complaintMapper).delTargetReportReplies(10L, 77L);
         deletionOrder.verify(complaintMapper).delTargetReportLikes(10L, 77L);
         deletionOrder.verify(complaintMapper).delTargetReport(10L, 77L);
+        deletionOrder.verify(complaintMapper).uptManualComplaints(
+                Constant.CMPL_TARGET_BOOK_REPORT, 10L,
+                "관리자 원본 수동 조치: 신고 대상 독후감을 완전 삭제. 관련 미처리 신고를 일괄 종결함. 기준 신고번호: 1", 1L);
         assertFalse(detail.isTargetContentExists());
     }
 
@@ -295,12 +381,17 @@ class ComplaintServiceTests {
         when(complaintMapper.getComplaintForUpdate(1L)).thenReturn(complaint);
         when(complaintMapper.delTargetReply(10L, 77L)).thenReturn(1);
         when(complaintMapper.getComplaintDtl(1L)).thenReturn(complaint);
-        when(complaintMapper.getRelatedComplaintList(Constant.CMPL_TARGET_REPLY, 10L, 1L))
+        when(complaintMapper.getRelatedComplaintList(
+                Constant.CMPL_TARGET_REPLY, 10L, TEST_TARGET_HASH, 1L))
                 .thenReturn(List.of());
 
         complaintService.delTargetContent(1L, createAdminSession());
 
         verify(complaintMapper).delTargetReply(10L, 77L);
+        // 논리 삭제된 같은 댓글 번호의 모든 미처리 신고가 함께 종결되는지 확인한다
+        verify(complaintMapper).uptManualComplaints(
+                Constant.CMPL_TARGET_REPLY, 10L,
+                "관리자 원본 수동 조치: 신고 대상 댓글을 삭제 상태로 변경. 관련 미처리 신고를 일괄 종결함. 기준 신고번호: 1", 1L);
     }
 
     /**
@@ -322,12 +413,44 @@ class ComplaintServiceTests {
         when(complaintMapper.delTargetProfileImage(10L, 30L)).thenReturn(1);
         when(complaintMapper.delTagtFileIfUnref(30L)).thenReturn(1);
         when(complaintMapper.getComplaintDtl(1L)).thenReturn(complaint);
-        when(complaintMapper.getRelatedComplaintList(Constant.CMPL_TARGET_USER, 10L, 1L))
+        when(complaintMapper.getRelatedComplaintList(
+                Constant.CMPL_TARGET_USER, 10L, TEST_TARGET_HASH, 1L))
                 .thenReturn(List.of());
 
         complaintService.delTargetProfImage(1L, createAdminSession());
 
         verify(fileStorage).delFile("profile/260822/profile.jpg");
+        // 현재 프로필 초기화로 해결된 해당 사용자의 프로필 사진 신고를 함께 종결하는지 확인한다
+        verify(complaintMapper).uptManualComplaints(
+                Constant.CMPL_TARGET_PROFILE_IMAGE, 10L,
+                "관리자 원본 수동 조치: 피신고자의 프로필 사진을 초기화. 관련 미처리 신고를 일괄 종결함. 기준 신고번호: 1", 1L);
+    }
+
+    /**
+     * 신고 접수와 같은 유형 구분자 및 원문으로 테스트 대상 버전 해시를 생성한다
+     *
+     * @author SeungHyeon.Kang
+     * @param tagtType 신고 대상 유형
+     * @param tagtCntn 신고 대상 원문
+     * @return 소문자 64자리 SHA-256 해시
+     */
+    private String getTargetHash(String tagtType, String tagtCntn) {
+        // 운영과 같은 SHA-256 알고리즘으로 대상 유형과 원문을 해시한다
+        try {
+            // 대상 버전 계산에 사용할 SHA-256 객체를 생성한다
+            MessageDigest digest = MessageDigest.getInstance("SHA-256");
+            // 서로 다른 대상 유형의 같은 원문을 분리하도록 유형 구분자를 반영한다
+            digest.update((tagtType + "\u0000").getBytes(StandardCharsets.UTF_8));
+            // 신고 당시 원문 전체를 대상 버전 계산에 반영한다
+            digest.update(tagtCntn.getBytes(StandardCharsets.UTF_8));
+            // 신고 테이블 저장 형식과 같은 소문자 64자리 해시를 반환한다
+            return HexFormat.of().formatHex(digest.digest());
+        }
+
+        // 필수 JDK 알고리즘이 없으면 테스트 환경 오류로 즉시 실패시킨다
+        catch (NoSuchAlgorithmException exception) {
+            throw new IllegalStateException("SHA-256 is not available.", exception);
+        }
     }
 
     /**
@@ -348,6 +471,8 @@ class ComplaintServiceTests {
         complaint.setTagtType(tagtType);
         // 대상 사용자 또는 콘텐츠 번호를 설정한다
         complaint.setTagtNumb(10L);
+        // 동일 대상 번호의 버전별 조회를 검증할 해시를 설정한다
+        complaint.setTagtHash(TEST_TARGET_HASH);
         // 사용자 신고 기본값과 콘텐츠 신고의 명시적 작성자 연결에 사용할 피신고자 번호를 설정한다
         complaint.setTagtUser(10L);
         // 현재 신고 처리 상태를 설정한다

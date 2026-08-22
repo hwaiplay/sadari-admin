@@ -3,6 +3,7 @@ package org.sadari.admin.sadariadmin.complaint.service;
 import org.sadari.admin.sadariadmin.admin.vo.AdminSessionVO;
 import org.sadari.admin.sadariadmin.common.pagination.PageData;
 import org.sadari.admin.sadariadmin.complaint.vo.ComplaintDetailVO;
+import org.sadari.admin.sadariadmin.complaint.vo.ComplaintEvidenceVO;
 import org.sadari.admin.sadariadmin.complaint.vo.ComplaintSearchVO;
 import org.sadari.admin.sadariadmin.complaint.vo.ComplaintUpdateVO;
 import org.sadari.admin.sadariadmin.complaint.vo.ComplaintVO;
@@ -39,6 +40,16 @@ public interface ComplaintService {
      * @return 신고 상세
      */
     ComplaintDetailVO getComplaintDtl(Long cmplNumb, AdminSessionVO admin);
+
+    /**
+     * 신고번호에 연결된 프로필 사진 신고 증거 원본을 관리자에게 제공한다
+     *
+     * @author SeungHyeon.Kang
+     * @param cmplNumb 신고 번호
+     * @param admin 로그인 관리자
+     * @return 관리자 전용 이미지 증거 원본
+     */
+    ComplaintEvidenceVO getComplaintEvidence(Long cmplNumb, AdminSessionVO admin);
 
     /**
      * 신고의 검토 시작 또는 최종 처리 상태를 저장한다

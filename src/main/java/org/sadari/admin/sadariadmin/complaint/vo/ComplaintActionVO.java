@@ -26,6 +26,9 @@ public class ComplaintActionVO {
     // 신고 대상 번호
     private Long tagtNumb;
 
+    // 신고 대상 버전 SHA-256 해시
+    private String tagtHash;
+
     // 자동 조치 시점의 피신고자 회원번호
     private Long tagtUser;
 
@@ -47,7 +50,7 @@ public class ComplaintActionVO {
     // 자동 조치 시점의 유효 신고 누적 건수
     private int cmplCntt;
 
-    // 동일 대상의 자동 조치 순번
+    // 동일 대상 버전의 자동 조치 순번
     private int actnOrdr;
 
     // 자동 조치를 발생시킨 신고번호

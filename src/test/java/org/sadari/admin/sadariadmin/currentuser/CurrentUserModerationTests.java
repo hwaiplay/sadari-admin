@@ -7,6 +7,7 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.sadari.admin.sadariadmin.admin.vo.AdminSessionVO;
 import org.sadari.admin.sadariadmin.common.code.mapper.CodeMapper;
+import org.sadari.admin.sadariadmin.common.constant.Constant;
 import org.sadari.admin.sadariadmin.currentuser.mapper.CurrentUserMapper;
 import org.sadari.admin.sadariadmin.currentuser.service.CurrentUserService;
 import org.sadari.admin.sadariadmin.currentuser.service.impl.CurrentUserServiceImpl;
@@ -26,7 +27,7 @@ import static org.mockito.Mockito.when;
  * ===========================================================
  * DATE              AUTHOR             NOTE
  * -----------------------------------------------------------
- * 2026-08-22        SeungHyeon.Kang    최초 생성
+ * 2026-08-22        SeungHyeon.Kang    프로필 조치와 관련 신고 종결 검증
  */
 @ExtendWith(MockitoExtension.class)
 class CurrentUserModerationTests {
@@ -91,6 +92,10 @@ class CurrentUserModerationTests {
 
         // 내부 저장소의 검증된 프로필 객체가 삭제되는지 확인한다
         verify(fileStorage).delFile("profile/260822/profile.jpg");
+        // 프로필 사진 초기화로 해결된 같은 사용자의 미처리 신고가 함께 종결되는지 확인한다
+        verify(currentUserMapper).uptUserComplaints(
+                Constant.CMPL_TARGET_PROFILE_IMAGE, 10L,
+                "관리자 원본 수동 조치: 현 사용자 상세에서 프로필 사진 초기화. 관련 미처리 신고를 일괄 종결함.", 1L);
         // 프로필 조치 뒤 같은 회원의 최신 상세가 반환되는지 확인한다
         assertEquals(10L, result.getUserNumb());
     }
@@ -114,6 +119,10 @@ class CurrentUserModerationTests {
         // 현 사용자 상세와 같은 경로로 한줄 소개 삭제를 실행한다
         CurrentUserVO result = currentUserService.delUserIntroduction(10L, createAdminSession());
 
+        // 한줄소개 초기화로 해결된 같은 사용자의 미처리 신고가 함께 종결되는지 확인한다
+        verify(currentUserMapper).uptUserComplaints(
+                Constant.CMPL_TARGET_INTRODUCTION, 10L,
+                "관리자 원본 수동 조치: 현 사용자 상세에서 한줄소개 초기화. 관련 미처리 신고를 일괄 종결함.", 1L);
         // 한줄 소개 조치 뒤 같은 회원의 최신 상세가 반환되는지 확인한다
         assertEquals(10L, result.getUserNumb());
     }
