@@ -70,6 +70,57 @@ export const getCurrentUser = (userNumb: number): Promise<CurrentUser> => {
 }
 
 /**
+ * 현재 사용자의 프로필 사진을 삭제하고 기본 이미지 상태로 변경한다.
+ *
+ * @author SeungHyeon.Kang
+ * @param userNumb 사용자 번호
+ * @return 변경된 현재 사용자 상세 정보
+ * @throws 프로필 사진 삭제 API가 실패하면 발생한다
+ */
+export const delUserProfImage = (userNumb: number): Promise<CurrentUser> => {
+  // 현재 프로필 이미지 참조와 저장 파일을 함께 정리한다.
+  return fetchJson<CurrentUser>(
+    `/api/current-users/${userNumb}/profile-image`,
+    { method: 'DELETE' },
+    '프로필 사진을 삭제하지 못했습니다.',
+  )
+}
+
+/**
+ * 현재 사용자의 배경화면을 삭제하고 기본 이미지 상태로 변경한다.
+ *
+ * @author SeungHyeon.Kang
+ * @param userNumb 사용자 번호
+ * @return 변경된 현재 사용자 상세 정보
+ * @throws 배경화면 삭제 API가 실패하면 발생한다
+ */
+export const delUserBgimImage = (userNumb: number): Promise<CurrentUser> => {
+  // 현재 배경 이미지 참조와 저장 파일을 함께 정리한다.
+  return fetchJson<CurrentUser>(
+    `/api/current-users/${userNumb}/background-image`,
+    { method: 'DELETE' },
+    '배경화면을 삭제하지 못했습니다.',
+  )
+}
+
+/**
+ * 현재 사용자의 한줄 소개를 삭제한다.
+ *
+ * @author SeungHyeon.Kang
+ * @param userNumb 사용자 번호
+ * @return 변경된 현재 사용자 상세 정보
+ * @throws 한줄 소개 삭제 API가 실패하면 발생한다
+ */
+export const delUserIntroduction = (userNumb: number): Promise<CurrentUser> => {
+  // 현재 사용자의 한줄 소개를 NULL 처리한다.
+  return fetchJson<CurrentUser>(
+    `/api/current-users/${userNumb}/introduction`,
+    { method: 'DELETE' },
+    '한줄 소개를 삭제하지 못했습니다.',
+  )
+}
+
+/**
  * 현재 사용자의 마스킹된 로그인 이력을 조회한다.
  *
  * @author SeungHyeon.Kang

@@ -7,6 +7,7 @@ import org.sadari.admin.sadariadmin.currentuser.service.CurrentUserService;
 import org.sadari.admin.sadariadmin.currentuser.vo.CurrentUserSearchVO;
 import org.sadari.admin.sadariadmin.currentuser.vo.CurrentUserSuspensionVO;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -28,6 +29,7 @@ import org.springframework.web.bind.annotation.RestController;
  * 2026-07-30        SeungHyeon.Kang    최초 생성
  * 2026-08-13        SeungHyeon.Kang    삭제 회원의 유효 제재 목록과 해제 API 추가
  * 2026-08-22        SeungHyeon.Kang    현재 사용자의 받은 신고 이력 API 추가
+ * 2026-08-22        SeungHyeon.Kang    현재 사용자 프로필 정보 삭제 API 추가
  */
 @RestController
 @RequestMapping(Constant.API_CURRENT_USERS_PREFIX)
@@ -78,6 +80,57 @@ public class CurrentUserController {
     ) {
         // 사용자 번호에 해당하는 상세 정보를 반환한다.
         return ResultData.success(currentUserService.getCurrentUserDtl(userNumb, admin));
+    }
+
+    /**
+     * 현재 사용자의 프로필 사진을 기본 이미지 상태로 변경한다
+     *
+     * @author SeungHyeon.Kang
+     * @param userNumb 사용자 번호
+     * @param admin 처리 관리자
+     * @return 변경된 현재 사용자 상세 정보
+     */
+    @DeleteMapping("/{userNumb}/profile-image")
+    public ResultData delUserProfImage(
+        @PathVariable Long userNumb
+        , @AuthenticationPrincipal AdminSessionVO admin
+    ) {
+        // 프로필 사진 참조와 저장 파일을 정리한 최신 사용자 상세를 반환한다
+        return ResultData.success(currentUserService.delUserProfImage(userNumb, admin));
+    }
+
+    /**
+     * 현재 사용자의 배경화면을 기본 이미지 상태로 변경한다
+     *
+     * @author SeungHyeon.Kang
+     * @param userNumb 사용자 번호
+     * @param admin 처리 관리자
+     * @return 변경된 현재 사용자 상세 정보
+     */
+    @DeleteMapping("/{userNumb}/background-image")
+    public ResultData delUserBgimImage(
+        @PathVariable Long userNumb
+        , @AuthenticationPrincipal AdminSessionVO admin
+    ) {
+        // 배경화면 참조와 저장 파일을 정리한 최신 사용자 상세를 반환한다
+        return ResultData.success(currentUserService.delUserBgimImage(userNumb, admin));
+    }
+
+    /**
+     * 현재 사용자의 한줄 소개를 NULL 처리한다
+     *
+     * @author SeungHyeon.Kang
+     * @param userNumb 사용자 번호
+     * @param admin 처리 관리자
+     * @return 변경된 현재 사용자 상세 정보
+     */
+    @DeleteMapping("/{userNumb}/introduction")
+    public ResultData delUserIntroduction(
+        @PathVariable Long userNumb
+        , @AuthenticationPrincipal AdminSessionVO admin
+    ) {
+        // 한줄 소개를 제거한 최신 사용자 상세를 반환한다
+        return ResultData.success(currentUserService.delUserIntroduction(userNumb, admin));
     }
 
     /**

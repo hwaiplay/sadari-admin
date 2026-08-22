@@ -16,8 +16,10 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.sadari.admin.sadariadmin.admin.vo.AdminSessionVO;
 import org.sadari.admin.sadariadmin.common.exception.BusinessException;
+import org.sadari.admin.sadariadmin.common.pagination.PageData;
 import org.sadari.admin.sadariadmin.usermenu.mapper.UserMenuMapper;
 import org.sadari.admin.sadariadmin.usermenu.service.impl.UserMenuServiceImpl;
+import org.sadari.admin.sadariadmin.usermenu.vo.UserMenuSearchVO;
 import org.sadari.admin.sadariadmin.usermenu.vo.UserMenuVO;
 
 /**
@@ -30,6 +32,7 @@ import org.sadari.admin.sadariadmin.usermenu.vo.UserMenuVO;
  * -----------------------------------------------------------
  * 2026-08-10        SeungHyeon.Kang    최초 생성
  * 2026-08-10        SeungHyeon.Kang    직계 하위 메뉴 목록 조회 검증 추가
+ * 2026-08-22        SeungHyeon.Kang    메뉴 트리 단위 페이징 검증 추가
  */
 @ExtendWith(MockitoExtension.class)
 class UserMenuServiceImplTest {
@@ -142,6 +145,39 @@ class UserMenuServiceImplTest {
         assertEquals(List.of(childMenu), childList);
         // 직계 하위 메뉴 조회 Mapper가 호출됐는지 검증한다
         verify(userMenuMapper).getUserMenuChildList(10L);
+    }
+
+    /** 검색 조건이 없으면 최상위 메뉴 분기 수로 목록 페이지를 계산하는지 확인한다. */
+    @Test
+    void getListUsesTreePages() {
+        // 검색 조건이 없는 목록 요청을 생성한다
+        UserMenuSearchVO search = new UserMenuSearchVO();
+        // 기존 목록 화면에 남은 유효 범위 밖의 페이지를 설정한다
+        search.setPage(3);
+        // 트리 단위 목록 조회 결과를 설정한다
+        List<UserMenuVO> menuList = List.of(getMenu(10L, 1), getMenu(20L, 2));
+        // 사용자 메뉴 목록 조회 결과를 설정한다
+        when(userMenuMapper.getUserMenuList(search)).thenReturn(menuList);
+        // 화면에 표시할 전체 메뉴 건수를 설정한다
+        when(userMenuMapper.getUserMenuCount(search)).thenReturn(26);
+        // 페이지 계산에 사용할 최상위 메뉴 건수를 설정한다
+        when(userMenuMapper.getUserMenuRootCount()).thenReturn(21);
+
+        // 검색 조건이 없는 사용자 메뉴 목록을 조회한다
+        PageData<UserMenuVO> pageData = userMenuService.getUserMenuList(search, admin);
+
+        // 검색 조건이 없으면 트리 단위 페이징이 적용됐는지 검증한다
+        assertEquals(true, search.isTreeMode());
+        // 실제 전체 메뉴 건수가 유지됐는지 검증한다
+        assertEquals(26, pageData.getTotalCount());
+        // 최상위 메뉴 건수로 전체 페이지 수가 계산됐는지 검증한다
+        assertEquals(2, pageData.getTotalPages());
+        // 유효 범위 밖의 저장 페이지가 마지막 페이지로 보정됐는지 검증한다
+        assertEquals(2, pageData.getPageNumber());
+        // 보정된 두 번째 페이지의 최상위 메뉴 시작 순번이 설정됐는지 검증한다
+        assertEquals(21, search.getStartRow());
+        // 최상위 메뉴 건수 조회 Mapper가 호출됐는지 검증한다
+        verify(userMenuMapper).getUserMenuRootCount();
     }
 
     /** 사용자 메뉴 테스트 데이터를 생성한다. */

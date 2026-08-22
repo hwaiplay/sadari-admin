@@ -20,6 +20,7 @@ import org.sadari.admin.sadariadmin.currentuser.vo.CurrentUserWithdrawalHistoryV
  * 2026-07-30        SeungHyeon.Kang    최초 생성
  * 2026-08-13        SeungHyeon.Kang    삭제 회원의 유효 제재 목록과 해제 업무 추가
  * 2026-08-22        SeungHyeon.Kang    현재 사용자의 받은 신고 이력 업무 추가
+ * 2026-08-22        SeungHyeon.Kang    현재 사용자 프로필 정보 삭제 업무 추가
  */
 public interface CurrentUserService {
 
@@ -42,6 +43,36 @@ public interface CurrentUserService {
      * @return 현재 사용자 상세정보
      */
     CurrentUserVO getCurrentUserDtl(Long userNumb, AdminSessionVO admin);
+
+    /**
+     * 현재 사용자의 프로필 사진을 기본 이미지 상태로 변경한다
+     *
+     * @author SeungHyeon.Kang
+     * @param userNumb 처리할 회원번호
+     * @param admin 처리 관리자
+     * @return 변경된 현재 사용자 상세정보
+     */
+    CurrentUserVO delUserProfImage(Long userNumb, AdminSessionVO admin);
+
+    /**
+     * 현재 사용자의 배경화면을 기본 이미지 상태로 변경한다
+     *
+     * @author SeungHyeon.Kang
+     * @param userNumb 처리할 회원번호
+     * @param admin 처리 관리자
+     * @return 변경된 현재 사용자 상세정보
+     */
+    CurrentUserVO delUserBgimImage(Long userNumb, AdminSessionVO admin);
+
+    /**
+     * 현재 사용자의 한줄 소개를 NULL 처리한다
+     *
+     * @author SeungHyeon.Kang
+     * @param userNumb 처리할 회원번호
+     * @param admin 처리 관리자
+     * @return 변경된 현재 사용자 상세정보
+     */
+    CurrentUserVO delUserIntroduction(Long userNumb, AdminSessionVO admin);
 
     /**
      * 현재 사용자의 마스킹된 로그인 이력을 조회한다

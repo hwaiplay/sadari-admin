@@ -194,15 +194,26 @@ export function UserMenuManagePage({ currentPath, onMovePath, onError }: UserMen
         // 목록 경로에서는 저장한 검색 상태로 사용자 메뉴 목록을 복원한다.
         if (isList) {
           const snapshot = getListPageSnapshot(USER_MENU_LIST_PATH, DEFAULT_SEARCH)
+          // 서버에서 같은 최상위 메뉴 분기로 구성한 사용자 메뉴 페이지를 조회한다.
           const result = await getUserMenus(snapshot.pageNumber, snapshot.search)
+
+          // 조회한 사용자 메뉴 페이지 정보를 목록 화면에 설정한다.
           setPageData(result)
+          // 조회한 사용자 메뉴 분기 행을 목록 화면에 설정한다.
           setRows(result.items)
+          // 복원한 검색 입력값을 목록 화면에 설정한다.
           setSearch(snapshot.search)
+          // 복원한 적용 검색 조건을 목록 화면에 설정한다.
           setAppliedSearch(snapshot.search)
+          // 페이지 이동 시 모든 메뉴 분기를 접힌 상태로 초기화한다.
           setExpandedMenuNumbs(new Set())
+          // 목록 화면에서는 사용자 메뉴 상세 상태를 제거한다.
           setDetail(null)
+          // 목록 화면에서는 직계 하위 메뉴 상세 상태를 제거한다.
           setChildMenus([])
+          // 목록 화면에서는 직계 하위 메뉴 수정 폼을 제거한다.
           setChildEditForms([])
+          // 목록 화면에서는 직계 하위 메뉴 등록 폼을 제거한다.
           setChildForms([])
           return
         }
@@ -246,12 +257,16 @@ export function UserMenuManagePage({ currentPath, onMovePath, onError }: UserMen
 
   /** 지정한 검색 조건과 페이지로 사용자 메뉴 목록을 조회한다. */
   const loadListPage = async (pageNumber: number, targetSearch: UserMenuSearch): Promise<void> => {
-    // 사용자 메뉴 목록의 지정 페이지를 조회한다.
+    // 서버에서 같은 최상위 메뉴 분기로 구성한 지정 페이지 목록을 조회한다.
     const result = await getUserMenus(pageNumber, targetSearch)
-    // 페이지 메타데이터와 목록 행을 화면 상태에 설정한다.
+
+    // 조회한 사용자 메뉴 페이지 정보를 목록 화면에 설정한다.
     setPageData(result)
+    // 조회한 사용자 메뉴 분기 행을 목록 화면에 설정한다.
     setRows(result.items)
+    // 실제 목록 조회에 사용한 검색 조건을 설정한다.
     setAppliedSearch(targetSearch)
+    // 페이지 이동 시 모든 메뉴 분기를 접힌 상태로 초기화한다.
     setExpandedMenuNumbs(new Set())
     // 상세 화면에서 목록으로 돌아올 때 현재 조회 상태를 복원하도록 저장한다.
     setListPageSnapshot(USER_MENU_LIST_PATH, result.pageNumber, targetSearch)

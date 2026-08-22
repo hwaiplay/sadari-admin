@@ -33,6 +33,7 @@
     <sql id="userMenuTree">
         WITH RECURSIVE MENU_TREE AS (
             SELECT M.MENU_NUMB
+                 , M.MENU_NUMB AS ROOT_NUMB
                  , CAST(CONCAT(LPAD(CAST(COALESCE(M.SORT_ORDR, 9999) AS CHAR), 50, '0')
                                , '-'
                                , LPAD(CAST(M.MENU_NUMB AS CHAR), 20, '0')) AS CHAR(1000)) AS TREE_PATH
@@ -40,6 +41,7 @@
              WHERE M.PARN_NUMB IS NULL
             UNION ALL
             SELECT CHILD.MENU_NUMB
+                 , PARENT.ROOT_NUMB
                  , CONCAT(PARENT.TREE_PATH
                          , '/'
                          , LPAD(CAST(COALESCE(CHILD.SORT_ORDR, 9999) AS CHAR), 50, '0')
@@ -77,36 +79,62 @@
             resultType="org.sadari.admin.sadariadmin.usermenu.vo.UserMenuVO">
         <include refid="codeNameBindings"/>
         <include refid="userMenuTree"/>
-        SELECT /* getUserMenuList */
-               PAGE.MENU_NUMB
-             , PAGE.PARN_NUMB
-             , PAGE.PARN_NAME
-             , PAGE.MENU_LEVL
-             , PAGE.MENU_NAME
-             , PAGE.MENU_URLX
-             , PAGE.SORT_ORDR
-             , PAGE.SHOW_YSNO
-             , PAGE.SHOW_YSNO_NAME
-             , PAGE.USEE_YSNO
-             , PAGE.USEE_YSNO_NAME
-             , PAGE.REGI_ADMN
-             , PAGE.REGI_ADMN_NAME
-             , PAGE.REGI_DATE
-             , PAGE.UPDT_ADMN
-             , PAGE.UPDT_ADMN_NAME
-             , PAGE.UPDT_DATE
-          FROM (  SELECT <include refid="userMenuColumns"/>
-                       , ROW_NUMBER() OVER (ORDER BY TREE.TREE_PATH) AS ROW_NUMB
-                    FROM MENU_TREE TREE
-                    JOIN TM_URMENU M
-                      ON M.MENU_NUMB = TREE.MENU_NUMB
-               LEFT JOIN TM_URMENU P
-                      ON P.MENU_NUMB = M.PARN_NUMB
-                   WHERE 1 = 1
-                         <include refid="userMenuSearchConditions"/>
-               ) PAGE
-         WHERE PAGE.ROW_NUMB BETWEEN #{startRow} AND #{endRow}
-      ORDER BY PAGE.ROW_NUMB
+        <choose>
+            <when test="treeMode">
+                SELECT /* getUserMenuList */
+                       <include refid="userMenuColumns"/>
+                  FROM MENU_TREE TREE
+                  JOIN (  SELECT ROOT_PAGE.ROOT_NUMB
+                            FROM (  SELECT ROOTS.ROOT_NUMB
+                                         , ROW_NUMBER() OVER (ORDER BY ROOTS.TREE_PATH) AS ROW_NUMB
+                                      FROM (  SELECT ROOT_NUMB
+                                                   , MIN(TREE_PATH) AS TREE_PATH
+                                                FROM MENU_TREE
+                                            GROUP BY ROOT_NUMB
+                                           ) ROOTS
+                                 ) ROOT_PAGE
+                           WHERE ROOT_PAGE.ROW_NUMB BETWEEN #{startRow} AND #{endRow}
+                       ) PAGE_ROOT
+                    ON PAGE_ROOT.ROOT_NUMB = TREE.ROOT_NUMB
+                  JOIN TM_URMENU M
+                    ON M.MENU_NUMB = TREE.MENU_NUMB
+             LEFT JOIN TM_URMENU P
+                    ON P.MENU_NUMB = M.PARN_NUMB
+              ORDER BY TREE.TREE_PATH
+            </when>
+            <otherwise>
+                SELECT /* getUserMenuList */
+                       PAGE.MENU_NUMB
+                     , PAGE.PARN_NUMB
+                     , PAGE.PARN_NAME
+                     , PAGE.MENU_LEVL
+                     , PAGE.MENU_NAME
+                     , PAGE.MENU_URLX
+                     , PAGE.SORT_ORDR
+                     , PAGE.SHOW_YSNO
+                     , PAGE.SHOW_YSNO_NAME
+                     , PAGE.USEE_YSNO
+                     , PAGE.USEE_YSNO_NAME
+                     , PAGE.REGI_ADMN
+                     , PAGE.REGI_ADMN_NAME
+                     , PAGE.REGI_DATE
+                     , PAGE.UPDT_ADMN
+                     , PAGE.UPDT_ADMN_NAME
+                     , PAGE.UPDT_DATE
+                  FROM (  SELECT <include refid="userMenuColumns"/>
+                               , ROW_NUMBER() OVER (ORDER BY TREE.TREE_PATH) AS ROW_NUMB
+                            FROM MENU_TREE TREE
+                            JOIN TM_URMENU M
+                              ON M.MENU_NUMB = TREE.MENU_NUMB
+                       LEFT JOIN TM_URMENU P
+                              ON P.MENU_NUMB = M.PARN_NUMB
+                           WHERE 1 = 1
+                                 <include refid="userMenuSearchConditions"/>
+                       ) PAGE
+                 WHERE PAGE.ROW_NUMB BETWEEN #{startRow} AND #{endRow}
+              ORDER BY PAGE.ROW_NUMB
+            </otherwise>
+        </choose>
     </select>
 
     <!-- 사용자 메뉴 전체 건수를 조회한다. -->
@@ -117,6 +145,14 @@
           FROM TM_URMENU M
          WHERE 1 = 1
                <include refid="userMenuSearchConditions"/>
+    </select>
+
+    <!-- 사용자 메뉴 최상위 메뉴 전체 건수를 조회한다. -->
+    <select id="getUserMenuRootCount" resultType="int">
+        SELECT /* getUserMenuRootCount */
+               COUNT(1)
+          FROM TM_URMENU
+         WHERE PARN_NUMB IS NULL
     </select>
 
     <!-- 메뉴 번호로 사용자 메뉴 상세를 조회한다. -->

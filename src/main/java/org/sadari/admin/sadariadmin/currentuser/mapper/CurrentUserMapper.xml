@@ -275,6 +275,74 @@
       ORDER BY P.ROW_NUMB
     </select>
 
+    <!-- 현재 사용자의 프로필 이미지 파일 메타정보를 참조 제거 전 잠금 조회한다 -->
+    <select id="getUserProfFileForUpdate"
+            resultType="org.sadari.admin.sadariadmin.currentuser.vo.CurrentUserFileVO">
+        SELECT /* getUserProfFileForUpdate */
+               F.FILE_NUMB
+             , F.STOR_NAME
+             , F.FILE_PATH
+          FROM TM_USERXM U
+    INNER JOIN TM_FILEXM F
+            ON F.FILE_NUMB = U.PROF_NUMB
+         WHERE U.USER_NUMB = #{userNumb}
+           FOR UPDATE
+    </select>
+
+    <!-- 현재 사용자의 배경 이미지 파일 메타정보를 참조 제거 전 잠금 조회한다 -->
+    <select id="getUserBgimFileForUpdate"
+            resultType="org.sadari.admin.sadariadmin.currentuser.vo.CurrentUserFileVO">
+        SELECT /* getUserBgimFileForUpdate */
+               F.FILE_NUMB
+             , F.STOR_NAME
+             , F.FILE_PATH
+          FROM TM_USERXM U
+    INNER JOIN TM_FILEXM F
+            ON F.FILE_NUMB = U.BGIM_NUMB
+         WHERE U.USER_NUMB = #{userNumb}
+           FOR UPDATE
+    </select>
+
+    <!-- 현재 사용자의 프로필 이미지 참조를 NULL 처리한다 -->
+    <update id="delUserProfileImage">
+        UPDATE /* delUserProfileImage */
+               TM_USERXM
+           SET PROF_NUMB = NULL
+         WHERE USER_NUMB = #{userNumb}
+           AND PROF_NUMB = #{fileNumb}
+    </update>
+
+    <!-- 현재 사용자의 배경 이미지 참조를 NULL 처리한다 -->
+    <update id="delUserBackgroundImage">
+        UPDATE /* delUserBackgroundImage */
+               TM_USERXM
+           SET BGIM_NUMB = NULL
+         WHERE USER_NUMB = #{userNumb}
+           AND BGIM_NUMB = #{fileNumb}
+    </update>
+
+    <!-- 다른 사용자 이미지에서 참조하지 않는 파일 메타정보만 삭제한다 -->
+    <delete id="delUserFileIfUnref">
+        DELETE /* delUserFileIfUnref */ F
+          FROM TM_FILEXM F
+         WHERE F.FILE_NUMB = #{fileNumb}
+           AND NOT EXISTS (
+                   SELECT 1
+                     FROM TM_USERXM U
+                    WHERE U.PROF_NUMB = F.FILE_NUMB
+                       OR U.BGIM_NUMB = F.FILE_NUMB
+               )
+    </delete>
+
+    <!-- 값이 있는 현재 사용자의 한줄 소개를 NULL 처리한다 -->
+    <update id="delUserIntroduction">
+        UPDATE /* delUserIntroduction */
+               TM_USERXM
+           SET INTR_CNTN = NULL
+         WHERE USER_NUMB = #{userNumb}
+           AND INTR_CNTN IS NOT NULL
+    </update>
+
     <!-- 현재 사용자의 로그인 이력 전체 건수를 조회한다 -->
     <select id="getLoginHistoryListCount" resultType="int">
         SELECT /* getLoginHistoryListCount */

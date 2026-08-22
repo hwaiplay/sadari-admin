@@ -12,6 +12,7 @@ import lombok.Data;
  * -----------------------------------------------------------
  * 2026-07-31        SeungHyeon.Kang    최초 생성
  * 2026-08-10        SeungHyeon.Kang    메뉴 단계 검색 조건 추가
+ * 2026-08-22        SeungHyeon.Kang    메뉴 트리 단위 페이징 조건 추가
  */
 @Data
 public class UserMenuSearchVO {
@@ -30,6 +31,9 @@ public class UserMenuSearchVO {
 
     // 메뉴 단계
     private Integer menuLevl;
+
+    // 검색 조건이 없는 메뉴 트리 단위 페이징 여부
+    private boolean treeMode;
 
     // 페이지 조회 시작 행 번호
     private int startRow;

@@ -3,6 +3,7 @@ package org.sadari.admin.sadariadmin.currentuser.mapper;
 import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Param;
 import org.sadari.admin.sadariadmin.currentuser.vo.CurrentUserComplaintVO;
+import org.sadari.admin.sadariadmin.currentuser.vo.CurrentUserFileVO;
 import org.sadari.admin.sadariadmin.currentuser.vo.CurrentUserLoginHistoryVO;
 import org.sadari.admin.sadariadmin.currentuser.vo.CurrentUserSearchVO;
 import org.sadari.admin.sadariadmin.currentuser.vo.CurrentUserSuspensionVO;
@@ -25,6 +26,7 @@ import java.util.List;
  * 2026-07-30        SeungHyeon.Kang    정지 이력 동기화 상태 수정 추가
  * 2026-08-13        SeungHyeon.Kang    삭제 회원의 유효 제재 조회와 잠금 조회 추가
  * 2026-08-22        SeungHyeon.Kang    현재 사용자의 받은 신고 이력 조회 추가
+ * 2026-08-22        SeungHyeon.Kang    현재 사용자 프로필 정보 삭제 SQL 추가
  */
 @Mapper
 public interface CurrentUserMapper {
@@ -55,6 +57,62 @@ public interface CurrentUserMapper {
      * @return 현재 사용자 상세와 활동 요약
      */
     CurrentUserVO getCurrentUserDtl(@Param("userNumb") Long userNumb);
+
+    /**
+     * 현재 사용자의 프로필 이미지 파일 메타정보를 잠금 조회한다
+     *
+     * @author SeungHyeon.Kang
+     * @param userNumb 사용자 번호
+     * @return 프로필 이미지 파일 메타정보
+     */
+    CurrentUserFileVO getUserProfFileForUpdate(@Param("userNumb") Long userNumb);
+
+    /**
+     * 현재 사용자의 배경 이미지 파일 메타정보를 잠금 조회한다
+     *
+     * @author SeungHyeon.Kang
+     * @param userNumb 사용자 번호
+     * @return 배경 이미지 파일 메타정보
+     */
+    CurrentUserFileVO getUserBgimFileForUpdate(@Param("userNumb") Long userNumb);
+
+    /**
+     * 현재 사용자의 프로필 이미지 참조를 제거한다
+     *
+     * @author SeungHyeon.Kang
+     * @param userNumb 사용자 번호
+     * @param fileNumb 현재 프로필 파일번호
+     * @return 수정 건수
+     */
+    int delUserProfileImage(@Param("userNumb") Long userNumb, @Param("fileNumb") Long fileNumb);
+
+    /**
+     * 현재 사용자의 배경 이미지 참조를 제거한다
+     *
+     * @author SeungHyeon.Kang
+     * @param userNumb 사용자 번호
+     * @param fileNumb 현재 배경 파일번호
+     * @return 수정 건수
+     */
+    int delUserBackgroundImage(@Param("userNumb") Long userNumb, @Param("fileNumb") Long fileNumb);
+
+    /**
+     * 다른 사용자 이미지에서 참조하지 않는 파일 메타정보를 삭제한다
+     *
+     * @author SeungHyeon.Kang
+     * @param fileNumb 삭제할 파일번호
+     * @return 삭제 건수
+     */
+    int delUserFileIfUnref(@Param("fileNumb") Long fileNumb);
+
+    /**
+     * 현재 사용자의 한줄 소개를 NULL 처리한다
+     *
+     * @author SeungHyeon.Kang
+     * @param userNumb 사용자 번호
+     * @return 수정 건수
+     */
+    int delUserIntroduction(@Param("userNumb") Long userNumb);
 
     /**
      * 회원번호에 해당하는 현재 사용자 존재 여부를 조회한다

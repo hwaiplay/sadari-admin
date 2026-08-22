@@ -142,6 +142,9 @@ public enum ResultEnum {
     /** 현재 사용자 없음 */
     CURRENT_USER_NOT_FOUND(2004, "current-user.not-found"),
 
+    /** 현재 사용자 프로필 정보 동시 수정 충돌 */
+    CURRENT_USER_CONFLICT(2009, "current-user.conflict"),
+
     /** 적용 중인 회원 정지 중복 */
     USER_SUSPENSION_DUPLICATE(2009, "user-suspension.duplicate"),
 

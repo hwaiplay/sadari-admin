@@ -1,5 +1,8 @@
 import { useEffect, useState } from 'react'
 import {
+  delUserBgimImage,
+  delUserIntroduction,
+  delUserProfImage,
   setCurrentUserSuspension,
   getCurrentUser,
   getUserComplaintList,
@@ -12,6 +15,7 @@ import { Pagination } from '../../components/Pagination'
 import { ImagePreviewButton } from '../../components/ImagePreviewButton'
 import { UserSuspensionPanel } from '../../components/UserSuspensionPanel'
 import { CURRENT_USER_LIST_PATH } from '../../constants/routes'
+import { useMenuPermission } from '../../contexts/useMenuPermission'
 import type { PageData } from '../../types/common'
 import type {
   CurrentUser,
@@ -60,11 +64,14 @@ export function CurrentUserDetailPage({
   onMovePath,
   onError,
 }: CurrentUserDetailPageProps) {
+  // 현재 사용자 메뉴의 삭제 권한을 프로필 정보 조치 버튼 노출 기준으로 조회한다.
+  const permission = useMenuPermission()
   const [currentUser, setCurrentUser] = useState<CurrentUser | null>(null)
   const [loginHistories, setLoginHistories] = useState<PageData<CurrentUserLoginHistory>>(emptyPage())
   const [withdrawalHistories, setWithdrawalHistories] = useState<PageData<CurrentUserWithdrawalHistory>>(emptyPage())
   const [complaintHistories, setComplaintHistories] = useState<PageData<CurrentUserComplaint>>(emptyPage())
   const [loading, setLoading] = useState(true)
+  const [moderating, setModerating] = useState<string | null>(null)
 
   // 사용자 번호가 변경되면 상세와 세 이력의 첫 페이지를 함께 조회한다.
   useEffect(() => {
@@ -210,6 +217,53 @@ export function CurrentUserDetailPage({
   }
 
   /**
+   * 현재 사용자의 프로필 정보 삭제 조치를 확인하고 최신 상세를 반영한다.
+   *
+   * @author SeungHyeon.Kang
+   * @param actionKey 실행할 조치 식별값
+   * @param confirmMessage 관리자 확인 문구
+   * @param action 실행할 삭제 API
+   * @param fallbackMessage 기본 실패 문구
+   * @return 반환값이 없다
+   */
+  const handleModeration = async (
+    actionKey: string,
+    confirmMessage: string,
+    action: () => Promise<CurrentUser>,
+    fallbackMessage: string,
+  ): Promise<void> => {
+    // 프로필 정보 삭제는 자동 복원되지 않으므로 실행 전에 관리자 확인을 받는다.
+    if (!window.confirm(confirmMessage)) {
+      // 관리자가 취소한 삭제 조치는 실행하지 않고 종료한다.
+      return
+    }
+
+    // 다른 삭제 버튼의 중복 실행을 막도록 현재 조치 식별값을 설정한다.
+    setModerating(actionKey)
+    // 서버 조치 결과를 현재 사용자 상세에 안전하게 반영한다.
+    try {
+      // 서버가 현재 사용자와 파일 참조를 다시 검증한 조치 결과를 조회한다.
+      const updatedUser = await action()
+      // 프로필 정보가 갱신된 최신 사용자 상세를 반영한다.
+      setCurrentUser(updatedUser)
+      // 이전 현재 사용자 상세 오류 메시지를 초기화한다.
+      onError(null)
+    }
+
+    // 서버가 거절한 조치 사유 또는 기본 실패 메시지를 화면에 표시한다.
+    catch (error: unknown) {
+      // 조치 실패 원인을 현재 사용자 관리 화면 공통 오류 영역에 설정한다.
+      onError(error instanceof Error ? error.message : fallbackMessage)
+    }
+
+    // 성공과 실패 모두에서 다른 관리자 조치를 다시 허용한다.
+    finally {
+      // 현재 조치 식별값을 초기화한다.
+      setModerating(null)
+    }
+  }
+
+  /**
    * 로그인 이력 행을 표시한다.
    *
    * @author SeungHyeon.Kang
@@ -335,28 +389,84 @@ export function CurrentUserDetailPage({
                 <td>{formatDate(currentUser.deltDate) || '-'}</td>
                 <th>프로필 이미지</th>
                 <td>
-                  {/* "프로필 사진 보기" */}
-                  <ImagePreviewButton
-                    imagePath={currentUser.profPath}
-                    buttonLabel="프로필 사진 보기"
-                    dialogTitle={`${currentUser.userNick} 프로필 사진`}
-                    emptyLabel="미등록"
-                  />
+                  {/* 현재 사용자의 프로필 사진 보기와 삭제 조치 영역 */}
+                  <div className="image-preview-actions">
+                    {/* "프로필 사진 보기" */}
+                    <ImagePreviewButton
+                      imagePath={currentUser.profPath}
+                      buttonLabel="프로필 사진 보기"
+                      dialogTitle={`${currentUser.userNick} 프로필 사진`}
+                      emptyLabel="미등록"
+                    />
+                    {permission.deltYsno === 'Y' && currentUser.profPath && (
+                      <button
+                        type="button"
+                        className="delete-button"
+                        disabled={moderating !== null}
+                        onClick={() => void handleModeration(
+                          'profile-image',
+                          '현재 사용자의 프로필 사진을 삭제하고 기본 프로필로 변경하시겠습니까?',
+                          () => delUserProfImage(userNumb),
+                          '프로필 사진을 삭제하지 못했습니다.',
+                        )}
+                      >
+                        {moderating === 'profile-image' ? '삭제 중' : '프로필 사진 삭제'}
+                      </button>
+                    )}
+                  </div>
                 </td>
                 <th>배경 이미지</th>
                 <td>
-                  {/* "배경화면 보기" */}
-                  <ImagePreviewButton
-                    imagePath={currentUser.bgimPath}
-                    buttonLabel="배경화면 보기"
-                    dialogTitle={`${currentUser.userNick} 배경화면`}
-                    emptyLabel="미등록"
-                  />
+                  {/* 현재 사용자의 배경화면 보기와 삭제 조치 영역 */}
+                  <div className="image-preview-actions">
+                    {/* "배경화면 보기" */}
+                    <ImagePreviewButton
+                      imagePath={currentUser.bgimPath}
+                      buttonLabel="배경화면 보기"
+                      dialogTitle={`${currentUser.userNick} 배경화면`}
+                      emptyLabel="미등록"
+                    />
+                    {permission.deltYsno === 'Y' && currentUser.bgimPath && (
+                      <button
+                        type="button"
+                        className="delete-button"
+                        disabled={moderating !== null}
+                        onClick={() => void handleModeration(
+                          'background-image',
+                          '현재 사용자의 배경화면을 삭제하고 기본 배경으로 변경하시겠습니까?',
+                          () => delUserBgimImage(userNumb),
+                          '배경화면을 삭제하지 못했습니다.',
+                        )}
+                      >
+                        {moderating === 'background-image' ? '삭제 중' : '배경화면 삭제'}
+                      </button>
+                    )}
+                  </div>
                 </td>
               </tr>
               <tr>
                 <th>한줄 소개</th>
-                <td colSpan={5}>{currentUser.intrCntn ?? '-'}</td>
+                <td colSpan={5}>
+                  {/* 현재 사용자의 한줄 소개와 삭제 조치 영역 */}
+                  <div className="complaint-moderation-content">
+                    <span className="complaint-content-cell">{currentUser.intrCntn ?? '-'}</span>
+                    {permission.deltYsno === 'Y' && currentUser.intrCntn && (
+                      <button
+                        type="button"
+                        className="delete-button"
+                        disabled={moderating !== null}
+                        onClick={() => void handleModeration(
+                          'introduction',
+                          '현재 사용자의 한줄 소개를 삭제하시겠습니까?',
+                          () => delUserIntroduction(userNumb),
+                          '한줄 소개를 삭제하지 못했습니다.',
+                        )}
+                      >
+                        {moderating === 'introduction' ? '삭제 중' : '한줄 소개 삭제'}
+                      </button>
+                    )}
+                  </div>
+                </td>
               </tr>
             </tbody>
           </table>

@@ -429,22 +429,20 @@ export function ComplaintDetailPage({
               {/* 신고 대상 식별정보와 피신고자 현재정보 */}
               <tr>
                 <th>신고 대상 유형</th>
-                <td>{complaint.tagtTypeName ?? complaint.tagtType}</td>
-                <th>신고 대상 번호</th>
-                <td>{complaint.tagtNumb}</td>
-                <th>피신고자 회원번호</th>
-                <td>{complaint.tagtUser ?? '-'}</td>
+                <td colSpan={5}>
+                  {`${complaint.tagtTypeName ?? complaint.tagtType} (${complaint.tagtNumb})`}
+                </td>
               </tr>
               <tr>
-                <th>피신고자 닉네임</th>
+                <th>피신고자</th>
                 <td colSpan={3}>
                   {detail.targetUser
-                    ? detail.targetUser.userNick
+                    ? `${detail.targetUser.userNick} (${detail.targetUser.userNumb})`
                     : complaint.tagtUser
                       ? (
                           <>
                             {/* "회원 정보 없음" */}
-                            회원 정보 없음
+                            회원 정보 없음 ({complaint.tagtUser})
                           </>
                         )
                       : (

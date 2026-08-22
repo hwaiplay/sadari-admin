@@ -1,5 +1,13 @@
 package org.sadari.admin.sadariadmin.currentuser.service.impl;
 
+import java.io.IOException;
+import java.nio.charset.StandardCharsets;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.time.LocalDateTime;
+import java.util.Locale;
+
+import lombok.extern.slf4j.Slf4j;
 import org.sadari.admin.sadariadmin.admin.vo.AdminSessionVO;
 import org.sadari.admin.sadariadmin.common.code.mapper.CodeMapper;
 import org.sadari.admin.sadariadmin.common.constant.Constant;
@@ -11,19 +19,19 @@ import org.sadari.admin.sadariadmin.common.util.StringUtil;
 import org.sadari.admin.sadariadmin.currentuser.mapper.CurrentUserMapper;
 import org.sadari.admin.sadariadmin.currentuser.service.CurrentUserService;
 import org.sadari.admin.sadariadmin.currentuser.vo.CurrentUserComplaintVO;
+import org.sadari.admin.sadariadmin.currentuser.vo.CurrentUserFileVO;
 import org.sadari.admin.sadariadmin.currentuser.vo.CurrentUserLoginHistoryVO;
 import org.sadari.admin.sadariadmin.currentuser.vo.CurrentUserSearchVO;
 import org.sadari.admin.sadariadmin.currentuser.vo.CurrentUserSuspensionVO;
 import org.sadari.admin.sadariadmin.currentuser.vo.CurrentUserStatusEventVO;
 import org.sadari.admin.sadariadmin.currentuser.vo.CurrentUserVO;
 import org.sadari.admin.sadariadmin.currentuser.vo.CurrentUserWithdrawalHistoryVO;
+import org.sadari.admin.sadariadmin.file.storage.FileStorage;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-
-import java.nio.charset.StandardCharsets;
-import java.time.LocalDateTime;
-import java.util.Locale;
+import org.springframework.transaction.support.TransactionSynchronization;
+import org.springframework.transaction.support.TransactionSynchronizationManager;
 
 /**
  * fileName       : CurrentUserServiceImpl
@@ -39,10 +47,21 @@ import java.util.Locale;
  * 2026-07-30        SeungHyeon.Kang    정지 이력 동기화 상태와 임시 Outbox 전달 적용
  * 2026-08-13        SeungHyeon.Kang    삭제 회원의 유효 제재 목록과 관리자 해제 처리 추가
  * 2026-08-22        SeungHyeon.Kang    현재 사용자의 받은 신고 이력 조회 추가
+ * 2026-08-22        SeungHyeon.Kang    현재 사용자 프로필 정보 삭제 처리 추가
  */
 @Service
 @Transactional(readOnly = true)
+@Slf4j
 public class CurrentUserServiceImpl implements CurrentUserService {
+
+    // 사용자 업로드 이미지 공개 경로 접두사
+    private static final String UPLOAD_ACCESS_PREFIX = "/uploads/";
+
+    // 프로필 이미지 저장 디렉터리
+    private static final Path PROFILE_IMAGE_ROOT = Paths.get("profile");
+
+    // 배경 이미지 저장 디렉터리
+    private static final Path BACKGROUND_IMAGE_ROOT = Paths.get("background");
 
     // 회원번호 또는 닉네임 검색어 최대 문자 수
     private static final int KEYWORD_MAX_LENGTH = 100;
@@ -56,17 +75,23 @@ public class CurrentUserServiceImpl implements CurrentUserService {
     // 회원 상태 공통코드 검증 Mapper
     private final CodeMapper codeMapper;
 
+    // 현재 사용자 이미지 물리 파일 저장소
+    private final FileStorage fileStorage;
+
     /**
      * 현재 사용자 조회 서비스를 생성한다
      *
      * @author SeungHyeon.Kang
      * @param currentUserMapper 현재 사용자 조회 Mapper
      * @param codeMapper 회원 상태 공통코드 검증 Mapper
+     * @param fileStorage 현재 사용자 이미지 물리 파일 저장소
      */
-    public CurrentUserServiceImpl(CurrentUserMapper currentUserMapper, CodeMapper codeMapper) {
+    public CurrentUserServiceImpl(CurrentUserMapper currentUserMapper, CodeMapper codeMapper
+                                  , FileStorage fileStorage) {
 
         this.currentUserMapper = currentUserMapper;
         this.codeMapper = codeMapper;
+        this.fileStorage = fileStorage;
     }
 
     /**
@@ -118,6 +143,59 @@ public class CurrentUserServiceImpl implements CurrentUserService {
 
         // 조회된 현재 사용자 상세와 활동 요약을 반환한다
         return currentUser;
+    }
+
+    /**
+     * 현재 사용자의 프로필 사진을 기본 이미지 상태로 변경한다
+     *
+     * @author SeungHyeon.Kang
+     * @param userNumb 처리할 회원번호
+     * @param admin 처리 관리자
+     * @return 변경된 현재 사용자 상세정보
+     */
+    @Transactional
+    @Override
+    public CurrentUserVO delUserProfImage(Long userNumb, AdminSessionVO admin) {
+        // 프로필 이미지 참조와 저장 파일을 정리한 최신 사용자 상세를 반환한다
+        return delUserImage(userNumb, admin, true);
+    }
+
+    /**
+     * 현재 사용자의 배경화면을 기본 이미지 상태로 변경한다
+     *
+     * @author SeungHyeon.Kang
+     * @param userNumb 처리할 회원번호
+     * @param admin 처리 관리자
+     * @return 변경된 현재 사용자 상세정보
+     */
+    @Transactional
+    @Override
+    public CurrentUserVO delUserBgimImage(Long userNumb, AdminSessionVO admin) {
+        // 배경 이미지 참조와 저장 파일을 정리한 최신 사용자 상세를 반환한다
+        return delUserImage(userNumb, admin, false);
+    }
+
+    /**
+     * 현재 사용자의 한줄 소개를 NULL 처리한다
+     *
+     * @author SeungHyeon.Kang
+     * @param userNumb 처리할 회원번호
+     * @param admin 처리 관리자
+     * @return 변경된 현재 사용자 상세정보
+     */
+    @Transactional
+    @Override
+    public CurrentUserVO delUserIntroduction(Long userNumb, AdminSessionVO admin) {
+        // 프로필 정보 조치 권한과 현재 회원 존재 여부를 확인한다
+        checkLogin(admin);
+        // 다른 회원을 수정하지 않도록 양수 회원번호만 허용한다
+        validateUserNumb(userNumb);
+        // 이미 소개가 없거나 회원이 삭제된 요청은 삭제 성공으로 오인하지 않는다
+        if (currentUserMapper.delUserIntroduction(userNumb) != 1) {
+            throw new BusinessException(HttpStatus.NOT_FOUND, ResultEnum.CURRENT_USER_NOT_FOUND);
+        }
+        // 한줄 소개가 제거된 최신 현재 사용자 상세를 반환한다
+        return getCurrentUserDtl(userNumb, admin);
     }
 
     /**
@@ -524,6 +602,156 @@ public class CurrentUserServiceImpl implements CurrentUserService {
                 && content.getBytes(StandardCharsets.UTF_8).length > SUSPENSION_CONTENT_MAX_BYTES) {
             throw new BusinessException(HttpStatus.BAD_REQUEST, ResultEnum.COMMON_INVALID_REQUEST);
         }
+    }
+
+    /**
+     * 현재 사용자의 프로필 또는 배경 이미지 참조와 파일 메타정보를 제거한다
+     *
+     * @author SeungHyeon.Kang
+     * @param userNumb 처리할 회원번호
+     * @param admin 처리 관리자
+     * @param profileImage 프로필 이미지 여부
+     * @return 변경된 현재 사용자 상세정보
+     */
+    private CurrentUserVO delUserImage(Long userNumb, AdminSessionVO admin, boolean profileImage) {
+        // 프로필 정보 조치 권한과 현재 회원 존재 여부를 확인한다
+        checkLogin(admin);
+        // 다른 회원의 파일을 수정하지 않도록 양수 회원번호만 허용한다
+        validateUserNumb(userNumb);
+        CurrentUserFileVO userFile;
+        int updateCount;
+
+        // 프로필 조치는 현재 프로필 파일 참조를 잠금 조회한다
+        if (profileImage) {
+            // 동시 변경 전 현재 프로필 이미지 파일 메타정보를 조회한다
+            userFile = currentUserMapper.getUserProfFileForUpdate(userNumb);
+        }
+
+        // 배경 이미지 요청은 프로필 파일과 분리된 현재 참조를 잠금 조회한다
+        else {
+            // 동시 변경 전 현재 배경 이미지 파일 메타정보를 조회한다
+            userFile = currentUserMapper.getUserBgimFileForUpdate(userNumb);
+        }
+
+        // 현재 이미지가 없으면 다른 파일을 삭제하지 않고 이미 조치된 상태를 알린다
+        if (StringUtil.isEmpty(userFile)) {
+            throw new BusinessException(HttpStatus.NOT_FOUND, ResultEnum.CURRENT_USER_NOT_FOUND);
+        }
+
+        // 프로필 이미지 요청은 잠금 조회한 파일번호와 현재 참조가 같은 경우에만 제거한다
+        if (profileImage) {
+            updateCount = currentUserMapper.delUserProfileImage(userNumb, userFile.getFileNumb());
+        }
+
+        // 배경 이미지 요청도 잠금 조회한 파일번호가 유지될 때만 참조를 제거한다
+        else {
+            updateCount = currentUserMapper.delUserBackgroundImage(userNumb, userFile.getFileNumb());
+        }
+
+        // 동시 변경으로 파일 참조가 달라졌으면 최신 이미지를 잘못 삭제하지 않는다
+        if (updateCount != 1) {
+            throw new BusinessException(HttpStatus.CONFLICT, ResultEnum.CURRENT_USER_CONFLICT);
+        }
+
+        // 다른 프로필 또는 배경에서 참조하지 않는 파일만 메타정보와 물리 파일을 정리한다
+        if (currentUserMapper.delUserFileIfUnref(userFile.getFileNumb()) == 1) {
+            // 커밋된 파일 메타정보 삭제에 맞춰 물리 파일 정리를 예약한다
+            setFileCleanupOnCommit(userFile);
+        }
+
+        // 이미지 참조가 제거된 최신 현재 사용자 상세를 반환한다
+        return getCurrentUserDtl(userNumb, admin);
+    }
+
+    /**
+     * 이미지 참조와 메타정보 삭제가 커밋된 뒤 물리 파일을 삭제한다
+     *
+     * @author SeungHyeon.Kang
+     * @param userFile 삭제할 파일 메타정보
+     */
+    private void setFileCleanupOnCommit(CurrentUserFileVO userFile) {
+        // 공개 접근 경로가 허용된 내부 저장소 객체인지 검증한다
+        String objectKey = getStoredObjectKey(userFile);
+        // 외부 URL과 비정상 경로는 파일 메타정보만 제거하고 저장소 접근을 차단한다
+        if (StringUtil.isEmpty(objectKey)) {
+            // 삭제할 수 없는 저장소 경로의 정리 예약을 종료한다
+            return;
+        }
+        // 트랜잭션 밖의 독립 호출에서는 완료된 DB 상태에 맞춰 즉시 정리한다
+        if (!TransactionSynchronizationManager.isSynchronizationActive()) {
+            // 독립 호출에서 DB 상태와 물리 저장소를 즉시 일치시킨다
+            delPhysicalFile(userFile, objectKey);
+            // 즉시 물리 파일 정리를 마친다
+            return;
+        }
+
+        // DB 롤백 시 기존 파일을 유지하도록 트랜잭션 종료 상태 확인 작업을 등록한다
+        TransactionSynchronizationManager.registerSynchronization(new TransactionSynchronization() {
+            /**
+             * DB 커밋이 완료된 경우에만 현재 사용자 이미지 파일을 삭제한다
+             *
+             * @author SeungHyeon.Kang
+             * @param status 트랜잭션 종료 상태
+             */
+            @Override
+            public void afterCompletion(int status) {
+                // 롤백된 사용자 참조가 기존 파일을 계속 가리킬 수 있으므로 커밋 외 상태는 유지한다
+                if (status != TransactionSynchronization.STATUS_COMMITTED) {
+                    // 기존 물리 파일을 유지하고 정리 콜백을 종료한다
+                    return;
+                }
+
+                // DB에서 참조와 메타정보가 제거된 저장소 객체를 삭제한다
+                delPhysicalFile(userFile, objectKey);
+            }
+        });
+    }
+
+    /**
+     * 검증된 저장소 객체 키에 해당하는 현재 사용자 이미지를 멱등 삭제한다
+     *
+     * @author SeungHyeon.Kang
+     * @param userFile 운영 로그에 남길 파일 메타정보
+     * @param objectKey 검증된 저장소 객체 키
+     */
+    private void delPhysicalFile(CurrentUserFileVO userFile, String objectKey) {
+        // 물리 파일 실패가 커밋된 데이터베이스 상태를 되돌리지 않도록 예외를 격리한다
+        try {
+            fileStorage.delFile(objectKey);
+        }
+
+        // 커밋 뒤 실패한 파일번호와 객체 키를 재정리 가능한 운영 로그로 남긴다
+        catch (IOException exception) {
+            log.error("Committed current user image cleanup failed. fileNumb={}, objectKey={}", userFile.getFileNumb(), objectKey, exception);
+        }
+    }
+
+    /**
+     * 내부 사용자 이미지 공개 경로를 검증된 저장소 객체 키로 변환한다
+     *
+     * @author SeungHyeon.Kang
+     * @param userFile 파일 메타정보
+     * @return 삭제 가능한 객체 키, 외부 또는 비정상 경로이면 null
+     */
+    private String getStoredObjectKey(CurrentUserFileVO userFile) {
+        // 파일명과 내부 공개 경로가 모두 확인되지 않으면 저장소 삭제를 허용하지 않는다
+        if (StringUtil.isEmpty(userFile) || StringUtil.hasEmpty(userFile.getFilePath(), userFile.getStorName())
+                || !userFile.getFilePath().startsWith(UPLOAD_ACCESS_PREFIX)) {
+            // 외부 또는 불완전한 파일 메타정보에는 저장소 객체 키가 없음을 반환한다
+            return null;
+        }
+
+        // 상위 디렉터리 이동 문자를 제거한 상대 저장 경로를 생성한다
+        Path storedPath = Paths.get(userFile.getFilePath().substring(UPLOAD_ACCESS_PREFIX.length())).normalize();
+        // 프로필과 배경의 날짜별 저장 규격에서 벗어난 경로는 파일 시스템 접근 전에 차단한다
+        if (storedPath.isAbsolute() || storedPath.getNameCount() != 3
+                || (!storedPath.startsWith(PROFILE_IMAGE_ROOT) && !storedPath.startsWith(BACKGROUND_IMAGE_ROOT))
+                || !userFile.getStorName().equals(storedPath.getFileName().toString())) {
+            // 검증되지 않은 공개 경로에는 삭제 가능한 객체 키가 없음을 반환한다
+            return null;
+        }
+        // 운영체제 경로 구분자를 저장소 공통 구분자로 변환한 안전한 객체 키를 반환한다
+        return storedPath.toString().replace('\\', '/');
     }
 
     /**

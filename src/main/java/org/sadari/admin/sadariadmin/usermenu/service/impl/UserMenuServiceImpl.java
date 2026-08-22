@@ -28,6 +28,7 @@ import org.springframework.transaction.annotation.Transactional;
  * 2026-07-31        SeungHyeon.Kang    사용자 메뉴 목록 검색 조건 추가
  * 2026-08-10        SeungHyeon.Kang    3단계 인접 목록 메뉴 구조 적용
  * 2026-08-10        SeungHyeon.Kang    사용자 메뉴 직계 하위 목록 조회 추가
+ * 2026-08-22        SeungHyeon.Kang    메뉴 트리 단위 목록 페이징 적용
  */
 @Service
 @Transactional(readOnly = true)
@@ -47,15 +48,43 @@ public class UserMenuServiceImpl implements UserMenuService {
     public PageData<UserMenuVO> getUserMenuList(UserMenuSearchVO search, AdminSessionVO admin) {
         // 인증되지 않은 요청이 사용자 메뉴 정보를 조회하지 못하도록 로그인 상태를 확인한다
         checkLogin(admin);
-        // 요청 페이지에 해당하는 조회 행 범위를 계산한다
-        PageRequest pageRequest = new PageRequest(search.getPage());
+        // 공백 검색어가 목록과 건수 조회에서 서로 다르게 처리되지 않도록 정규화한다
+        search.setKeyword(StringUtil.isEmpty(search.getKeyword()) ? null : search.getKeyword().trim());
+        // 검색 조건이 없으면 최상위 메뉴와 전체 하위 메뉴를 같은 페이지에서 조회한다
+        search.setTreeMode(isTreePaging(search));
+        // 화면에 표시할 사용자 메뉴 전체 건수를 조회한다
+        int totalCount = userMenuMapper.getUserMenuCount(search);
+        // 메뉴 트리 페이징이면 최상위 메뉴 수를 페이지 계산 건수로 사용한다
+        int pagingCount = search.isTreeMode() ? userMenuMapper.getUserMenuRootCount() : totalCount;
+        // 페이지 계산 건수로 전체 페이지 수를 계산한다
+        int totalPages = (int) Math.ceil((double) pagingCount / PageRequest.PAGE_SIZE);
+        // 요청 페이지가 없으면 첫 페이지를 기준으로 사용한다
+        int requestPage = StringUtil.isEmpty(search.getPage()) ? 1 : search.getPage();
+        // 저장된 페이지가 현재 전체 페이지 범위를 벗어나면 마지막 유효 페이지로 보정한다
+        int pageNumber = totalPages > 0 ? Math.min(Math.max(requestPage, 1), totalPages) : 1;
+        // 보정된 요청 페이지에 해당하는 조회 행 범위를 계산한다
+        PageRequest pageRequest = new PageRequest(pageNumber);
         // 검색 조건에 페이지 시작 행을 설정한다
         search.setStartRow(pageRequest.getStartRow());
         // 검색 조건에 페이지 마지막 행을 설정한다
         search.setEndRow(pageRequest.getEndRow());
-        // 검색 조건에 맞는 사용자 메뉴 목록과 전체 건수로 페이지 응답을 반환한다
-        return PageData.of(userMenuMapper.getUserMenuList(search), userMenuMapper.getUserMenuCount(search),
-                           pageRequest);
+        // 검색 조건에 맞는 사용자 메뉴 목록을 조회한다
+        List<UserMenuVO> menuList = userMenuMapper.getUserMenuList(search);
+        // 사용자 메뉴 목록과 전체 건수로 기본 페이지 응답을 생성한다
+        PageData<UserMenuVO> pageData = PageData.of(menuList, totalCount, pageRequest);
+        // 검색 여부에 따른 페이징 기준으로 전체 페이지 수를 설정한다
+        pageData.setTotalPages(totalPages);
+        // 메뉴 트리 단위로 구성한 페이지 응답을 반환한다
+        return pageData;
+    }
+
+    /** 검색 조건 없이 전체 메뉴 트리를 조회하는지 확인한다. */
+    private boolean isTreePaging(UserMenuSearchVO search) {
+        // 메뉴명, URL, 노출 여부, 사용 여부, 단계 조건이 모두 없을 때 트리 페이징을 사용한다
+        return StringUtil.isEmpty(search.getKeyword())
+                && StringUtil.isEmpty(search.getShowYsno())
+                && StringUtil.isEmpty(search.getUseeYsno())
+                && StringUtil.isEmpty(search.getMenuLevl());
     }
 
     /** 사용자 메뉴 상세를 조회한다. */
