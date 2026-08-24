@@ -17,6 +17,7 @@ import java.time.LocalDateTime;
  * 2026-08-22        SeungHyeon.Kang    신고 대상 내용 스냅샷 추가
  * 2026-08-22        SeungHyeon.Kang    신고 대상 소유 사용자 번호 추가
  * 2026-08-22        SeungHyeon.Kang    신고자 이미지 비노출 정책 반영
+ * 2026-08-24        HanWon.Jang        목록 자동조치 담당자 표시 정보 추가
  */
 @Data
 public class ComplaintVO {
@@ -77,6 +78,9 @@ public class ComplaintVO {
 
     // 담당 관리자명
     private String procAdmnName;
+
+    // 자동조치 완료 신고 여부
+    private Boolean autoActioned;
 
     // 최종 처리 일시
     private LocalDateTime procDate;

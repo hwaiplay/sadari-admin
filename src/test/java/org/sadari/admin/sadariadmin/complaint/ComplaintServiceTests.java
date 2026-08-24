@@ -20,6 +20,7 @@ import org.sadari.admin.sadariadmin.complaint.vo.ComplaintUpdateVO;
 import org.sadari.admin.sadariadmin.complaint.vo.ComplaintVO;
 import org.sadari.admin.sadariadmin.complaint.vo.ComplaintTargetContentVO;
 import org.sadari.admin.sadariadmin.complaint.vo.ComplaintTargetFileVO;
+import org.sadari.admin.sadariadmin.complaint.vo.ComplaintResultEventVO;
 import org.sadari.admin.sadariadmin.currentuser.service.CurrentUserService;
 import org.sadari.admin.sadariadmin.currentuser.vo.CurrentUserSuspensionVO;
 import org.sadari.admin.sadariadmin.currentuser.vo.CurrentUserVO;
@@ -37,10 +38,14 @@ import static org.junit.jupiter.api.Assertions.assertArrayEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyLong;
+import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.inOrder;
 import static org.mockito.Mockito.when;
+import static org.mockito.Mockito.doAnswer;
+import static org.mockito.Mockito.lenient;
 
 /**
  * fileName       : ComplaintServiceTests
@@ -89,6 +94,19 @@ class ComplaintServiceTests {
         // Mapper와 이용정지 서비스 대역으로 신고 관리 서비스를 생성한다
         complaintService = new ComplaintServiceImpl(complaintMapper, codeMapper, currentUserService, fileStorage
                                                      , new ComplaintAutoActionProperties());
+        // 개별 조치 테스트에서 사용할 기본 사용자 안내 이벤트 원본을 설정한다
+        lenient().when(complaintMapper.getResultEvent(anyLong())).thenAnswer(invocation ->
+                createResultEvent(Constant.CMPL_TARGET_USER, 10L, 10L, invocation.getArgument(0)));
+        // 수동 일괄 조치 테스트에서 사용할 대상별 안내 이벤트 원본을 설정한다
+        lenient().when(complaintMapper.getManualResultEvent(anyString(), anyLong(), anyString(), anyLong()))
+                .thenAnswer(invocation -> createResultEvent(invocation.getArgument(0), invocation.getArgument(1)
+                        , 10L, 1L));
+        // 안내 이벤트 저장 뒤 생성 번호가 반영되도록 설정한다
+        lenient().doAnswer(invocation -> {
+            ComplaintResultEventVO event = invocation.getArgument(0);
+            event.setEvntNumb(801L);
+            return 1;
+        }).when(complaintMapper).setResultEvent(any(ComplaintResultEventVO.class));
     }
 
     /**
@@ -267,7 +285,7 @@ class ComplaintServiceTests {
         complaintService.uptComplaint(1L, update, createAdminSession());
 
         // 조치 완료된 개별 신고의 신고자 결과가 신고번호 기준으로 생성되는지 확인한다
-        verify(complaintMapper).setResultTarget(1L);
+        verify(complaintMapper).setReporterResult(801L, 1L);
     }
 
     /**
@@ -393,8 +411,8 @@ class ComplaintServiceTests {
         deletionOrder.verify(complaintMapper).uptManualComplaints(
                 Constant.CMPL_TARGET_BOOK_REPORT, 10L,
                 "관리자 원본 수동 조치: 신고 대상 독후감을 완전 삭제. 관련 미처리 신고를 일괄 종결함. 기준 신고번호: 1", 1L);
-        deletionOrder.verify(complaintMapper).setManualResultTargets(
-                Constant.CMPL_TARGET_BOOK_REPORT, 10L,
+        deletionOrder.verify(complaintMapper).setManualReporterResults(
+                801L, Constant.CMPL_TARGET_BOOK_REPORT, 10L,
                 "관리자 원본 수동 조치: 신고 대상 독후감을 완전 삭제. 관련 미처리 신고를 일괄 종결함. 기준 신고번호: 1", 1L);
         assertFalse(detail.isTargetContentExists());
     }
@@ -423,8 +441,8 @@ class ComplaintServiceTests {
         verify(complaintMapper).uptManualComplaints(
                 Constant.CMPL_TARGET_REPLY, 10L,
                 "관리자 원본 수동 조치: 신고 대상 댓글을 삭제 상태로 변경. 관련 미처리 신고를 일괄 종결함. 기준 신고번호: 1", 1L);
-        verify(complaintMapper).setManualResultTargets(
-                Constant.CMPL_TARGET_REPLY, 10L,
+        verify(complaintMapper).setManualReporterResults(
+                801L, Constant.CMPL_TARGET_REPLY, 10L,
                 "관리자 원본 수동 조치: 신고 대상 댓글을 삭제 상태로 변경. 관련 미처리 신고를 일괄 종결함. 기준 신고번호: 1", 1L);
     }
 
@@ -458,8 +476,8 @@ class ComplaintServiceTests {
         verify(complaintMapper).uptManualComplaints(
                 Constant.CMPL_TARGET_PROFILE_IMAGE, 10L,
                 "관리자 원본 수동 조치: 피신고자의 프로필 사진을 초기화. 관련 미처리 신고를 일괄 종결함. 기준 신고번호: 1", 1L);
-        verify(complaintMapper).setManualResultTargets(
-                Constant.CMPL_TARGET_PROFILE_IMAGE, 10L,
+        verify(complaintMapper).setManualReporterResults(
+                801L, Constant.CMPL_TARGET_PROFILE_IMAGE, 10L,
                 "관리자 원본 수동 조치: 피신고자의 프로필 사진을 초기화. 관련 미처리 신고를 일괄 종결함. 기준 신고번호: 1", 1L);
     }
 
@@ -489,9 +507,36 @@ class ComplaintServiceTests {
         verify(complaintMapper).uptManualComplaints(
                 Constant.CMPL_TARGET_BACKGROUND_IMAGE, 10L,
                 "관리자 원본 수동 조치: 피신고자의 배경사진을 초기화. 관련 미처리 신고를 일괄 종결함. 기준 신고번호: 1", 1L);
-        verify(complaintMapper).setManualResultTargets(
-                Constant.CMPL_TARGET_BACKGROUND_IMAGE, 10L,
+        verify(complaintMapper).setManualReporterResults(
+                801L, Constant.CMPL_TARGET_BACKGROUND_IMAGE, 10L,
                 "관리자 원본 수동 조치: 피신고자의 배경사진을 초기화. 관련 미처리 신고를 일괄 종결함. 기준 신고번호: 1", 1L);
+    }
+
+    /** 관리자 조치 결과 생성 테스트에 사용할 안내 이벤트 원본을 생성한다. */
+    private ComplaintResultEventVO createResultEvent(String tagtType, Long tagtNumb
+                                                     , Long tagtUser, Long trigCmpl) {
+        // 조치 대상과 단일 신고 사유를 담을 이벤트 원본을 생성한다
+        ComplaintResultEventVO event = new ComplaintResultEventVO();
+        // 조치 기준 신고 번호를 설정한다
+        event.setTrigCmpl(trigCmpl);
+        // 신고 대상 유형을 설정한다
+        event.setTagtType(tagtType);
+        // 신고 대상 번호를 설정한다
+        event.setTagtNumb(tagtNumb);
+        // 피신고 사용자 번호를 설정한다
+        event.setTagtUser(tagtUser);
+        // 사용자 팝업에 표시할 대상 이름을 설정한다
+        event.setTagtName("신고 대상");
+        // 모두 같은 단일 사유 누적 상태를 설정한다
+        event.setRsonCntt(1);
+        // 단일 신고 사유 코드를 설정한다
+        event.setRsonCode("CMPL_ABUSE");
+        // 단일 신고 사유 표시명을 설정한다
+        event.setRsonName("욕설 및 비방");
+        // 조치 완료 시각을 설정한다
+        event.setProcDate(LocalDateTime.now());
+        // 생성한 테스트 이벤트 원본을 반환한다
+        return event;
     }
 
     /**

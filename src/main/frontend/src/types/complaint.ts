@@ -31,6 +31,7 @@ export type Complaint = {
   procCntn: string | null
   procAdmn: number | null
   procAdmnName: string | null
+  autoActioned: boolean | null
   procDate: string | null
   regiDate: string
   updtDate: string

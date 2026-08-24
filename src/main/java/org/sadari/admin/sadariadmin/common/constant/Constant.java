@@ -90,6 +90,8 @@ public final class Constant {
 
     /** 신고 사유 공통코드 */
     public static final String CMPL_RSON = "CMPL_RSON";
+    // 기타 신고 사유 세부코드
+    public static final String CMPL_REASON_OTHER = "CMPL_OTHER";
 
     /** 신고 처리 상태 공통코드 */
     public static final String CMPL_STAT = "CMPL_STAT";
@@ -153,6 +155,24 @@ public final class Constant {
 
     /** 신고 반려 상태 */
     public static final String CMPL_STATUS_REJECTED = "CMPL_REJECTED";
+    // 신고 조치 결과의 신고자 수신 유형
+    public static final String CMPL_RECEIVER_REPORTER = "REPORTER";
+    // 신고 조치 결과의 피신고자 수신 유형
+    public static final String CMPL_RECEIVER_TARGET = "TARGET";
+    // 모든 누적 신고 사유가 같은 유형인 요약 코드
+    public static final String CMPL_REASON_SUMMARY_SINGLE = "SINGLE";
+    // 누적 신고 사유가 둘 이상인 요약 코드
+    public static final String CMPL_REASON_SUMMARY_MULTIPLE = "MULTIPLE";
+    // 기타 사유만 누적된 요약 코드
+    public static final String CMPL_REASON_SUMMARY_OTHER = "OTHER";
+    // 사유를 안전하게 확정할 수 없는 요약 코드
+    public static final String CMPL_REASON_SUMMARY_UNKNOWN = "UNKNOWN";
+    // 관리자 개별 검토 완료 조치 유형
+    public static final String CMPL_ACTION_REVIEW = "CMPL_REVIEW_ACTION";
+    // 독후감 완전 삭제 수동 조치 유형
+    public static final String CMPL_ACTION_DELETE_REPORT = "CMPL_DEL_REPORT";
+    // 모임소개 초기화 수동 조치 유형
+    public static final String CMPL_ACTION_CLEAR_CLUB = "CMPL_CLEAR_CLUB";
 
     // 현재 대상 버전의 자동 조치 진행 상태
     public static final String CMPL_PROGRESS_PENDING = "PENDING";

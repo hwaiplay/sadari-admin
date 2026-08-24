@@ -25,6 +25,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
  * DATE              AUTHOR             NOTE
  * -----------------------------------------------------------
  * 2026-08-22        SeungHyeon.Kang    신고 조회와 자동·수동 조치 SQL 검증
+ * 2026-08-24        HanWon.Jang        목록 자동조치 담당자 판정 SQL 검증
  */
 class ComplaintMapperTests {
 
@@ -39,7 +40,7 @@ class ComplaintMapperTests {
      * @throws IOException Mapper XML을 읽을 수 없을 때 발생
      */
     @Test
-    void getListWithoutSearchFilters() throws IOException {
+    void getListNoSearchFilters() throws IOException {
         // 신고 목록 Mapper XML을 해석할 MyBatis 설정을 생성한다
         Configuration configuration = new Configuration();
         // 운영과 동일한 Mapper XML에서 실제 동적 SQL을 구성한다
@@ -83,6 +84,13 @@ class ComplaintMapperTests {
         assertTrue(sql.contains("P.TAGT_USER"));
         // 대상 유형과 무관하게 저장된 소유 사용자 번호로 피신고자 닉네임을 조회하는지 확인한다
         assertTrue(sql.contains("T.USER_NUMB = C.TAGT_USER"));
+        // 동일 대상 버전의 자동조치 이력을 목록 담당자 판정에 사용하는지 확인한다
+        assertTrue(sql.contains("FROM TH_CMACTN H"));
+        // 조치 완료와 담당자 부재 및 자동조치 이력을 모두 만족할 때만 자동조치로 판정하는지 확인한다
+        assertTrue(sql.contains("CASE WHEN C.CMPL_STAT = ? AND C.PROC_ADMN IS NULL "
+                + "AND A.ACTN_NUMB IS NOT NULL THEN 1 ELSE 0 END AS AUTO_ACTIONED"));
+        // 조치 완료 상태 판정값이 공통 상수에서 바인딩되는지 확인한다
+        assertEquals(Constant.CMPL_STATUS_ACTIONED, boundSql.getAdditionalParameter("cmplActioned"));
     }
 
     /**
@@ -145,7 +153,7 @@ class ComplaintMapperTests {
 
     /** 자동 조치 대상 조회 SQL이 배경사진을 독립된 현재 파일로 조회하는지 확인한다. */
     @Test
-    void getAutoActionTargetIncludesBackgroundImage() throws IOException {
+    void getAutoActionTargetBgImg() throws IOException {
         // 배경사진 유형으로 자동 조치 대상 조회 SQL을 생성한다
         java.util.Map<String, Object> parameters = java.util.Map.of(
                 "tagtType", Constant.CMPL_TARGET_BACKGROUND_IMAGE,

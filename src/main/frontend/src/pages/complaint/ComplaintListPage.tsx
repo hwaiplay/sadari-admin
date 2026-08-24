@@ -233,7 +233,11 @@ export function ComplaintListPage({ onMovePath, onError }: ComplaintListPageProp
       <td className="col-target-number">{complaint.tagtNumb}</td>
       <td>{complaint.cmplRsonName ?? complaint.cmplRson}</td>
       <td>{complaint.userNumb ? `${complaint.reporterNick ?? '닉네임 없음'} (${complaint.userNumb})` : '탈퇴한 사용자'}</td>
-      <td>{complaint.procAdmnName ?? '-'}</td>
+      <td>
+        {/* 자동조치 완료 여부에 따라 시스템 처리 주체 또는 실제 담당 관리자를 표시한다 */}
+        {/* "자동조치" */}
+        {complaint.autoActioned ? '자동조치' : complaint.procAdmnName ?? '-'}
+      </td>
       <td className="col-date-time">{formatDate(complaint.regiDate)}</td>
       <td className="col-date-time">{formatDate(complaint.procDate) || '-'}</td>
     </tr>

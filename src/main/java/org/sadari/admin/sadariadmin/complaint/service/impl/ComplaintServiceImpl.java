@@ -32,6 +32,7 @@ import org.sadari.admin.sadariadmin.complaint.vo.ComplaintTargetFileVO;
 import org.sadari.admin.sadariadmin.complaint.vo.ComplaintTargetContentVO;
 import org.sadari.admin.sadariadmin.complaint.vo.ComplaintUpdateVO;
 import org.sadari.admin.sadariadmin.complaint.vo.ComplaintVO;
+import org.sadari.admin.sadariadmin.complaint.vo.ComplaintResultEventVO;
 import org.sadari.admin.sadariadmin.currentuser.service.CurrentUserService;
 import org.sadari.admin.sadariadmin.currentuser.vo.CurrentUserSuspensionVO;
 import org.sadari.admin.sadariadmin.currentuser.vo.CurrentUserVO;
@@ -228,8 +229,8 @@ public class ComplaintServiceImpl implements ComplaintService {
 
         // 개별 신고를 조치 완료한 경우 현재 신고자에게 표시할 미확인 결과를 생성한다
         if (Constant.CMPL_STATUS_ACTIONED.equals(update.getCmplStat())) {
-            // 이미 생성된 신고 결과는 고유 신고번호 기준으로 중복 생성하지 않는다
-            complaintMapper.setResultTarget(cmplNumb);
+            // 하나의 관리자 검토 완료 이벤트를 신고자와 피신고자 결과함에 연결한다
+            setIndividualResult(cmplNumb);
         }
 
         // 저장된 처리 결과와 갱신된 수정일시를 포함한 상세를 반환한다
@@ -786,8 +787,135 @@ public class ComplaintServiceImpl implements ComplaintService {
         String processContent = String.format(MANUAL_PROCESS_FORMAT, actionName, cmplNumb);
         // 원본 비노출로 해결된 모든 접수와 검토 중 신고를 같은 관리자 처리 결과로 종결한다
         complaintMapper.uptManualComplaints(tagtType, tagtNumb, processContent, adminNumb);
-        // 같은 원본 조치로 종결된 각 신고의 현재 신고자에게 미확인 결과를 생성한다
-        complaintMapper.setManualResultTargets(tagtType, tagtNumb, processContent, adminNumb);
+        // 같은 원본 조치로 종결된 신고자 전원과 피신고자에게 하나의 안내 이벤트를 연결한다
+        setManualResults(tagtType, tagtNumb, processContent, adminNumb);
+    }
+
+    /** 관리자가 개별 조치 완료한 신고의 양측 결과 안내를 생성한다. */
+    private void setIndividualResult(Long cmplNumb) {
+        // 저장된 최종 처리일과 신고 대상 및 사유를 안내 이벤트 원본으로 조회한다
+        ComplaintResultEventVO event = complaintMapper.getResultEvent(cmplNumb);
+        // 개별 검토 완료는 구체적인 정지 기간이나 관리자 메모를 공개하지 않는다
+        event.setActnType(Constant.CMPL_ACTION_REVIEW);
+        // 신고자에게 공개할 일반 처리 완료 문구를 설정한다
+        event.setRptrCntn("신고 내용을 검토하여 운영정책에 따른 조치를 완료했습니다.");
+        // 단일 신고의 사유를 피신고자 공개 정책에 맞춰 요약한다
+        setReasonSummary(event);
+        // 피신고자에게 건수와 제재 기간 없이 누적 및 정책 조치 사실만 안내한다
+        event.setTgtrCntn(getReasonContent(event) + "가 누적되어 운영정책에 따른 조치를 적용했습니다.");
+        // 사용자 안내 이벤트와 수신자 연결을 같은 트랜잭션에서 저장한다
+        saveResultEvent(event, false, null, null);
+    }
+
+    /** 관리자 수동 원본 조치로 함께 종결된 신고의 양측 결과 안내를 생성한다. */
+    private void setManualResults(String tagtType, Long tagtNumb, String procCntn, Long procAdmn) {
+        // 같은 관리자 처리로 종결된 신고들의 사유 구성을 안내 이벤트 원본으로 조회한다
+        ComplaintResultEventVO event = complaintMapper.getManualResultEvent(
+                tagtType, tagtNumb, procCntn, procAdmn
+        );
+        // 대상 유형으로 실제 실행한 공개용 조치 유형을 설정한다
+        event.setActnType(getManualActionType(tagtType));
+        // 신고자에게 공개할 실제 콘텐츠 조치 문구를 설정한다
+        event.setRptrCntn(getPublicResult(tagtType));
+        // 여러 신고 사유를 대표값 없이 피신고자 공개 정책에 맞춰 요약한다
+        setReasonSummary(event);
+        // 피신고자에게 정확한 건수 없이 누적 사실과 실제 콘텐츠 조치를 안내한다
+        event.setTgtrCntn(getReasonContent(event) + "가 누적되어 " + getPublicResult(tagtType));
+        // 하나의 이벤트에 종결 신고자 전원과 피신고자를 연결한다
+        saveResultEvent(event, true, procCntn, procAdmn);
+    }
+
+    /** 사용자 안내 이벤트와 신고자·피신고자 수신 결과를 저장한다. */
+    private void saveResultEvent(ComplaintResultEventVO event, boolean manual
+                                , String procCntn, Long procAdmn) {
+        // 이벤트 원본이 없으면 사용자 결과 일부만 생성되지 않도록 전체 처리를 중단한다
+        if (StringUtil.isEmpty(event)) {
+            throw new IllegalStateException("Complaint result event source was not found.");
+        }
+        // 조치 시점 문구와 사유 요약을 변경 불가능한 안내 이벤트로 저장한다
+        if (complaintMapper.setResultEvent(event) != 1 || StringUtil.isEmpty(event.getEvntNumb())) {
+            throw new IllegalStateException("Complaint result event was not saved.");
+        }
+        // 수동 일괄 조치와 개별 조치의 신고자 연결 범위를 구분한다
+        if (manual) {
+            // 같은 원본 조치로 종결된 보존 대상 신고자 전원에게 결과를 생성한다
+            complaintMapper.setManualReporterResults(event.getEvntNumb(), event.getTagtType()
+                                                    , event.getTagtNumb(), procCntn, procAdmn);
+        } else {
+            // 개별 조치 완료 신고의 보존 대상 신고자에게 결과를 생성한다
+            complaintMapper.setReporterResult(event.getEvntNumb(), event.getTrigCmpl());
+        }
+        // 탈퇴·삭제대기가 아닌 피신고자에게 하나의 전용 결과를 생성한다
+        complaintMapper.setTargetResult(event.getEvntNumb(), event.getTrigCmpl(), event.getTagtUser());
+    }
+
+    /** 누적 신고 사유를 피신고자에게 공개할 정책 요약으로 변환한다. */
+    private void setReasonSummary(ComplaintResultEventVO event) {
+        // 사유 집계가 없으면 구체적인 사유를 추정하지 않는다
+        if (StringUtil.isEmpty(event.getRsonCntt()) || event.getRsonCntt() < 1) {
+            // 안전한 과거 데이터 요약 코드를 설정한다
+            event.setRsonSumm(Constant.CMPL_REASON_SUMMARY_UNKNOWN);
+            // 피신고자에게 표시할 일반 운영정책 문구를 설정한다
+            event.setRsonName("운영정책 관련 신고");
+            // 단일 사유 코드가 잘못 노출되지 않도록 제거한다
+            event.setRsonCode(null);
+            return;
+        }
+        // 서로 다른 신고 사유가 둘 이상이면 대표 사유를 선택하지 않는다
+        if (event.getRsonCntt() > 1) {
+            // 복수 유형 요약 코드를 설정한다
+            event.setRsonSumm(Constant.CMPL_REASON_SUMMARY_MULTIPLE);
+            // 정확한 건수 없이 복수 유형으로 표시한다
+            event.setRsonName("복수 유형의 신고");
+            // 대표 사유처럼 보이지 않도록 단일 사유 코드를 제거한다
+            event.setRsonCode(null);
+            return;
+        }
+        // 기타 사유만 누적된 경우 신고 상세를 공개하지 않는다
+        if (Constant.CMPL_REASON_OTHER.equals(event.getRsonCode())) {
+            // 기타 사유 전용 요약 코드를 설정한다
+            event.setRsonSumm(Constant.CMPL_REASON_SUMMARY_OTHER);
+            // 피신고자에게 기타 유형만 표시한다
+            event.setRsonName("기타 사유 신고");
+            return;
+        }
+        // 모두 같은 단일 사유이면 실제 공통코드 표시명을 사용한다
+        event.setRsonSumm(Constant.CMPL_REASON_SUMMARY_SINGLE);
+    }
+
+    /** 피신고자 안내 문장에 사용할 신고 유형 누적 표현을 생성한다. */
+    private String getReasonContent(ComplaintResultEventVO event) {
+        // 단일 실제 사유만 자연스러운 문장을 위해 관련 신고라는 표현을 덧붙인다
+        return Constant.CMPL_REASON_SUMMARY_SINGLE.equals(event.getRsonSumm())
+                ? event.getRsonName() + " 관련 신고" : event.getRsonName();
+    }
+
+    /** 대상 유형에 대응하는 관리자 수동 조치 유형 코드를 조회한다. */
+    private String getManualActionType(String tagtType) {
+        // 실제 실행한 원본 조치를 대상 유형별 고정 코드로 반환한다
+        return switch (tagtType) {
+            case Constant.CMPL_TARGET_BOOK_REPORT -> Constant.CMPL_ACTION_DELETE_REPORT;
+            case Constant.CMPL_TARGET_REPLY -> Constant.CMPL_ACTION_DELETE_REPLY;
+            case Constant.CMPL_TARGET_PROFILE_IMAGE -> Constant.CMPL_ACTION_RESET_PROFILE;
+            case Constant.CMPL_TARGET_BACKGROUND_IMAGE -> Constant.CMPL_ACTION_RESET_BACKGROUND;
+            case Constant.CMPL_TARGET_INTRODUCTION -> Constant.CMPL_ACTION_CLEAR_INTRO;
+            case Constant.CMPL_TARGET_CLUB -> Constant.CMPL_ACTION_CLEAR_CLUB;
+            default -> Constant.CMPL_ACTION_REVIEW;
+        };
+    }
+
+    /** 신고자와 피신고자에게 공개할 대상별 실제 조치 문구를 조회한다. */
+    private String getPublicResult(String tagtType) {
+        // 정지 기간이나 내부 관리자 메모를 제외한 실제 콘텐츠 조치만 반환한다
+        return switch (tagtType) {
+            case Constant.CMPL_TARGET_BOOK_REPORT -> "신고된 독후감을 삭제 처리했습니다.";
+            case Constant.CMPL_TARGET_REPLY -> "신고된 댓글을 삭제 처리했습니다.";
+            case Constant.CMPL_TARGET_PROFILE_IMAGE -> "신고된 프로필 사진을 기본 이미지로 초기화했습니다.";
+            case Constant.CMPL_TARGET_BACKGROUND_IMAGE -> "신고된 배경사진을 기본 이미지로 초기화했습니다.";
+            case Constant.CMPL_TARGET_INTRODUCTION -> "신고된 한줄소개를 초기화했습니다.";
+            case Constant.CMPL_TARGET_CLUB -> "신고된 모임 소개를 초기화했습니다.";
+            default -> "신고 내용을 검토하여 운영정책에 따른 조치를 완료했습니다.";
+        };
     }
 
     /**

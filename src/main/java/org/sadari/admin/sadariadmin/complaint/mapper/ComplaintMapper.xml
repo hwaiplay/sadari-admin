@@ -89,6 +89,7 @@
         , P.PROC_CNTN
         , P.PROC_ADMN
         , P.PROC_ADMN_NAME
+        , P.AUTO_ACTIONED
         , P.PROC_DATE
         , P.REGI_DATE
         , P.UPDT_DATE
@@ -98,6 +99,8 @@
     <select id="getComplaintList" parameterType="org.sadari.admin.sadariadmin.complaint.vo.ComplaintSearchVO"
             resultType="org.sadari.admin.sadariadmin.complaint.vo.ComplaintVO">
         <include refid="complaintCodeBindings"/>
+        <bind name="cmplActioned"
+              value="@org.sadari.admin.sadariadmin.common.constant.Constant@CMPL_STATUS_ACTIONED"/>
         SELECT /* getComplaintList */
                <include refid="complaintPageColumns"/>
           FROM (  SELECT Q.CMPL_NUMB
@@ -119,6 +122,7 @@
                        , Q.PROC_CNTN
                        , Q.PROC_ADMN
                        , Q.PROC_ADMN_NAME
+                       , Q.AUTO_ACTIONED
                        , Q.PROC_DATE
                        , Q.REGI_DATE
                        , Q.UPDT_DATE
@@ -127,11 +131,29 @@
                                     , Q.CMPL_NUMB DESC
                          ) AS ROW_NUMB
                     FROM (  SELECT <include refid="complaintColumns"/>
+                                 , CASE WHEN C.CMPL_STAT = #{cmplActioned}
+                                             AND C.PROC_ADMN IS NULL
+                                             AND A.ACTN_NUMB IS NOT NULL
+                                            THEN 1
+                                         ELSE 0
+                                     END AS AUTO_ACTIONED
                               FROM TH_CMPLNT C
                          LEFT JOIN TM_USERXM R
                                 ON R.USER_NUMB = C.USER_NUMB
                          LEFT JOIN TM_USERXM T
                                 ON T.USER_NUMB = C.TAGT_USER
+                         LEFT JOIN (  SELECT H.TAGT_TYPE
+                                           , H.TAGT_NUMB
+                                           , H.TAGT_HASH
+                                           , MAX(H.ACTN_NUMB) AS ACTN_NUMB
+                                        FROM TH_CMACTN H
+                                    GROUP BY H.TAGT_TYPE
+                                           , H.TAGT_NUMB
+                                           , H.TAGT_HASH
+                                   ) A
+                                ON A.TAGT_TYPE = C.TAGT_TYPE
+                               AND A.TAGT_NUMB = C.TAGT_NUMB
+                               AND A.TAGT_HASH = C.TAGT_HASH
                              WHERE 1 = 1
                                    <include refid="complaintSearchConditions"/>
                          ) Q
@@ -312,55 +334,113 @@
            AND CMPL_STAT IN (#{cmplReceived}, #{cmplReviewing})
     </update>
 
-    <!-- 관리자가 개별 조치 완료한 신고의 현재 신고자 미확인 결과를 한 번만 생성한다 -->
-    <insert id="setResultTarget">
+    <!-- 관리자가 개별 조치 완료한 신고의 사용자 안내 이벤트 원본을 조회한다 -->
+    <select id="getResultEvent"
+            resultType="org.sadari.admin.sadariadmin.complaint.vo.ComplaintResultEventVO">
+        <include refid="complaintCodeBindings"/>
         <bind name="cmplActioned"
               value="@org.sadari.admin.sadariadmin.common.constant.Constant@CMPL_STATUS_ACTIONED"/>
-        INSERT /* setResultTarget */
-          INTO TH_CMRSLT (
-               CMPL_NUMB
-             , USER_NUMB
-             , REGI_DATE
-        )
-        SELECT C.CMPL_NUMB
-             , C.USER_NUMB
-             , CURRENT_TIMESTAMP(6)
+        SELECT /* getResultEvent */
+               C.CMPL_NUMB AS TRIG_CMPL, C.TAGT_TYPE, C.TAGT_NUMB, C.TAGT_HASH, C.TAGT_USER
+             , FN_GET_CODE_NAME(#{cmplTagt}, C.TAGT_TYPE, NULL) AS TAGT_NAME
+             , 1 AS RSON_CNTT, C.CMPL_RSON AS RSON_CODE
+             , FN_GET_CODE_NAME(#{cmplRsonGroup}, C.CMPL_RSON, NULL) AS RSON_NAME
+             , C.PROC_DATE
           FROM TH_CMPLNT C
          WHERE C.CMPL_NUMB = #{cmplNumb}
            AND C.CMPL_STAT = #{cmplActioned}
-           AND C.USER_NUMB IS NOT NULL
-           AND NOT EXISTS (
-               SELECT 1
-                 FROM TH_CMRSLT R
-                WHERE R.CMPL_NUMB = C.CMPL_NUMB
-               )
-    </insert>
+    </select>
 
-    <!-- 관리자 수동 원본 조치로 종결된 동일 대상 신고의 현재 신고자별 미확인 결과를 생성한다 -->
-    <insert id="setManualResultTargets">
+    <!-- 관리자 수동 원본 조치로 함께 종결된 신고의 사유 구성을 안내 이벤트 원본으로 조회한다 -->
+    <select id="getManualResultEvent"
+            resultType="org.sadari.admin.sadariadmin.complaint.vo.ComplaintResultEventVO">
+        <include refid="complaintCodeBindings"/>
         <bind name="cmplActioned"
               value="@org.sadari.admin.sadariadmin.common.constant.Constant@CMPL_STATUS_ACTIONED"/>
-        INSERT /* setManualResultTargets */
-          INTO TH_CMRSLT (
-               CMPL_NUMB
-             , USER_NUMB
-             , REGI_DATE
-        )
-        SELECT C.CMPL_NUMB
-             , C.USER_NUMB
-             , CURRENT_TIMESTAMP(6)
+        SELECT /* getManualResultEvent */
+               MIN(C.CMPL_NUMB) AS TRIG_CMPL, C.TAGT_TYPE, C.TAGT_NUMB, MAX(C.TAGT_HASH) AS TAGT_HASH
+             , MAX(C.TAGT_USER) AS TAGT_USER
+             , FN_GET_CODE_NAME(#{cmplTagt}, C.TAGT_TYPE, NULL) AS TAGT_NAME
+             , COUNT(DISTINCT C.CMPL_RSON) AS RSON_CNTT, MIN(C.CMPL_RSON) AS RSON_CODE
+             , FN_GET_CODE_NAME(#{cmplRsonGroup}, MIN(C.CMPL_RSON), NULL) AS RSON_NAME
+             , MAX(C.PROC_DATE) AS PROC_DATE
           FROM TH_CMPLNT C
          WHERE C.TAGT_TYPE = #{tagtType}
            AND C.TAGT_NUMB = #{tagtNumb}
            AND C.CMPL_STAT = #{cmplActioned}
            AND C.PROC_CNTN = #{procCntn}
            AND C.PROC_ADMN = #{procAdmn}
-           AND C.USER_NUMB IS NOT NULL
-           AND NOT EXISTS (
-               SELECT 1
-                 FROM TH_CMRSLT R
-                WHERE R.CMPL_NUMB = C.CMPL_NUMB
-               )
+         GROUP BY C.TAGT_TYPE, C.TAGT_NUMB
+    </select>
+
+    <!-- 하나의 관리자 조치에 대한 사용자 안내 문구와 사유 요약을 이벤트로 저장한다 -->
+    <insert id="setResultEvent" useGeneratedKeys="true" keyProperty="evntNumb" keyColumn="EVNT_NUMB">
+        /* setResultEvent */
+        INSERT INTO TH_CMREVT (
+                    TRIG_CMPL, TAGT_TYPE, TAGT_NUMB, TAGT_HASH, TAGT_USER, TAGT_NAME
+                  , RSON_SUMM, RSON_CODE, RSON_NAME, ACTN_TYPE, RPTR_CNTN, TGTR_CNTN, PROC_DATE
+        ) VALUES (  #{trigCmpl}, #{tagtType}, #{tagtNumb}, #{tagtHash,jdbcType=CHAR}
+                  , #{tagtUser,jdbcType=NUMERIC}, #{tagtName}, #{rsonSumm}
+                  , #{rsonCode,jdbcType=VARCHAR}, #{rsonName}, #{actnType}
+                  , #{rptrCntn}, #{tgtrCntn}, #{procDate}
+        )
+    </insert>
+
+    <!-- 개별 조치 완료 신고의 보존 대상 신고자 미확인 결과를 생성한다 -->
+    <insert id="setReporterResult">
+        <bind name="cmplActioned"
+              value="@org.sadari.admin.sadariadmin.common.constant.Constant@CMPL_STATUS_ACTIONED"/>
+        <bind name="receiverReporter"
+              value="@org.sadari.admin.sadariadmin.common.constant.Constant@CMPL_RECEIVER_REPORTER"/>
+        <bind name="active" value="@org.sadari.admin.sadariadmin.common.constant.Constant@USER_STAT_ACTIVE"/>
+        <bind name="suspended" value="@org.sadari.admin.sadariadmin.common.constant.Constant@USER_STAT_SUSPENDED"/>
+        INSERT /* setReporterResult */
+          INTO TH_CMRSLT (
+               EVNT_NUMB, CMPL_NUMB, USER_NUMB, RCVR_TYPE, REGI_DATE
+        )
+        SELECT #{eventNumb}, C.CMPL_NUMB, C.USER_NUMB, #{receiverReporter}, CURRENT_TIMESTAMP(6)
+          FROM TH_CMPLNT C
+          JOIN TM_USERXM U ON U.USER_NUMB = C.USER_NUMB
+                           AND U.USER_STAT IN (#{active}, #{suspended})
+         WHERE C.CMPL_NUMB = #{cmplNumb}
+           AND C.CMPL_STAT = #{cmplActioned}
+    </insert>
+
+    <!-- 관리자 수동 원본 조치로 종결된 동일 대상 신고의 보존 대상 신고자별 결과를 생성한다 -->
+    <insert id="setManualReporterResults">
+        <bind name="cmplActioned"
+              value="@org.sadari.admin.sadariadmin.common.constant.Constant@CMPL_STATUS_ACTIONED"/>
+        <bind name="receiverReporter"
+              value="@org.sadari.admin.sadariadmin.common.constant.Constant@CMPL_RECEIVER_REPORTER"/>
+        <bind name="active" value="@org.sadari.admin.sadariadmin.common.constant.Constant@USER_STAT_ACTIVE"/>
+        <bind name="suspended" value="@org.sadari.admin.sadariadmin.common.constant.Constant@USER_STAT_SUSPENDED"/>
+        INSERT /* setManualReporterResults */
+          INTO TH_CMRSLT (
+               EVNT_NUMB, CMPL_NUMB, USER_NUMB, RCVR_TYPE, REGI_DATE
+        )
+        SELECT #{eventNumb}, C.CMPL_NUMB, C.USER_NUMB, #{receiverReporter}, CURRENT_TIMESTAMP(6)
+          FROM TH_CMPLNT C
+          JOIN TM_USERXM U ON U.USER_NUMB = C.USER_NUMB
+                           AND U.USER_STAT IN (#{active}, #{suspended})
+         WHERE C.TAGT_TYPE = #{tagtType}
+           AND C.TAGT_NUMB = #{tagtNumb}
+           AND C.CMPL_STAT = #{cmplActioned}
+           AND C.PROC_CNTN = #{procCntn}
+           AND C.PROC_ADMN = #{procAdmn}
+    </insert>
+
+    <!-- 탈퇴·삭제대기가 아닌 피신고자에게 같은 조치 이벤트 결과를 한 번 생성한다 -->
+    <insert id="setTargetResult">
+        <bind name="receiverTarget"
+              value="@org.sadari.admin.sadariadmin.common.constant.Constant@CMPL_RECEIVER_TARGET"/>
+        <bind name="active" value="@org.sadari.admin.sadariadmin.common.constant.Constant@USER_STAT_ACTIVE"/>
+        <bind name="suspended" value="@org.sadari.admin.sadariadmin.common.constant.Constant@USER_STAT_SUSPENDED"/>
+        INSERT /* setTargetResult */
+          INTO TH_CMRSLT (EVNT_NUMB, CMPL_NUMB, USER_NUMB, RCVR_TYPE, REGI_DATE)
+        SELECT #{eventNumb}, #{cmplNumb}, U.USER_NUMB, #{receiverTarget}, CURRENT_TIMESTAMP(6)
+          FROM TM_USERXM U
+         WHERE U.USER_NUMB = #{userNumb}
+           AND U.USER_STAT IN (#{active}, #{suspended})
     </insert>
 
     <!-- 신고 당시 버전과 비교할 현재 자동 조치 대상 원문 또는 파일 정보를 조회한다 -->

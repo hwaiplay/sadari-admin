@@ -9,6 +9,7 @@ import org.sadari.admin.sadariadmin.complaint.vo.ComplaintTargetFileVO;
 import org.sadari.admin.sadariadmin.complaint.vo.ComplaintTargetContentVO;
 import org.sadari.admin.sadariadmin.complaint.vo.ComplaintUpdateVO;
 import org.sadari.admin.sadariadmin.complaint.vo.ComplaintVO;
+import org.sadari.admin.sadariadmin.complaint.vo.ComplaintResultEventVO;
 
 import java.util.List;
 
@@ -161,7 +162,19 @@ public interface ComplaintMapper {
      * @param cmplNumb 조치 완료된 신고 번호
      * @return 생성된 신고 조치 결과 수
      */
-    int setResultTarget(@Param("cmplNumb") Long cmplNumb);
+    ComplaintResultEventVO getResultEvent(@Param("cmplNumb") Long cmplNumb);
+
+    /** 수동 원본 조치로 함께 종결된 신고의 안내 이벤트 원본을 조회한다. */
+    ComplaintResultEventVO getManualResultEvent(@Param("tagtType") String tagtType
+                                               , @Param("tagtNumb") Long tagtNumb
+                                               , @Param("procCntn") String procCntn
+                                               , @Param("procAdmn") Long procAdmn);
+
+    /** 관리자 신고 조치의 사용자 안내 이벤트를 저장한다. */
+    int setResultEvent(ComplaintResultEventVO event);
+
+    /** 개별 종결 신고의 신고자 미확인 결과를 생성한다. */
+    int setReporterResult(@Param("eventNumb") Long eventNumb, @Param("cmplNumb") Long cmplNumb);
 
     /**
      * 관리자 수동 원본 조치로 종결된 동일 대상 신고의 신고자별 미확인 결과를 생성한다
@@ -173,8 +186,15 @@ public interface ComplaintMapper {
      * @param procAdmn 현재 수동 원본 조치 관리자 번호
      * @return 생성된 신고 조치 결과 수
      */
-    int setManualResultTargets(@Param("tagtType") String tagtType, @Param("tagtNumb") Long tagtNumb
-                              , @Param("procCntn") String procCntn, @Param("procAdmn") Long procAdmn);
+    int setManualReporterResults(@Param("eventNumb") Long eventNumb
+                                , @Param("tagtType") String tagtType
+                                , @Param("tagtNumb") Long tagtNumb
+                                , @Param("procCntn") String procCntn
+                                , @Param("procAdmn") Long procAdmn);
+
+    /** 조치 시점에 보존 대상인 피신고자의 미확인 결과를 생성한다. */
+    int setTargetResult(@Param("eventNumb") Long eventNumb, @Param("cmplNumb") Long cmplNumb
+                       , @Param("userNumb") Long userNumb);
 
     /**
      * 신고 당시 버전과 비교할 현재 자동 조치 대상 원문 또는 파일 정보를 조회한다
