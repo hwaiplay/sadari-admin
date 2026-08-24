@@ -53,6 +53,7 @@ import org.springframework.transaction.support.TransactionSynchronizationManager
  * -----------------------------------------------------------
  * 2026-08-05        SeungHyeon.Kang    최초 생성
  * 2026-08-22        SeungHyeon.Kang    자동 조치 현황과 수동 조치 일괄 종결
+ * 2026-08-24        HanWon.Jang        신고 결과 확인 대상 연동
  */
 @Service
 @Transactional(readOnly = true)
@@ -223,6 +224,12 @@ public class ComplaintServiceImpl implements ComplaintService {
         // 담당자와 상태 및 최종 처리일을 같은 신고 행에 저장한다
         if (complaintMapper.uptComplaint(cmplNumb, update, admin.getAdmnNumb()) != 1) {
             throw new BusinessException(HttpStatus.CONFLICT, ResultEnum.COMPLAINT_CONFLICT);
+        }
+
+        // 개별 신고를 조치 완료한 경우 현재 신고자에게 표시할 미확인 결과를 생성한다
+        if (Constant.CMPL_STATUS_ACTIONED.equals(update.getCmplStat())) {
+            // 이미 생성된 신고 결과는 고유 신고번호 기준으로 중복 생성하지 않는다
+            complaintMapper.setResultTarget(cmplNumb);
         }
 
         // 저장된 처리 결과와 갱신된 수정일시를 포함한 상세를 반환한다
@@ -779,6 +786,8 @@ public class ComplaintServiceImpl implements ComplaintService {
         String processContent = String.format(MANUAL_PROCESS_FORMAT, actionName, cmplNumb);
         // 원본 비노출로 해결된 모든 접수와 검토 중 신고를 같은 관리자 처리 결과로 종결한다
         complaintMapper.uptManualComplaints(tagtType, tagtNumb, processContent, adminNumb);
+        // 같은 원본 조치로 종결된 각 신고의 현재 신고자에게 미확인 결과를 생성한다
+        complaintMapper.setManualResultTargets(tagtType, tagtNumb, processContent, adminNumb);
     }
 
     /**

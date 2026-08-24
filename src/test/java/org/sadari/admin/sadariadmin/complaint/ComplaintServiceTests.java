@@ -52,6 +52,7 @@ import static org.mockito.Mockito.when;
  * -----------------------------------------------------------
  * 2026-08-05        SeungHyeon.Kang    최초 생성
  * 2026-08-22        SeungHyeon.Kang    자동·수동 조치와 이미지 증거 검증
+ * 2026-08-24        HanWon.Jang        신고 결과·테스트 명명 검증
  */
 @ExtendWith(MockitoExtension.class)
 class ComplaintServiceTests {
@@ -96,7 +97,7 @@ class ComplaintServiceTests {
      * @author SeungHyeon.Kang
      */
     @Test
-    void getComplaintEvidenceReturnsStoredOriginal() {
+    void getStoredEvidence() {
         // 관리자 전용으로 저장된 이미지 원본과 MIME 유형을 생성한다
         ComplaintEvidenceVO evidence = new ComplaintEvidenceVO();
         evidence.setOrigName("reported-profile.jpg");
@@ -174,7 +175,7 @@ class ComplaintServiceTests {
      * @author SeungHyeon.Kang
      */
     @Test
-    void getComplaintAutoActionCompleted() {
+    void getAutoActionCompleted() {
         // 자동 비공개 전환이 완료된 독후감 신고를 생성한다
         ComplaintVO complaint = createComplaint(Constant.CMPL_TARGET_BOOK_REPORT
                                                 , Constant.CMPL_STATUS_ACTIONED, LocalDateTime.now());
@@ -242,6 +243,33 @@ class ComplaintServiceTests {
         verify(complaintMapper).uptComplaint(1L, update, 1L);
     }
 
+    /** 관리자가 개별 신고를 조치 완료하면 해당 신고자의 미확인 결과를 생성한다. */
+    @Test
+    void completeComplaintResult() {
+        // 화면이 조회한 신고 수정 시각과 검토 중 신고를 준비한다
+        LocalDateTime updtDate = LocalDateTime.of(2026, 8, 24, 10, 0);
+        ComplaintVO complaint = createComplaint(
+                Constant.CMPL_TARGET_USER, Constant.CMPL_STATUS_REVIEWING, updtDate);
+        // 검토를 시작한 로그인 관리자가 같은 신고를 최종 처리하도록 담당자를 설정한다
+        complaint.setProcAdmn(1L);
+        // 상태 변경과 변경 뒤 상세 조회가 성공하도록 설정한다
+        when(complaintMapper.getComplaintForUpdate(1L)).thenReturn(complaint);
+        when(complaintMapper.uptComplaint(eq(1L), any(ComplaintUpdateVO.class), eq(1L))).thenReturn(1);
+        when(complaintMapper.getComplaintDtl(1L)).thenReturn(complaint);
+        when(complaintMapper.getRelatedComplaintList(
+                Constant.CMPL_TARGET_USER, 10L, TEST_TARGET_HASH, 1L)).thenReturn(List.of());
+
+        // 관리자가 조치 완료 상태와 처리 내용을 저장하도록 요청한다
+        ComplaintUpdateVO update = new ComplaintUpdateVO();
+        update.setCmplStat(Constant.CMPL_STATUS_ACTIONED);
+        update.setProcCntn("신고 내용을 확인하여 필요한 조치를 완료했습니다.");
+        update.setUpdtDate(updtDate);
+        complaintService.uptComplaint(1L, update, createAdminSession());
+
+        // 조치 완료된 개별 신고의 신고자 결과가 신고번호 기준으로 생성되는지 확인한다
+        verify(complaintMapper).setResultTarget(1L);
+    }
+
     /**
      * 사용자 신고 대상 번호가 기존 이용정지 서비스의 회원번호로 전달되는지 확인한다
      *
@@ -285,7 +313,7 @@ class ComplaintServiceTests {
      * @author SeungHyeon.Kang
      */
     @Test
-    void setContentComplaintTargetSusp() {
+    void setContentTargetSusp() {
         // 독후감 대상 번호 10을 가진 콘텐츠 신고를 생성한다
         ComplaintVO complaint = createComplaint("CMPL_BOOK_REPORT", Constant.CMPL_STATUS_REVIEWING
                                                 , LocalDateTime.now());
@@ -308,7 +336,7 @@ class ComplaintServiceTests {
      * @author SeungHyeon.Kang
      */
     @Test
-    void getContentComplaintTargetUser() {
+    void getContentTargetUser() {
         // 독후감 번호와 작성자 회원번호가 다른 콘텐츠 신고를 생성한다
         ComplaintVO complaint = createComplaint("CMPL_BOOK_REPORT", Constant.CMPL_STATUS_RECEIVED
                                                 , LocalDateTime.now());
@@ -365,6 +393,9 @@ class ComplaintServiceTests {
         deletionOrder.verify(complaintMapper).uptManualComplaints(
                 Constant.CMPL_TARGET_BOOK_REPORT, 10L,
                 "관리자 원본 수동 조치: 신고 대상 독후감을 완전 삭제. 관련 미처리 신고를 일괄 종결함. 기준 신고번호: 1", 1L);
+        deletionOrder.verify(complaintMapper).setManualResultTargets(
+                Constant.CMPL_TARGET_BOOK_REPORT, 10L,
+                "관리자 원본 수동 조치: 신고 대상 독후감을 완전 삭제. 관련 미처리 신고를 일괄 종결함. 기준 신고번호: 1", 1L);
         assertFalse(detail.isTargetContentExists());
     }
 
@@ -390,6 +421,9 @@ class ComplaintServiceTests {
         verify(complaintMapper).delTargetReply(10L, 77L);
         // 논리 삭제된 같은 댓글 번호의 모든 미처리 신고가 함께 종결되는지 확인한다
         verify(complaintMapper).uptManualComplaints(
+                Constant.CMPL_TARGET_REPLY, 10L,
+                "관리자 원본 수동 조치: 신고 대상 댓글을 삭제 상태로 변경. 관련 미처리 신고를 일괄 종결함. 기준 신고번호: 1", 1L);
+        verify(complaintMapper).setManualResultTargets(
                 Constant.CMPL_TARGET_REPLY, 10L,
                 "관리자 원본 수동 조치: 신고 대상 댓글을 삭제 상태로 변경. 관련 미처리 신고를 일괄 종결함. 기준 신고번호: 1", 1L);
     }
@@ -424,6 +458,9 @@ class ComplaintServiceTests {
         verify(complaintMapper).uptManualComplaints(
                 Constant.CMPL_TARGET_PROFILE_IMAGE, 10L,
                 "관리자 원본 수동 조치: 피신고자의 프로필 사진을 초기화. 관련 미처리 신고를 일괄 종결함. 기준 신고번호: 1", 1L);
+        verify(complaintMapper).setManualResultTargets(
+                Constant.CMPL_TARGET_PROFILE_IMAGE, 10L,
+                "관리자 원본 수동 조치: 피신고자의 프로필 사진을 초기화. 관련 미처리 신고를 일괄 종결함. 기준 신고번호: 1", 1L);
     }
 
     /** 배경사진 초기화가 프로필 사진과 분리된 신고 유형만 종결하는지 확인한다. */
@@ -450,6 +487,9 @@ class ComplaintServiceTests {
         // 배경사진 파일 정리와 배경사진 신고만의 종결을 확인한다
         verify(fileStorage).delFile("background/260822/background.jpg");
         verify(complaintMapper).uptManualComplaints(
+                Constant.CMPL_TARGET_BACKGROUND_IMAGE, 10L,
+                "관리자 원본 수동 조치: 피신고자의 배경사진을 초기화. 관련 미처리 신고를 일괄 종결함. 기준 신고번호: 1", 1L);
+        verify(complaintMapper).setManualResultTargets(
                 Constant.CMPL_TARGET_BACKGROUND_IMAGE, 10L,
                 "관리자 원본 수동 조치: 피신고자의 배경사진을 초기화. 관련 미처리 신고를 일괄 종결함. 기준 신고번호: 1", 1L);
     }

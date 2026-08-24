@@ -312,6 +312,57 @@
            AND CMPL_STAT IN (#{cmplReceived}, #{cmplReviewing})
     </update>
 
+    <!-- 관리자가 개별 조치 완료한 신고의 현재 신고자 미확인 결과를 한 번만 생성한다 -->
+    <insert id="setResultTarget">
+        <bind name="cmplActioned"
+              value="@org.sadari.admin.sadariadmin.common.constant.Constant@CMPL_STATUS_ACTIONED"/>
+        INSERT /* setResultTarget */
+          INTO TH_CMRSLT (
+               CMPL_NUMB
+             , USER_NUMB
+             , REGI_DATE
+        )
+        SELECT C.CMPL_NUMB
+             , C.USER_NUMB
+             , CURRENT_TIMESTAMP(6)
+          FROM TH_CMPLNT C
+         WHERE C.CMPL_NUMB = #{cmplNumb}
+           AND C.CMPL_STAT = #{cmplActioned}
+           AND C.USER_NUMB IS NOT NULL
+           AND NOT EXISTS (
+               SELECT 1
+                 FROM TH_CMRSLT R
+                WHERE R.CMPL_NUMB = C.CMPL_NUMB
+               )
+    </insert>
+
+    <!-- 관리자 수동 원본 조치로 종결된 동일 대상 신고의 현재 신고자별 미확인 결과를 생성한다 -->
+    <insert id="setManualResultTargets">
+        <bind name="cmplActioned"
+              value="@org.sadari.admin.sadariadmin.common.constant.Constant@CMPL_STATUS_ACTIONED"/>
+        INSERT /* setManualResultTargets */
+          INTO TH_CMRSLT (
+               CMPL_NUMB
+             , USER_NUMB
+             , REGI_DATE
+        )
+        SELECT C.CMPL_NUMB
+             , C.USER_NUMB
+             , CURRENT_TIMESTAMP(6)
+          FROM TH_CMPLNT C
+         WHERE C.TAGT_TYPE = #{tagtType}
+           AND C.TAGT_NUMB = #{tagtNumb}
+           AND C.CMPL_STAT = #{cmplActioned}
+           AND C.PROC_CNTN = #{procCntn}
+           AND C.PROC_ADMN = #{procAdmn}
+           AND C.USER_NUMB IS NOT NULL
+           AND NOT EXISTS (
+               SELECT 1
+                 FROM TH_CMRSLT R
+                WHERE R.CMPL_NUMB = C.CMPL_NUMB
+               )
+    </insert>
+
     <!-- 신고 당시 버전과 비교할 현재 자동 조치 대상 원문 또는 파일 정보를 조회한다 -->
     <select id="getAutoActionTargetDtl"
             resultType="org.sadari.admin.sadariadmin.complaint.vo.ComplaintTargetContentVO">

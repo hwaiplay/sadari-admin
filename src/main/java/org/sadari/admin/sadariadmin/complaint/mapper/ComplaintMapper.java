@@ -22,6 +22,7 @@ import java.util.List;
  * -----------------------------------------------------------
  * 2026-08-05        SeungHyeon.Kang    최초 생성
  * 2026-08-22        SeungHyeon.Kang    자동·수동 조치와 증거 원본 조회
+ * 2026-08-24        HanWon.Jang        신고 결과 확인 대상 연동
  */
 @Mapper
 public interface ComplaintMapper {
@@ -152,6 +153,28 @@ public interface ComplaintMapper {
      */
     int uptManualComplaints(@Param("tagtType") String tagtType, @Param("tagtNumb") Long tagtNumb
                            , @Param("procCntn") String procCntn, @Param("procAdmn") Long procAdmn);
+
+    /**
+     * 관리자가 개별 조치 완료한 신고의 신고자 미확인 결과를 생성한다
+     *
+     * @author HanWon.Jang
+     * @param cmplNumb 조치 완료된 신고 번호
+     * @return 생성된 신고 조치 결과 수
+     */
+    int setResultTarget(@Param("cmplNumb") Long cmplNumb);
+
+    /**
+     * 관리자 수동 원본 조치로 종결된 동일 대상 신고의 신고자별 미확인 결과를 생성한다
+     *
+     * @author HanWon.Jang
+     * @param tagtType 종결된 신고 대상 유형
+     * @param tagtNumb 종결된 신고 대상 번호
+     * @param procCntn 현재 수동 원본 조치 처리 내용
+     * @param procAdmn 현재 수동 원본 조치 관리자 번호
+     * @return 생성된 신고 조치 결과 수
+     */
+    int setManualResultTargets(@Param("tagtType") String tagtType, @Param("tagtNumb") Long tagtNumb
+                              , @Param("procCntn") String procCntn, @Param("procAdmn") Long procAdmn);
 
     /**
      * 신고 당시 버전과 비교할 현재 자동 조치 대상 원문 또는 파일 정보를 조회한다
