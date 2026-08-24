@@ -395,6 +395,14 @@ export function ComplaintDetailPage({
   const imageEvidenceLabel = IMAGE_EVIDENCE_LABELS[complaint.tagtType]
   // 자동 조치 진행과 실행 이력을 한 영역에서 표시할 상세 정보를 분리한다
   const autoAction = detail.autoAction
+  let processAdminName = complaint.procAdmnName ?? '-'
+  // 조치 완료 상태에 실제 관리자 없이 자동조치 이력이 있으면 시스템 처리 주체를 담당자로 표시한다
+  if (complaint.cmplStat === 'CMPL_ACTIONED' && complaint.procAdmn === null
+          && autoAction.actionHistories.length > 0) {
+    // "자동조치"
+    processAdminName = '자동조치'
+  }
+
   // 원본이 신고 당시 버전으로 실제 노출 중인 경우에만 다음 임계치 정보를 표시한다
   const isAutoActionPending = autoAction.progressStatus === 'PENDING'
   // 서버가 판정한 현재 자동조치 진행 상태를 관리자에게 명확한 문구로 표시한다
@@ -613,7 +621,7 @@ export function ComplaintDetailPage({
                 <th>처리 상태</th>
                 <td>{complaint.cmplStatName ?? complaint.cmplStat}</td>
                 <th>담당 관리자</th>
-                <td>{complaint.procAdmnName ?? '-'}</td>
+                <td>{processAdminName}</td>
                 <th>최종 처리일시</th>
                 <td>{formatDate(complaint.procDate) || '-'}</td>
               </tr>
