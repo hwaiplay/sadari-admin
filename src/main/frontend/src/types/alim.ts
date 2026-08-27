@@ -5,13 +5,12 @@ export type AlimTemp = {
   tempTitl: string
   alimTitl: string | null
   tempCont: string
-  linkUrlx: string
   useeYsno: string | null
   useeYsnoName?: string | null
-  regiAdmn: number | null
+  regiAdmn: string | null
   regiAdmnName?: string | null
   regiDate: string | null
-  updtAdmn: number | null
+  updtAdmn: string | null
   updtAdmnName?: string | null
   updtDate: string | null
 }
@@ -22,7 +21,6 @@ export type AlimTempForm = {
   tempTitl: string
   alimTitl: string
   tempCont: string
-  linkUrlx: string
   useeYsno: string
 }
 

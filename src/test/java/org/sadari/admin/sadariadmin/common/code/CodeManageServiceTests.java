@@ -20,13 +20,13 @@ import static org.mockito.Mockito.when;
 
 /**
  * fileName       : CodeManageServiceTests
- * author         : OpenAI.Codex
+ * author         : SeungHyeon.Kang
  * date           : 2026-08-05
  * description    : 세부코드 계층 무결성 검증 단위 테스트
  * ===========================================================
  * DATE              AUTHOR             NOTE
  * -----------------------------------------------------------
- * 2026-08-05        OpenAI.Codex       최초 생성
+ * 2026-08-05        SeungHyeon.Kang       최초 생성
  */
 @ExtendWith(MockitoExtension.class)
 class CodeManageServiceTests {
@@ -42,7 +42,7 @@ class CodeManageServiceTests {
     /**
      * 같은 공통코드에 존재하지 않는 상위 세부코드를 등록할 수 없는지 확인한다
      *
-     * @author OpenAI.Codex
+     * @author SeungHyeon.Kang
      */
     @Test
     void setCodeRejectsNoParent() {
@@ -65,7 +65,7 @@ class CodeManageServiceTests {
     /**
      * 현재 코드의 하위 세부코드를 새 부모로 지정해 순환 구조를 만들 수 없는지 확인한다
      *
-     * @author OpenAI.Codex
+     * @author SeungHyeon.Kang
      */
     @Test
     void uptCodeRejectsDescendant() {
@@ -90,7 +90,7 @@ class CodeManageServiceTests {
     /**
      * 하위 세부코드가 남아 있는 부모 세부코드를 삭제할 수 없는지 확인한다
      *
-     * @author OpenAI.Codex
+     * @author SeungHyeon.Kang
      */
     @Test
     void delCodeRejectsChildren() {
@@ -109,7 +109,7 @@ class CodeManageServiceTests {
     /**
      * 계층 검증 테스트에 사용할 세부코드를 생성한다
      *
-     * @author OpenAI.Codex
+     * @author SeungHyeon.Kang
      * @param comdCode 세부코드
      * @param upprCode 상위 세부코드
      * @return 필수 표시명이 설정된 세부코드
@@ -130,7 +130,7 @@ class CodeManageServiceTests {
     /**
      * 코드 변경 감사정보에 사용할 관리자 세션을 생성한다
      *
-     * @author OpenAI.Codex
+     * @author SeungHyeon.Kang
      * @return 관리자 번호가 설정된 세션
      */
     private AdminSessionVO createAdminSession() {

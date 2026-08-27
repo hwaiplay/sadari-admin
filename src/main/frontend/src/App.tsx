@@ -83,7 +83,7 @@ function App() {
   const [alimTemps, setAlimTemps] = useState<AlimTemp[]>([])
   const [alimPageData, setAlimPageData] = useState<PageData<AlimTemp>>(emptyPageData())
   const [alimTempDetail, setAlimTempDetail] = useState<AlimTemp | null>(null)
-  const [alimTempForm, setAlimTempForm] = useState<AlimTempForm>({ alimSitu: '', tempCode: '', tempTitl: '', alimTitl: '', tempCont: '', linkUrlx: '', useeYsno: DEFAULT_USEE_YSNO })
+  const [alimTempForm, setAlimTempForm] = useState<AlimTempForm>({ alimSitu: '', tempCode: '', tempTitl: '', alimTitl: '', tempCont: '', useeYsno: DEFAULT_USEE_YSNO })
   const [alimIcons, setAlimIcons] = useState<AlimIcon[]>([])
   const [alimIconPageData, setAlimIconPageData] = useState<PageData<AlimIcon>>(emptyPageData())
   const [alimIconDetail, setAlimIconDetail] = useState<AlimIcon | null>(null)
@@ -419,7 +419,7 @@ function App() {
     setError(null)
     const [situCodes] = await Promise.all([loadAlimSituCodeList(), loadUseeYsnoCodeList()])
     setAlimTempDetail(null)
-    setAlimTempForm({ alimSitu: situCodes[0]?.comdCode ?? '', tempCode: '', tempTitl: '', alimTitl: '', tempCont: '', linkUrlx: '', useeYsno: DEFAULT_USEE_YSNO })
+    setAlimTempForm({ alimSitu: situCodes[0]?.comdCode ?? '', tempCode: '', tempTitl: '', alimTitl: '', tempCont: '', useeYsno: DEFAULT_USEE_YSNO })
   }
 
   /**
@@ -433,7 +433,7 @@ function App() {
     setError(null)
     const [detail] = await Promise.all([getAlimTempDetail(alimSitu, tempCode), loadAlimSituCodeList(), loadUseeYsnoCodeList()])
     setAlimTempDetail(detail)
-    setAlimTempForm({ alimSitu: detail.alimSitu, tempCode: detail.tempCode, tempTitl: detail.tempTitl, alimTitl: detail.alimTitl ?? '', tempCont: detail.tempCont, linkUrlx: detail.linkUrlx, useeYsno: detail.useeYsno ?? DEFAULT_USEE_YSNO })
+    setAlimTempForm({ alimSitu: detail.alimSitu, tempCode: detail.tempCode, tempTitl: detail.tempTitl, alimTitl: detail.alimTitl ?? '', tempCont: detail.tempCont, useeYsno: detail.useeYsno ?? DEFAULT_USEE_YSNO })
   }
 
   /** 알림 아이콘 목록 화면을 조회한다. */
@@ -743,7 +743,7 @@ function App() {
   /**
    * 세부코드를 자식 목록의 상세 기준으로 선택한다
    *
-   * @author OpenAI.Codex
+   * @author SeungHyeon.Kang
    * @param commCode 세부코드가 속한 공통코드
    * @param comdCode 선택한 세부코드
    * @return 반환값이 없다
@@ -941,10 +941,10 @@ function App() {
    * @return
    */
   const validateAlimTempForm = () => {
-    const hasRequired = alimTempForm.alimSitu.trim() && alimTempForm.tempCode.trim() && alimTempForm.tempTitl.trim() && alimTempForm.tempCont.trim() && alimTempForm.linkUrlx.trim()
+    const hasRequired = alimTempForm.alimSitu.trim() && alimTempForm.tempCode.trim() && alimTempForm.tempTitl.trim() && alimTempForm.tempCont.trim()
     // 필수값이 하나라도 없으면 저장 요청을 보내지 않는다
     if (!hasRequired) {
-      setError('알림상황, 템플릿코드, 관리용 제목, 템플릿 내용과 이동 URL을 입력해 주세요.')
+      setError('알림상황, 템플릿코드, 관리용 제목과 템플릿 내용을 입력해 주세요.')
       return false
     }
     // 템플릿 코드는 영문 대문자와 밑줄만 허용한다

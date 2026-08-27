@@ -37,7 +37,7 @@ export const createSearchParams = (pageNumber: number, search: object): URLSearc
 /**
  * 관리 목록의 마지막 페이지와 적용 검색 조건을 저장한다
  *
- * @author OpenAI.Codex
+ * @author SeungHyeon.Kang
  * @param listPath 상태를 구분할 목록 경로
  * @param pageNumber 마지막으로 조회한 페이지 번호
  * @param search 마지막으로 적용한 검색 조건
@@ -55,7 +55,7 @@ export const setListPageSnapshot = <TSearch extends object>(
 /**
  * 관리 목록의 마지막 페이지와 적용 검색 조건을 조회한다
  *
- * @author OpenAI.Codex
+ * @author SeungHyeon.Kang
  * @param listPath 상태를 구분할 목록 경로
  * @param defaultSearch 저장된 상태가 없을 때 적용할 기본 검색 조건
  * @return 복원할 페이지 번호와 검색 조건

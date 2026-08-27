@@ -35,7 +35,6 @@
         , A.TEMP_TITL
         , A.ALIM_TITL
         , A.TEMP_CONT
-        , A.LINK_URLX
         , A.USEE_YSNO
         , FN_GET_CODE_NAME(#{commYsno}, A.USEE_YSNO, #{useeYsnoCode}) AS USEE_YSNO_NAME
         , A.REGI_ADMN
@@ -54,7 +53,6 @@
         , P.TEMP_TITL
         , P.ALIM_TITL
         , P.TEMP_CONT
-        , P.LINK_URLX
         , P.USEE_YSNO
         , P.USEE_YSNO_NAME
         , P.REGI_ADMN
@@ -77,7 +75,6 @@
                        , R.TEMP_TITL
                        , R.ALIM_TITL
                        , R.TEMP_CONT
-                       , R.LINK_URLX
                        , R.USEE_YSNO
                        , R.USEE_YSNO_NAME
                        , R.REGI_ADMN
@@ -140,7 +137,6 @@
                   , TEMP_TITL
                   , ALIM_TITL
                   , TEMP_CONT
-                  , LINK_URLX
                   , USEE_YSNO
                   , REGI_ADMN
                   , REGI_DATE
@@ -151,7 +147,6 @@
                   , #{tempTitl}
                   , #{alimTitl}
                   , #{tempCont}
-                  , #{linkUrlx}
                   , #{useeYsno}
                   , #{regiAdmn}
                   , CURRENT_TIMESTAMP
@@ -169,7 +164,6 @@
              , TEMP_TITL = #{alimTemp.tempTitl}
              , ALIM_TITL = #{alimTemp.alimTitl}
              , TEMP_CONT = #{alimTemp.tempCont}
-             , LINK_URLX = #{alimTemp.linkUrlx}
              , USEE_YSNO = #{alimTemp.useeYsno}
              , UPDT_ADMN = #{alimTemp.updtAdmn}
              , UPDT_DATE = CURRENT_TIMESTAMP

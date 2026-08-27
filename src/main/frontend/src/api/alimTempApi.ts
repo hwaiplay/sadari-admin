@@ -51,7 +51,6 @@ export const saveAlimTempApi = (form: AlimTempForm, detail: boolean, oldAlimSitu
     tempTitl: form.tempTitl.trim(),
     alimTitl: form.alimTitl.trim(),
     tempCont: form.tempCont.trim(),
-    linkUrlx: form.linkUrlx.trim(),
     useeYsno: form.useeYsno,
   }
 

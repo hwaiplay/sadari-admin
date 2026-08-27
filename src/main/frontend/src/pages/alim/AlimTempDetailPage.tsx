@@ -79,10 +79,8 @@ export function AlimTempDetailPage({ isNewPage, pageTitle, saving, alimTempForm,
                 <td><input value={alimTempForm.alimTitl} onChange={(event) => onChange('alimTitl', event.target.value)} /></td>
               </tr>
               <tr>
-                <th>이동 URL</th>
-                <td><input value={alimTempForm.linkUrlx} onChange={(event) => onChange('linkUrlx', event.target.value)} required /></td>
                 <th>사용여부</th>
-                <td>
+                <td colSpan={3}>
                   <select value={alimTempForm.useeYsno} onChange={(event) => onChange('useeYsno', event.target.value)}>
                     {useeYsnoCodes.map((code) => <option key={code.comdCode} value={code.comdCode}>{code.opt1Name ?? code.comdName}</option>)}
                   </select>

@@ -15,7 +15,7 @@ import org.sadari.admin.sadariadmin.common.util.MessageUtil;
  * 2026-07-30        SeungHyeon.Kang    현재 사용자 조회 오류 추가
  * 2026-07-30        SeungHyeon.Kang    회원 이용 정지 관리 오류 추가
  * 2026-08-05        SeungHyeon.Kang    신고 조회와 처리 오류 추가
- * 2026-08-05        OpenAI.Codex       세부코드 계층 검증 오류 추가
+ * 2026-08-05        SeungHyeon.Kang       세부코드 계층 검증 오류 추가
  * 2026-08-10        SeungHyeon.Kang    사용자 메뉴 계층 검증 오류 추가
  * 2026-08-12        SeungHyeon.Kang    알림 아이콘 검증 오류 추가
  */

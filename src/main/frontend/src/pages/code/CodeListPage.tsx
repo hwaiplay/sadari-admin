@@ -101,7 +101,7 @@ export function CodeListPage({
   /**
    * 공통코드의 최상위 세부코드를 펼치거나 접는다
    *
-   * @author OpenAI.Codex
+   * @author SeungHyeon.Kang
    * @param event 공통코드 행의 펼침 버튼 클릭 이벤트
    * @param master 펼침 상태를 변경할 공통코드
    * @return 비동기 처리 완료 Promise
@@ -171,7 +171,7 @@ export function CodeListPage({
   /**
    * 세부코드의 직계 자식 행을 펼치거나 접는다
    *
-   * @author OpenAI.Codex
+   * @author SeungHyeon.Kang
    * @param event 세부코드 행의 펼침 버튼 클릭 이벤트
    * @param detail 펼침 상태를 변경할 세부코드
    * @return 반환값이 없다
@@ -322,7 +322,7 @@ export function CodeListPage({
 /**
  * 세부코드의 공통코드와 코드값을 펼침 상태 식별자로 결합한다
  *
- * @author OpenAI.Codex
+ * @author SeungHyeon.Kang
  * @param detail 식별할 세부코드
  * @return 공통코드 안에서 유일한 세부코드 식별자
  */
@@ -334,7 +334,7 @@ function getDetailKey(detail: Code): string {
 /**
  * 세부코드 목록에서 현재 펼쳐진 재귀 분기만 깊이와 함께 평탄화한다
  *
- * @author OpenAI.Codex
+ * @author SeungHyeon.Kang
  * @param details 공통코드의 전체 세부코드
  * @param expandedDetails 펼쳐진 세부코드 식별자 집합
  * @return 화면에 표시할 깊이순 세부코드 행
@@ -361,7 +361,7 @@ function getVisibleDetailRows(details: Code[], expandedDetails: Set<string>): Vi
   /**
    * 한 부모의 자식들을 깊이 우선으로 방문해 펼쳐진 행을 추가한다
    *
-   * @author OpenAI.Codex
+   * @author SeungHyeon.Kang
    * @param parentCode 자식을 조회할 부모 세부코드
    * @param depth 화면에서 적용할 계층 깊이
    * @return 반환값이 없다
@@ -399,7 +399,7 @@ function getVisibleDetailRows(details: Code[], expandedDetails: Set<string>): Vi
 /**
  * 같은 부모에 속한 세부코드를 정렬 순서와 코드값으로 비교한다
  *
- * @author OpenAI.Codex
+ * @author SeungHyeon.Kang
  * @param left 왼쪽 세부코드
  * @param right 오른쪽 세부코드
  * @return 정렬 비교 결과
@@ -420,7 +420,7 @@ function compareDetailCodes(left: Code, right: Code): number {
 /**
  * 코드 계층의 펼침 상태를 화살표 아이콘으로 표시한다
  *
- * @author OpenAI.Codex
+ * @author SeungHyeon.Kang
  * @param expanded 현재 계층이 펼쳐졌는지 여부
  * @return 펼침 또는 접힘 화살표 아이콘
  */

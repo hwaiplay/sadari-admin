@@ -11,7 +11,7 @@ import lombok.Data;
  * DATE              AUTHOR             NOTE
  * -----------------------------------------------------------
  * 2026-07-31        SeungHyeon.Kang    최초 생성
- * 2026-08-06        OpenAI.Codex       세부코드 검색 범위 추가
+ * 2026-08-06        SeungHyeon.Kang       세부코드 검색 범위 추가
  */
 @Data
 public class CodeMasterSearchVO {

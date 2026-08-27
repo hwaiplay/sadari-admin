@@ -15,6 +15,7 @@ import java.time.LocalDateTime;
  * 2026-07-24        SeungHyeon.Kang    최초 생성
  * 2026-08-12        SeungHyeon.Kang    선택한 알림 아이콘 정보 추가
  * 2026-08-12        SeungHyeon.Kang    알림 상황 기준 아이콘 조회 전환
+ * 2026-08-27        SeungHyeon.Kang       감사 관리자 문자열 계약 반영
  */
 @Data
 public class AlimTempVO {
@@ -37,9 +38,6 @@ public class AlimTempVO {
     /** 템플릿 내용 */
     private String tempCont;
 
-    /** 이동 URL */
-    private String linkUrlx;
-
     /** 사용 여부 */
     private String useeYsno;
 
@@ -47,7 +45,7 @@ public class AlimTempVO {
     private String useeYsnoName;
 
     /** 등록 관리자 번호 */
-    private Long regiAdmn;
+    private String regiAdmn;
 
     /** 등록 관리자명 */
     private String regiAdmnName;
@@ -56,7 +54,7 @@ public class AlimTempVO {
     private LocalDateTime regiDate;
 
     /** 수정 관리자 번호 */
-    private Long updtAdmn;
+    private String updtAdmn;
 
     /** 수정 관리자명 */
     private String updtAdmnName;

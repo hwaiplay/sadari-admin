@@ -28,6 +28,7 @@ import java.util.List;
  * 2026-07-24        SeungHyeon.Kang    최초 생성
  * 2026-07-31        SeungHyeon.Kang    알림 템플릿 목록 검색 조건 추가
  * 2026-08-12        SeungHyeon.Kang    알림 아이콘 선택값 검증 추가
+ * 2026-08-27        SeungHyeon.Kang       감사 관리자 문자열 계약 반영
  */
 @Service
 @Transactional(readOnly = true)
@@ -166,8 +167,7 @@ public class AlimTempServiceImpl implements AlimTempService {
                 || StringUtil.isEmpty(alimTemp.getAlimSitu())
                 || StringUtil.isEmpty(alimTemp.getTempCode())
                 || StringUtil.isEmpty(alimTemp.getTempTitl())
-                || StringUtil.isEmpty(alimTemp.getTempCont())
-                || StringUtil.isEmpty(alimTemp.getLinkUrlx())) {
+                || StringUtil.isEmpty(alimTemp.getTempCont())) {
             throw new BusinessException(HttpStatus.BAD_REQUEST, ResultEnum.COMMON_REQUIRED_VALUE);
         }
         // 템플릿 코드는 영문 대문자와 밑줄만 허용한다
@@ -202,8 +202,13 @@ public class AlimTempServiceImpl implements AlimTempService {
         if (StringUtil.isEmpty(alimTemp.getUseeYsno())) {
             alimTemp.setUseeYsno(Constant.YES);
         }
-        alimTemp.setRegiAdmn(admin.getAdmnNumb());
-        alimTemp.setUpdtAdmn(admin.getAdmnNumb());
+
+        // 문자열 감사 컬럼에 로그인 관리자 번호를 저장할 수 있도록 변환한다
+        String adminNumb = String.valueOf(admin.getAdmnNumb());
+        // 알림 템플릿 등록 관리자 식별값을 설정한다
+        alimTemp.setRegiAdmn(adminNumb);
+        // 알림 템플릿 수정 관리자 식별값을 설정한다
+        alimTemp.setUpdtAdmn(adminNumb);
     }
 
     /**

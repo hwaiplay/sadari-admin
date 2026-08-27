@@ -27,7 +27,7 @@ import java.util.List;
  * -----------------------------------------------------------
  * 2026-07-08        SeungHyeon.Kang    최초 생성
  * 2026-07-31        SeungHyeon.Kang    공통코드 목록 검색 조건 추가
- * 2026-08-05        OpenAI.Codex       세부코드 상위 관계와 순환 검증 추가
+ * 2026-08-05        SeungHyeon.Kang       세부코드 상위 관계와 순환 검증 추가
  */
 @Service
 @Transactional(readOnly = true)
@@ -259,7 +259,7 @@ public class CodeManageService {
     /**
      * 화면에서 비어 있게 전달한 상위 세부코드를 최상위 관계로 정규화한다
      *
-     * @author OpenAI.Codex
+     * @author SeungHyeon.Kang
      * @param upprCode 정규화할 상위 세부코드
      * @return 공백을 제거한 상위 세부코드 또는 최상위를 나타내는 null
      */
@@ -277,7 +277,7 @@ public class CodeManageService {
     /**
      * 세부코드의 부모가 같은 공통코드에 존재하고 순환 관계를 만들지 않는지 검증한다
      *
-     * @author OpenAI.Codex
+     * @author SeungHyeon.Kang
      * @param commCode 세부코드가 속한 공통코드
      * @param comdCode 저장할 세부코드
      * @param upprCode 지정한 상위 세부코드
