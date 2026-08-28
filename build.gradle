@@ -34,6 +34,7 @@ dependencies {
     implementation platform("software.amazon.awssdk:bom:${awsSdkVersion}")
     implementation 'software.amazon.awssdk:s3'
     implementation 'org.jsoup:jsoup:1.22.2'
+    implementation 'net.scenariopla.imageio:webp-imageio:0.1.8'
     runtimeOnly 'com.mysql:mysql-connector-j'
     compileOnly 'org.projectlombok:lombok'
     annotationProcessor 'org.projectlombok:lombok'

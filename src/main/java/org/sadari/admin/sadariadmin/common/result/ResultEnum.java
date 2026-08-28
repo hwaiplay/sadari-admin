@@ -139,6 +139,12 @@ public enum ResultEnum {
     /** 서비스 정보 입력 형식 또는 카테고리 중복 오류 */
     SERVICE_INFO_INVALID(2009, "service-info.invalid"),
 
+    /** 웰컴페이지 없음 */
+    WELCOME_PAGE_NOT_FOUND(2004, "welcome-page.not-found"),
+
+    /** 웰컴페이지 입력 형식 오류 */
+    WELCOME_PAGE_INVALID(2009, "welcome-page.invalid"),
+
     /** 현재 사용자 없음 */
     CURRENT_USER_NOT_FOUND(2004, "current-user.not-found"),
 

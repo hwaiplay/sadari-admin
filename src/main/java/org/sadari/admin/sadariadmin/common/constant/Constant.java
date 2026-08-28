@@ -321,6 +321,12 @@ public final class Constant {
     /** 서비스 정보 관리 API URL 접두어 */
     public static final String API_SERVICE_INFO_PREFIX = "/api/service-info";
 
+    /** 웰컴페이지 관리 API URL 접두어 */
+    public static final String API_WELCOME_PAGE_PREFIX = "/api/welcome-pages";
+
+    /** 웰컴페이지 관리 API URL 패턴 */
+    public static final String API_WELCOME_PAGE_PATTERN = "/api/welcome-pages/**";
+
     /** 권한그룹 관리 API URL 접두어 */
     public static final String API_AUTH_GROUP_PREFIX = "/api/auth-groups";
 

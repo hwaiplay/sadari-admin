@@ -34,6 +34,7 @@ import { InquiryListPage } from './pages/inquiry/InquiryListPage'
 import { InquiryDetailPage } from './pages/inquiry/InquiryDetailPage'
 import { NoticeManagePage } from './pages/notice/NoticeManagePage'
 import { ServiceInfoManagePage } from './pages/serviceInfo/ServiceInfoManagePage'
+import { WelcomePageManagePage } from './pages/welcomePage/WelcomePageManagePage'
 import { UserStatisticsPage } from './pages/statistics/UserStatisticsPage'
 import type { AdminSession } from './types/admin'
 import type { AlimIcon, AlimIconSearch, AlimTemp, AlimTempForm, AlimTempSearch } from './types/alim'
@@ -43,6 +44,7 @@ import type { PageData } from './types/common'
 import { emptyDetailForm, emptyMenuForm, getNextSortOrdr, toDetailCodeForm, toMenuForm } from './utils/forms'
 import { getListPageSnapshot, setListPageSnapshot } from './utils/search'
 import { DELETED_SUSPENSION_PATH, INQUIRY_DETAIL_PREFIX, INQUIRY_LIST_PATH } from './constants/routes'
+import { WELCOME_PAGE_DETAIL_PREFIX, WELCOME_PAGE_LIST_PATH, WELCOME_PAGE_NEW_PATH } from './constants/routes'
 
 const emptyPageData = <T,>(): PageData<T> => ({ items: [], totalCount: 0, pageNumber: 1, pageSize: 20, totalPages: 0 })
 
@@ -186,6 +188,9 @@ function App() {
   const isServiceInfoPage = currentPath === SERVICE_INFO_LIST_PATH
     || currentPath === SERVICE_INFO_NEW_PATH
     || currentPath.startsWith(`${SERVICE_INFO_DETAIL_PREFIX}/`)
+  const isWelcomePage = currentPath === WELCOME_PAGE_LIST_PATH
+    || currentPath === WELCOME_PAGE_NEW_PATH
+    || currentPath.startsWith(`${WELCOME_PAGE_DETAIL_PREFIX}/`)
 
   const activeMenuPath = useMemo(() => {
     if (currentPath === MENU_NEW_PATH || currentPath.startsWith(`${MENU_NEW_PATH}/`) || currentPath.startsWith(MENU_DETAIL_PREFIX)) return MENU_LIST_PATH
@@ -202,6 +207,7 @@ function App() {
     if (currentPath.startsWith(INQUIRY_DETAIL_PREFIX)) return INQUIRY_LIST_PATH
     if (currentPath === NOTICE_NEW_PATH || currentPath.startsWith(NOTICE_DETAIL_PREFIX)) return NOTICE_LIST_PATH
     if (currentPath === SERVICE_INFO_NEW_PATH || currentPath.startsWith(SERVICE_INFO_DETAIL_PREFIX)) return SERVICE_INFO_LIST_PATH
+    if (currentPath === WELCOME_PAGE_NEW_PATH || currentPath.startsWith(WELCOME_PAGE_DETAIL_PREFIX)) return WELCOME_PAGE_LIST_PATH
     return currentPath
   }, [currentPath])
 
@@ -1098,6 +1104,7 @@ function App() {
       {isPopupContentPage && <PopupContentManagePage currentPath={currentPath} onMovePath={movePath} onError={setError} />}
       {isNoticePage && <NoticeManagePage currentPath={currentPath} onMovePath={movePath} onError={setError} />}
       {isServiceInfoPage && <ServiceInfoManagePage currentPath={currentPath} onMovePath={movePath} onError={setError} />}
+      {isWelcomePage && <WelcomePageManagePage currentPath={currentPath} onMovePath={movePath} onError={setError} />}
       {isCodeListPage && (
         <CodeListPage
           codeMasters={codeMasters}

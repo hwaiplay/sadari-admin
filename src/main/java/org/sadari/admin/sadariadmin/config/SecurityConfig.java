@@ -70,7 +70,8 @@ public class SecurityConfig {
                                        , Constant.API_ALIM_ICON_PATTERN
                                        , Constant.API_POPUP_CONTENT_PATTERN, Constant.API_AUTH_GROUP_PATTERN
                                        , Constant.API_ADMIN_AUTHS_PATTERN, Constant.API_CURRENT_USERS_PATTERN
-                                       , Constant.API_COMPLAINTS_PATTERN, Constant.API_UPLOADS_PATTERN).authenticated()
+                                       , Constant.API_COMPLAINTS_PATTERN, Constant.API_UPLOADS_PATTERN
+                                       , Constant.API_WELCOME_PAGE_PATTERN).authenticated()
                         .requestMatchers(Constant.API_EMPLOYEES_PATTERN).authenticated()
                         .anyRequest().permitAll()
                 )
