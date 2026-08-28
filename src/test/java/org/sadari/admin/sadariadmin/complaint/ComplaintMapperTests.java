@@ -26,6 +26,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
  * -----------------------------------------------------------
  * 2026-08-22        SeungHyeon.Kang    신고 조회와 자동·수동 조치 SQL 검증
  * 2026-08-24        HanWon.Jang        목록 자동조치 담당자 판정 SQL 검증
+ * 2026-08-28        OpenAI.Codex       댓글 대상 조회와 독후감 댓글 삭제 SQL 검증
  */
 class ComplaintMapperTests {
 
@@ -168,6 +169,70 @@ class ComplaintMapperTests {
         assertTrue(sql.contains("U.BGIM_NUMB"));
         assertEquals(Constant.CMPL_TARGET_BACKGROUND_IMAGE,
                      boundSql.getAdditionalParameter("backgroundImage"));
+    }
+
+    /**
+     * 댓글 신고의 현재 원문이 부모 콘텐츠 종류와 무관하게 댓글 번호로 조회되는지 확인한다
+     *
+     * @author OpenAI.Codex
+     * @throws IOException Mapper XML을 읽을 수 없을 때 발생
+     */
+    @Test
+    void getAutoActionTargetReply() throws IOException {
+        // 프로필·배경사진·독후감 댓글이 같은 조회 경로를 사용하도록 댓글 번호 조건을 준비한다
+        java.util.Map<String, Object> parameters = java.util.Map.of(
+                "tagtType", Constant.CMPL_TARGET_REPLY,
+                "tagtNumb", 10L,
+                "userNumb", 20L
+        );
+        // 댓글 신고 상세에서 실행될 현재 원문 조회 SQL을 생성한다
+        BoundSql boundSql = createConfiguration().getMappedStatement(
+                MAPPER_NAMESPACE + "getAutoActionTargetDtl").getBoundSql(parameters);
+        // 공백 차이와 무관하게 댓글 조회 조건을 확인하도록 SQL을 정규화한다
+        String sql = boundSql.getSql().replaceAll("\\s+", " ").trim();
+
+        // 부모 콘텐츠 종류와 무관하게 신고된 댓글 번호와 작성자로 현재 댓글을 조회하는지 확인한다
+        assertTrue(sql.contains("FROM TB_REPLXX R WHERE ? = ? AND R.REPL_NUMB = ? AND R.USER_NUMB = ?"));
+        // 실제 댓글 테이블에 존재하지 않는 독후감 번호 컬럼을 참조하지 않는지 확인한다
+        assertFalse(sql.contains("R.REPT_NUMB"));
+        // 댓글 신고 유형 바인딩이 공통 상수를 사용하는지 확인한다
+        assertEquals(Constant.CMPL_TARGET_REPLY, boundSql.getAdditionalParameter("reply"));
+    }
+
+    /**
+     * 독후감 삭제 시 연결된 댓글을 공용 대상 유형과 번호로 조회하는지 확인한다
+     *
+     * @author OpenAI.Codex
+     * @throws IOException Mapper XML을 읽을 수 없을 때 발생
+     */
+    @Test
+    void delReportRepliesByTarget() throws IOException {
+        // 독후감 소유자 검증과 연결 댓글 삭제에 사용할 파라미터를 준비한다
+        java.util.Map<String, Object> parameters = java.util.Map.of("reptNumb", 10L, "userNumb", 20L);
+        // 댓글 좋아요 삭제 SQL을 생성한다
+        BoundSql likeBoundSql = createConfiguration().getMappedStatement(
+                MAPPER_NAMESPACE + "delTargetReportReplyLikes").getBoundSql(parameters);
+        // 대댓글 삭제 SQL을 생성한다
+        BoundSql childBoundSql = createConfiguration().getMappedStatement(
+                MAPPER_NAMESPACE + "delTagtReportChildReply").getBoundSql(parameters);
+        // 부모 댓글 삭제 SQL을 생성한다
+        BoundSql replyBoundSql = createConfiguration().getMappedStatement(
+                MAPPER_NAMESPACE + "delTargetReportReplies").getBoundSql(parameters);
+        // 각 삭제 SQL의 공백을 정규화한다
+        String likeSql = likeBoundSql.getSql().replaceAll("\\s+", " ").trim();
+        // 대댓글 삭제 SQL의 공백을 정규화한다
+        String childSql = childBoundSql.getSql().replaceAll("\\s+", " ").trim();
+        // 부모 댓글 삭제 SQL의 공백을 정규화한다
+        String replySql = replyBoundSql.getSql().replaceAll("\\s+", " ").trim();
+
+        // 댓글 좋아요 삭제가 독후감 대상 유형과 번호로 범위를 제한하는지 확인한다
+        assertTrue(likeSql.contains("R.TAGT_TYPE = ? AND R.TAGT_NUMB = ?"));
+        // 대댓글 삭제가 독후감 대상 유형과 번호로 범위를 제한하는지 확인한다
+        assertTrue(childSql.contains("C.TAGT_TYPE = ? AND C.TAGT_NUMB = ?"));
+        // 부모 댓글 삭제가 독후감 대상 유형과 번호로 범위를 제한하는지 확인한다
+        assertTrue(replySql.contains("R.TAGT_TYPE = ? AND R.TAGT_NUMB = ?"));
+        // 독후감 댓글의 공용 대상 유형 바인딩이 공통 상수를 사용하는지 확인한다
+        assertEquals(Constant.LIKE_TARGET_REPORT, replyBoundSql.getAdditionalParameter("reportTarget"));
     }
 
     /**
