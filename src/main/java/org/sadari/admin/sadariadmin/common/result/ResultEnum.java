@@ -18,6 +18,7 @@ import org.sadari.admin.sadariadmin.common.util.MessageUtil;
  * 2026-08-05        SeungHyeon.Kang       세부코드 계층 검증 오류 추가
  * 2026-08-10        SeungHyeon.Kang    사용자 메뉴 계층 검증 오류 추가
  * 2026-08-12        SeungHyeon.Kang    알림 아이콘 검증 오류 추가
+ * 2026-09-04        HanWon.Jang        독서 모임 조회와 상태 조치 오류 추가
  */
 @Getter
 public enum ResultEnum {
@@ -186,6 +187,15 @@ public enum ResultEnum {
 
     /** 신고 대상 조치 유형 오류 */
     COMPLAINT_TARGET_ACTION_INVALID(2009, "complaint.target-action.invalid"),
+
+    /** 독서 모임 없음 */
+    READING_CLUB_NOT_FOUND(2004, "reading-club.not-found"),
+
+    /** 독서 모임 조치 입력 오류 */
+    READING_CLUB_ACTION_INVALID(2009, "reading-club.action.invalid"),
+
+    /** 독서 모임 조치 상태 충돌 */
+    READING_CLUB_ACTION_CONFLICT(2009, "reading-club.action.conflict"),
 
     /** 권한그룹 중복 */
     AUTH_GROUP_DUPLICATE(2009, "auth-group.duplicate"),

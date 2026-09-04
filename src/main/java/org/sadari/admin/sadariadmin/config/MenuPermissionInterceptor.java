@@ -35,6 +35,7 @@ import java.util.Map;
  * 2026-08-05        SeungHyeon.Kang    신고 관리 권한 연결
  * 2026-08-12        SeungHyeon.Kang    알림 아이콘 관리 권한 연결
  * 2026-08-13        SeungHyeon.Kang    사용자 통계 조회 권한 연결
+ * 2026-09-04        HanWon.Jang        독서 모임 관리 권한 연결
  */
 @Component
 public class MenuPermissionInterceptor implements HandlerInterceptor {
@@ -54,6 +55,7 @@ public class MenuPermissionInterceptor implements HandlerInterceptor {
         MENU_URL_BY_API.put(Constant.API_CURRENT_USERS_PREFIX, "/sadari/adm/user/list");
         MENU_URL_BY_API.put(Constant.API_USER_STATISTICS_PREFIX, "/sadari/adm/statistics");
         MENU_URL_BY_API.put(Constant.API_COMPLAINTS_PREFIX, "/sadari/adm/complaint/list");
+        MENU_URL_BY_API.put(Constant.API_READING_CLUBS_PREFIX, "/sadari/adm/reading-club/list");
         MENU_URL_BY_API.put(Constant.API_INQUIRIES_PREFIX, "/sadari/adm/inquiry");
         MENU_URL_BY_API.put(Constant.API_WELCOME_PAGE_PREFIX, "/sadari/adm/welcomePage");
         MENU_URL_BY_API.put(Constant.API_MENUS_PREFIX, "/sadari/adm/menu/list");

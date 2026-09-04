@@ -22,6 +22,7 @@ package org.sadari.admin.sadariadmin.common.constant;
  * 2026-08-13        SeungHyeon.Kang    사용자 통계 API 경로 추가
  * 2026-08-13        SeungHyeon.Kang    사용자 이탈 추세 처리 유형 추가
  * 2026-08-22        SeungHyeon.Kang    신고 자동 조치 조회 상태 추가
+ * 2026-09-04        HanWon.Jang        독서 모임 관리 API 경로 추가
  */
 public final class Constant {
 
@@ -353,6 +354,12 @@ public final class Constant {
 
     /** 신고 관리 API URL 패턴 */
     public static final String API_COMPLAINTS_PATTERN = "/api/complaints/**";
+
+    /** 독서 모임 관리 API URL 접두어 */
+    public static final String API_READING_CLUBS_PREFIX = "/api/reading-clubs";
+
+    /** 독서 모임 관리 API URL 패턴 */
+    public static final String API_READING_CLUBS_PATTERN = "/api/reading-clubs/**";
 
     /** 고객문의 관리 API URL 접두어 */
     public static final String API_INQUIRIES_PREFIX = "/api/inquiries";

@@ -1,0 +1,283 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "https://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="org.sadari.admin.sadariadmin.readingclub.mapper.ReadingClubMapper">
+
+    <sql id="clubColumns">
+        CLUB.CLUB_NUMB
+      , CLUB.OWNR_NUMB
+      , OWNER.USER_NICK AS OWNR_NICK
+      , CLUB.CLUB_NAME
+      , CLUB.CLUB_CNTN
+      , CLUB.CLUB_VISB
+      , FN_GET_CODE_NAME('CLUB_VISB', CLUB.CLUB_VISB, NULL) AS CLUB_VISB_NAME
+      , CLUB.JOIN_TYPE
+      , FN_GET_CODE_NAME('CLUB_JOIN', CLUB.JOIN_TYPE, NULL) AS JOIN_TYPE_NAME
+      , CLUB.CLUB_STAT
+      , FN_GET_CODE_NAME('CLUB_STAT', CLUB.CLUB_STAT, NULL) AS CLUB_STAT_NAME
+      , CLUB.RCRT_YSNO
+      , CLUB.MAXX_MEMB
+      , COALESCE(SEAT.MEMBER_CNT, 0) AS MEMBER_CNT
+      , COALESCE(SEAT.INVITED_CNT, 0) AS INVITED_CNT
+      , CATE.CATEGORY_NAMES
+      , CLUB.REGI_DATE
+      , CLUB.UPDT_DATE
+      , CLUB.CLOS_DATE
+    </sql>
+
+    <sql id="clubJoins">
+        LEFT JOIN TM_USERXM OWNER
+          ON OWNER.USER_NUMB = CLUB.OWNR_NUMB
+        LEFT JOIN (  SELECT MEMBER.CLUB_NUMB
+                          , SUM(CASE WHEN MEMBER.MEMB_STAT = 'ACTIVE' THEN 1 ELSE 0 END) AS MEMBER_CNT
+                          , SUM(CASE WHEN MEMBER.MEMB_STAT = 'INVITED'
+                                          AND MEMBER.EXPR_DATE <![CDATA[>]]> CURRENT_TIMESTAMP(6) THEN 1 ELSE 0 END) AS INVITED_CNT
+                       FROM TB_CLMEMX MEMBER
+                   GROUP BY MEMBER.CLUB_NUMB
+                  ) SEAT
+          ON SEAT.CLUB_NUMB = CLUB.CLUB_NUMB
+        LEFT JOIN (  SELECT CLUB_CATE.CLUB_NUMB
+                          , GROUP_CONCAT(FN_GET_CODE_NAME('CATE_CODE', CLUB_CATE.INTR_CODE, NULL)
+                                         ORDER BY CLUB_CATE.SORT_ORDR SEPARATOR ', ') AS CATEGORY_NAMES
+                       FROM TB_CLCATE CLUB_CATE
+                   GROUP BY CLUB_CATE.CLUB_NUMB
+                  ) CATE
+          ON CATE.CLUB_NUMB = CLUB.CLUB_NUMB
+    </sql>
+
+    <sql id="clubSearchWhere">
+        <where>
+            <if test="keyword != null and keyword != ''">
+                AND (CAST(CLUB.CLUB_NUMB AS CHAR) LIKE CONCAT('%', #{keyword}, '%')
+                     OR CLUB.CLUB_NAME LIKE CONCAT('%', #{keyword}, '%')
+                     OR OWNER.USER_NICK LIKE CONCAT('%', #{keyword}, '%'))
+            </if>
+            <if test="clubStat != null and clubStat != ''">
+                AND CLUB.CLUB_STAT = #{clubStat}
+            </if>
+            <if test="clubVisb != null and clubVisb != ''">
+                AND CLUB.CLUB_VISB = #{clubVisb}
+            </if>
+            <if test="joinType != null and joinType != ''">
+                AND CLUB.JOIN_TYPE = #{joinType}
+            </if>
+            <if test="rcrtYsno != null and rcrtYsno != ''">
+                AND CLUB.RCRT_YSNO = #{rcrtYsno}
+            </if>
+            <if test="regiDateFrom != null">
+                AND CLUB.REGI_DATE <![CDATA[>=]]> #{regiDateFrom}
+            </if>
+            <if test="regiDateTo != null">
+                AND CLUB.REGI_DATE <![CDATA[<]]> DATE_ADD(#{regiDateTo}, INTERVAL 1 DAY)
+            </if>
+        </where>
+    </sql>
+
+    <select id="getClubList" resultType="org.sadari.admin.sadariadmin.readingclub.vo.ReadingClubVO">
+        SELECT /* getClubList */
+               PAGE.*
+          FROM (  SELECT ROW_NUMBER() OVER (ORDER BY CLUB.REGI_DATE DESC, CLUB.CLUB_NUMB DESC) AS ROW_NUMB
+                       , <include refid="clubColumns" />
+                    FROM TM_CLUBXM CLUB
+                         <include refid="clubJoins" />
+                         <include refid="clubSearchWhere" />
+               ) PAGE
+         WHERE PAGE.ROW_NUMB BETWEEN #{startRow} AND #{endRow}
+      ORDER BY PAGE.ROW_NUMB
+    </select>
+
+    <select id="getClubCnt" resultType="int">
+        SELECT /* getClubCnt */
+               COUNT(*)
+          FROM TM_CLUBXM CLUB
+               <include refid="clubJoins" />
+               <include refid="clubSearchWhere" />
+    </select>
+
+    <select id="getClubDtl" resultType="org.sadari.admin.sadariadmin.readingclub.vo.ReadingClubVO">
+        SELECT /* getClubDtl */
+               <include refid="clubColumns" />
+          FROM TM_CLUBXM CLUB
+               <include refid="clubJoins" />
+         WHERE CLUB.CLUB_NUMB = #{clubNumb}
+    </select>
+
+    <select id="getClubForUpdate" resultType="org.sadari.admin.sadariadmin.readingclub.vo.ReadingClubVO">
+        SELECT /* getClubForUpdate */
+               CLUB.CLUB_NUMB
+             , CLUB.CLUB_STAT
+             , CLUB.RCRT_YSNO
+          FROM TM_CLUBXM CLUB
+         WHERE CLUB.CLUB_NUMB = #{clubNumb}
+           FOR UPDATE
+    </select>
+
+    <sql id="actionColumns">
+        ACTION.CLUB_NUMB
+      , ACTION.HIST_NUMB
+      , ACTION.ADMN_NUMB
+      , ADMINX.ADMN_NAME
+      , ACTION.ACTN_TYPE
+      , FN_GET_CODE_NAME('CLAD_ACTN', ACTION.ACTN_TYPE, NULL) AS ACTN_TYPE_NAME
+      , ACTION.BEFR_STAT
+      , FN_GET_CODE_NAME('CLUB_STAT', ACTION.BEFR_STAT, NULL) AS BEFR_STAT_NAME
+      , ACTION.AFTR_STAT
+      , FN_GET_CODE_NAME('CLUB_STAT', ACTION.AFTR_STAT, NULL) AS AFTR_STAT_NAME
+      , ACTION.ACTN_RSON
+      , ACTION.REGI_DATE
+    </sql>
+
+    <sql id="actionJoins">
+        JOIN TM_ADMINX ADMINX
+          ON ADMINX.ADMN_NUMB = ACTION.ADMN_NUMB
+    </sql>
+
+    <select id="getLatestAction" resultType="org.sadari.admin.sadariadmin.readingclub.vo.ReadingClubActionVO">
+        SELECT /* getLatestAction */
+               ACTION.CLUB_NUMB
+             , ACTION.HIST_NUMB
+             , ACTION.ACTN_TYPE
+             , ACTION.BEFR_STAT
+             , ACTION.AFTR_STAT
+          FROM TH_CLADMN ACTION
+         WHERE ACTION.CLUB_NUMB = #{clubNumb}
+      ORDER BY ACTION.HIST_NUMB DESC
+         LIMIT 1
+    </select>
+
+    <select id="getActionList" resultType="org.sadari.admin.sadariadmin.readingclub.vo.ReadingClubActionVO">
+        SELECT /* getActionList */
+               PAGE.*
+          FROM (  SELECT ROW_NUMBER() OVER (ORDER BY ACTION.HIST_NUMB DESC) AS ROW_NUMB
+                       , <include refid="actionColumns" />
+                    FROM TH_CLADMN ACTION
+                         <include refid="actionJoins" />
+                   WHERE ACTION.CLUB_NUMB = #{clubNumb}
+               ) PAGE
+         WHERE PAGE.ROW_NUMB BETWEEN #{startRow} AND #{endRow}
+      ORDER BY PAGE.ROW_NUMB
+    </select>
+
+    <select id="getActionCnt" resultType="int">
+        SELECT /* getActionCnt */
+               COUNT(*)
+          FROM TH_CLADMN
+         WHERE CLUB_NUMB = #{clubNumb}
+    </select>
+
+    <update id="uptRecruitStopped">
+        UPDATE /* uptRecruitStopped */
+               TM_CLUBXM
+           SET RCRT_YSNO = 'N'
+             , UPDT_DATE = CURRENT_TIMESTAMP(6)
+         WHERE CLUB_NUMB = #{clubNumb}
+           AND CLUB_STAT = 'ACTIVE'
+           AND RCRT_YSNO = 'Y'
+    </update>
+
+    <update id="uptClubSuspended">
+        UPDATE /* uptClubSuspended */
+               TM_CLUBXM
+           SET CLUB_STAT = 'PAUSED'
+             , UPDT_DATE = CURRENT_TIMESTAMP(6)
+         WHERE CLUB_NUMB = #{clubNumb}
+           AND CLUB_STAT = 'ACTIVE'
+    </update>
+
+    <update id="uptClubRestored">
+        UPDATE /* uptClubRestored */
+               TM_CLUBXM
+           SET CLUB_STAT = 'ACTIVE'
+             , RCRT_YSNO = 'Y'
+             , UPDT_DATE = CURRENT_TIMESTAMP(6)
+             , CLOS_DATE = NULL
+         WHERE CLUB_NUMB = #{clubNumb}
+    </update>
+
+    <update id="uptClubClosed">
+        UPDATE /* uptClubClosed */
+               TM_CLUBXM
+           SET CLUB_STAT = 'CLOSED'
+             , RCRT_YSNO = 'N'
+             , UPDT_DATE = CURRENT_TIMESTAMP(6)
+             , CLOS_DATE = CURRENT_TIMESTAMP(6)
+         WHERE CLUB_NUMB = #{clubNumb}
+           AND CLUB_STAT <![CDATA[<>]]> 'CLOSED'
+    </update>
+
+    <insert id="setClubAction">
+        INSERT /* setClubAction */
+          INTO TH_CLADMN (
+               CLUB_NUMB
+             , HIST_NUMB
+             , ADMN_NUMB
+             , ACTN_TYPE
+             , BEFR_STAT
+             , AFTR_STAT
+             , ACTN_RSON
+             , REGI_DATE
+        )
+        SELECT #{clubNumb}
+             , COALESCE(MAX(ACTION.HIST_NUMB), 0) + 1
+             , #{admnNumb}
+             , #{actnType}
+             , #{befrStat}
+             , #{aftrStat}
+             , #{actnRson}
+             , CURRENT_TIMESTAMP(6)
+          FROM TH_CLADMN ACTION
+         WHERE ACTION.CLUB_NUMB = #{clubNumb}
+    </insert>
+
+    <insert id="setActionNotifications">
+        INSERT /* setActionNotifications */
+          INTO TB_ALIMXX (
+               USER_NUMB
+             , ALIM_NUMB
+             , ALIM_SITU
+             , TEMP_CODE
+             , ALIM_TITL
+             , ALIM_CONT
+             , TAGT_TYPE
+             , TAGT_NUMB
+             , REPL_NUMB
+             , READ_YSNO
+             , READ_DATE
+             , SEND_DATE
+             , DELT_YSNO
+        )
+        SELECT MEMBER.USER_NUMB
+             , COALESCE(ALIM.MAX_ALIM_NUMB, 0) + 1
+             , NULL
+             , NULL
+             , '독서 모임 운영 안내'
+             , CASE #{actnType}
+                   WHEN 'RECRUIT_STOP' THEN CONCAT(CLUB.CLUB_NAME, ' 모임의 신규 모집이 중지되었습니다.')
+                   WHEN 'SUSPEND' THEN CONCAT(CLUB.CLUB_NAME, ' 모임의 이용이 일시 중지되었습니다.')
+                   WHEN 'RESTORE' THEN CONCAT(CLUB.CLUB_NAME, ' 모임의 운영 제한이 해제되었습니다.')
+                   WHEN 'CLOSE' THEN CONCAT(CLUB.CLUB_NAME, ' 모임의 운영이 종료되었습니다.')
+               END
+             , 'READING_CLUB'
+             , MEMBER.CLUB_NUMB
+             , NULL
+             , 'N'
+             , NULL
+             , CURRENT_TIMESTAMP(6)
+             , 'N'
+          FROM TB_CLMEMX MEMBER
+          JOIN TM_CLUBXM CLUB
+            ON CLUB.CLUB_NUMB = MEMBER.CLUB_NUMB
+          JOIN TM_USERXM USERX
+            ON USERX.USER_NUMB = MEMBER.USER_NUMB
+           AND USERX.USER_STAT = 'ACTIVE'
+     LEFT JOIN (  SELECT USER_NUMB
+                       , MAX(ALIM_NUMB) AS MAX_ALIM_NUMB
+                    FROM TB_ALIMXX
+                GROUP BY USER_NUMB
+               ) ALIM
+            ON ALIM.USER_NUMB = MEMBER.USER_NUMB
+         WHERE MEMBER.CLUB_NUMB = #{clubNumb}
+           AND MEMBER.MEMB_STAT = 'ACTIVE'
+    </insert>
+</mapper>

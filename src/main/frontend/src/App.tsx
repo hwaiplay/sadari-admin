@@ -30,6 +30,8 @@ import { CurrentUserDetailPage } from './pages/currentUser/CurrentUserDetailPage
 import { DeletedSuspensionPage } from './pages/currentUser/DeletedSuspensionPage'
 import { ComplaintListPage } from './pages/complaint/ComplaintListPage'
 import { ComplaintDetailPage } from './pages/complaint/ComplaintDetailPage'
+import { ReadingClubListPage } from './pages/readingClub/ReadingClubListPage'
+import { ReadingClubDetailPage } from './pages/readingClub/ReadingClubDetailPage'
 import { InquiryListPage } from './pages/inquiry/InquiryListPage'
 import { InquiryDetailPage } from './pages/inquiry/InquiryDetailPage'
 import { NoticeManagePage } from './pages/notice/NoticeManagePage'
@@ -45,6 +47,7 @@ import { emptyDetailForm, emptyMenuForm, getNextSortOrdr, toDetailCodeForm, toMe
 import { getListPageSnapshot, setListPageSnapshot } from './utils/search'
 import { DELETED_SUSPENSION_PATH, INQUIRY_DETAIL_PREFIX, INQUIRY_LIST_PATH } from './constants/routes'
 import { WELCOME_PAGE_DETAIL_PREFIX, WELCOME_PAGE_LIST_PATH, WELCOME_PAGE_NEW_PATH } from './constants/routes'
+import { READING_CLUB_DETAIL_PREFIX, READING_CLUB_LIST_PATH } from './constants/routes'
 
 const emptyPageData = <T,>(): PageData<T> => ({ items: [], totalCount: 0, pageNumber: 1, pageSize: 20, totalPages: 0 })
 
@@ -150,6 +153,15 @@ function App() {
     return Number.isInteger(cmplNumb) && cmplNumb > 0 ? cmplNumb : null
   }, [currentPath])
 
+  const readingClubDetailKey = useMemo(() => {
+    // 독서 모임 상세 경로가 아니면 조회 키를 만들지 않는다.
+    if (!currentPath.startsWith(`${READING_CLUB_DETAIL_PREFIX}/`)) return null
+    // 상세 경로 뒤의 모임 번호를 숫자로 변환한다.
+    const clubNumb = Number(currentPath.slice(READING_CLUB_DETAIL_PREFIX.length + 1))
+    // 양수 정수 모임 번호만 상세 조회 키로 반환한다.
+    return Number.isInteger(clubNumb) && clubNumb > 0 ? clubNumb : null
+  }, [currentPath])
+
   const inquiryDetailKey = useMemo(() => {
     if (!currentPath.startsWith(`${INQUIRY_DETAIL_PREFIX}/`)) return null
     const inqrNumb = Number(currentPath.slice(INQUIRY_DETAIL_PREFIX.length + 1))
@@ -177,6 +189,8 @@ function App() {
   const isUserStatisticsPage = currentPath === USER_STATISTICS_PATH
   const isComplaintListPage = currentPath === COMPLAINT_LIST_PATH
   const isComplaintDetailPage = complaintDetailKey !== null
+  const isReadingClubListPage = currentPath === READING_CLUB_LIST_PATH
+  const isReadingClubDetailPage = readingClubDetailKey !== null
   const isInquiryListPage = currentPath === INQUIRY_LIST_PATH
   const isInquiryDetailPage = inquiryDetailKey !== null
   const isPopupContentPage = currentPath === POPUP_CONTENT_LIST_PATH
@@ -204,6 +218,7 @@ function App() {
     if (currentPath.startsWith(CURRENT_USER_DETAIL_PREFIX)) return CURRENT_USER_LIST_PATH
     if (currentPath === DELETED_SUSPENSION_PATH) return CURRENT_USER_LIST_PATH
     if (currentPath.startsWith(COMPLAINT_DETAIL_PREFIX)) return COMPLAINT_LIST_PATH
+    if (currentPath.startsWith(READING_CLUB_DETAIL_PREFIX)) return READING_CLUB_LIST_PATH
     if (currentPath.startsWith(INQUIRY_DETAIL_PREFIX)) return INQUIRY_LIST_PATH
     if (currentPath === NOTICE_NEW_PATH || currentPath.startsWith(NOTICE_DETAIL_PREFIX)) return NOTICE_LIST_PATH
     if (currentPath === SERVICE_INFO_NEW_PATH || currentPath.startsWith(SERVICE_INFO_DETAIL_PREFIX)) return SERVICE_INFO_LIST_PATH
@@ -1088,6 +1103,15 @@ function App() {
           cmplNumb={complaintDetailKey}
           adminNumb={admin.admnNumb}
           adminAuthCode={admin.authCode}
+          onMovePath={movePath}
+          onError={setError}
+        />
+      )}
+      {isReadingClubListPage && <ReadingClubListPage onMovePath={movePath} onError={setError} />}
+      {isReadingClubDetailPage && (
+        <ReadingClubDetailPage
+          key={readingClubDetailKey}
+          clubNumb={readingClubDetailKey}
           onMovePath={movePath}
           onError={setError}
         />
