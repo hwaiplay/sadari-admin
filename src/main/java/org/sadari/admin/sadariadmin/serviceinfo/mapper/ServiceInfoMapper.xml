@@ -19,6 +19,7 @@
              , C.COMD_NAME AS CATE_NAME
              , S.VERS_NUMB
              , S.SVCI_TITL
+             , S.SVCI_ENTL
              , S.DPLY_YSNO
              , S.REGI_ADMN
              , FN_GET_ADMIN_NAME(S.REGI_ADMN) AS REGI_ADMN_NAME
@@ -77,7 +78,9 @@
              , C.COMD_NAME AS CATE_NAME
              , S.VERS_NUMB
              , S.SVCI_TITL
+             , S.SVCI_ENTL
              , S.SVCI_CNTN
+             , S.SVCI_ENCT
              , S.DPLY_YSNO
              , S.REGI_ADMN
              , FN_GET_ADMIN_NAME(S.REGI_ADMN) AS REGI_ADMN_NAME
@@ -104,6 +107,7 @@
              , C.COMD_NAME AS CATE_NAME
              , S.VERS_NUMB
              , S.SVCI_TITL
+             , S.SVCI_ENTL
              , S.DPLY_YSNO
              , S.REGI_ADMN
              , FN_GET_ADMIN_NAME(S.REGI_ADMN) AS REGI_ADMN_NAME
@@ -128,6 +132,12 @@
           FROM CT_SVINFO
          WHERE CATE_CGRP = #{cateCgrp}
            AND CATE_CODE = #{cateCode}
+        UNION ALL
+        SELECT SVCI_ENCT
+          FROM CT_SVINFO
+         WHERE CATE_CGRP = #{cateCgrp}
+           AND CATE_CODE = #{cateCode}
+           AND SVCI_ENCT IS NOT NULL
     </select>
 
     <select id="getServiceInfoCategoryCnt" resultType="int">
@@ -166,10 +176,10 @@
     <insert id="setServiceInfo">
         INSERT /* setServiceInfo */
           INTO CT_SVINFO (
-               CATE_CGRP, CATE_CODE, VERS_NUMB, SVCI_TITL, SVCI_CNTN, DPLY_YSNO
+               CATE_CGRP, CATE_CODE, VERS_NUMB, SVCI_TITL, SVCI_ENTL, SVCI_CNTN, SVCI_ENCT, DPLY_YSNO
              , REGI_ADMN, REGI_DATE, UPDT_ADMN, UPDT_DATE
         ) VALUES (
-               #{cateCgrp}, #{cateCode}, #{versNumb}, #{svciTitl}, #{svciCntn}, #{dplyYsno}
+               #{cateCgrp}, #{cateCode}, #{versNumb}, #{svciTitl}, #{svciEntl}, #{svciCntn}, #{svciEnct}, #{dplyYsno}
              , #{regiAdmn}, COALESCE(#{regiDate,jdbcType=TIMESTAMP}, CURRENT_TIMESTAMP)
              , #{updtAdmn,jdbcType=BIGINT}
              , CASE WHEN #{updtAdmn,jdbcType=BIGINT} IS NULL THEN NULL ELSE CURRENT_TIMESTAMP END
@@ -179,7 +189,9 @@
     <update id="uptServiceInfo">
         UPDATE /* uptServiceInfo */ CT_SVINFO
            SET SVCI_TITL = #{svciTitl}
+             , SVCI_ENTL = #{svciEntl}
              , SVCI_CNTN = #{svciCntn}
+             , SVCI_ENCT = #{svciEnct}
              , UPDT_ADMN = #{updtAdmn}
              , UPDT_DATE = CURRENT_TIMESTAMP
          WHERE CATE_CGRP = #{cateCgrp}

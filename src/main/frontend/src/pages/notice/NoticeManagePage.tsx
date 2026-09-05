@@ -21,7 +21,7 @@ const EMPTY_PAGE: PageData<Notice> = {
   items: [], totalCount: 0, pageNumber: 1, pageSize: 20, totalPages: 0,
 }
 
-const EMPTY_FORM: NoticeForm = { cateCode: '', notiTitl: '', notiCntn: '', topxYsno: 'N' }
+const EMPTY_FORM: NoticeForm = { cateCode: '', notiTitl: '', notiEntl: '', notiCntn: '', notiEnct: '', topxYsno: 'N' }
 
 /** 상단 고정 공지에 사용하는 핀 아이콘을 표시한다. */
 function PinIcon() {
@@ -83,7 +83,9 @@ export function NoticeManagePage({ currentPath, onMovePath, onError }: NoticeMan
       setForm({
         cateCode: found.cateCode,
         notiTitl: found.notiTitl,
+        notiEntl: found.notiEntl,
         notiCntn: found.notiCntn,
+        notiEnct: found.notiEnct,
         topxYsno: found.topxYsno,
       })
     } catch (error: unknown) {
@@ -138,9 +140,10 @@ export function NoticeManagePage({ currentPath, onMovePath, onError }: NoticeMan
     // 브라우저 기본 제출을 막아 현재 관리 화면에서 API 저장을 처리한다.
     event.preventDefault()
     // 필수 입력값이 없으면 서버 요청 없이 관리자에게 입력 항목을 안내한다.
-    if (!form.cateCode || !form.notiTitl.trim() || !form.notiCntn.trim()) {
+    if (!form.cateCode || !form.notiTitl.trim() || !form.notiEntl.trim()
+        || !form.notiCntn.trim() || !form.notiEnct.trim()) {
       // "공지사항 카테고리와 제목 및 내용을 입력해 주세요."
-      onError('공지사항 카테고리와 제목 및 내용을 입력해 주세요.')
+      onError('공지사항 카테고리와 한글·영문 제목 및 내용을 입력해 주세요.')
       // 유효하지 않은 입력값으로 저장 API가 호출되지 않도록 종료한다.
       return
     }
@@ -318,6 +321,10 @@ export function NoticeManagePage({ currentPath, onMovePath, onError }: NoticeMan
                           <input className="notice-top-fixed-checkbox" type="checkbox" aria-label="상단 고정" checked={form.topxYsno === 'Y'} onChange={(event) => setForm({ ...form, topxYsno: event.target.checked ? 'Y' : 'N' })} />
                         </td>
                       </tr>
+                      <tr>
+                        <th>영문 제목</th>
+                        <td colSpan={5}><input maxLength={300} value={form.notiEntl} onChange={(event) => setForm({ ...form, notiEntl: event.target.value })} /></td>
+                      </tr>
                     </>
                   ) : (
                     <>
@@ -334,6 +341,10 @@ export function NoticeManagePage({ currentPath, onMovePath, onError }: NoticeMan
                         <th>제목</th>
                         <td colSpan={5}><input maxLength={300} value={form.notiTitl} onChange={(event) => setForm({ ...form, notiTitl: event.target.value })} /></td>
                       </tr>
+                      <tr>
+                        <th>영문 제목</th>
+                        <td colSpan={5}><input maxLength={300} value={form.notiEntl} onChange={(event) => setForm({ ...form, notiEntl: event.target.value })} /></td>
+                      </tr>
                     </>
                   )}
                 </tbody>
@@ -341,6 +352,8 @@ export function NoticeManagePage({ currentPath, onMovePath, onError }: NoticeMan
             </section>
             <label><span>내용</span></label>
             <SummernoteEditor value={form.notiCntn} disabled={saving} onChange={(notiCntn) => setForm((current) => ({ ...current, notiCntn }))} onError={onError} />
+            <label><span>영문 내용</span></label>
+            <SummernoteEditor value={form.notiEnct} disabled={saving} onChange={(notiEnct) => setForm((current) => ({ ...current, notiEnct }))} onError={onError} />
             {!isNewPage && detail && (
               /* 선택 가능한 공지사항 지난 버전 목록 영역 */
               <section className="notice-version-section">

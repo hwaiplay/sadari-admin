@@ -123,6 +123,7 @@ export function CodeDetailPage({
                                 <tr>
                                     <th className="col-code">세부코드</th>
                                     <th className="col-code-name">세부코드명</th>
+                                    <th className="col-code-name">영문 세부코드명</th>
                                     <th>설명</th>
                                     <th className="col-parent-code">상위 세부코드</th>
                                     <th className="col-sort">정렬</th>
@@ -134,6 +135,8 @@ export function CodeDetailPage({
                                     <td className="col-code"><input value={selectedDetailForm.comdCode} readOnly/></td>
                                     <td className="col-code-name"><input value={selectedDetailForm.comdName}
                                                onChange={(event) => onChangeDetailEditForm(selectedDetailIndex, 'comdName', event.target.value)}/></td>
+                                    <td className="col-code-name"><input value={selectedDetailForm.comdEnnm}
+                                               onChange={(event) => onChangeDetailEditForm(selectedDetailIndex, 'comdEnnm', event.target.value)}/></td>
                                     <td><input value={selectedDetailForm.codeExpl}
                                                onChange={(event) => onChangeDetailEditForm(selectedDetailIndex, 'codeExpl', event.target.value)}/></td>
                                     <td className="col-parent-code"><input value={selectedDetailForm.upprCode}
@@ -211,6 +214,7 @@ export function CodeDetailPage({
                         <tr>
                             <th className="col-code">세부코드</th>
                             <th className="col-code-name">세부코드명</th>
+                            <th className="col-code-name">영문 세부코드명</th>
                             <th>설명</th>
                             <th className="col-sort">정렬</th>
                             <th className="col-usee">사용여부</th>
@@ -232,6 +236,9 @@ export function CodeDetailPage({
                                         </td>
                                         <td className="col-code-name"><input value={form.comdName}
                                                    onChange={(event) => onChangeDetailEditForm(index, 'comdName', event.target.value)}
+                                                   /></td>
+                                        <td className="col-code-name"><input value={form.comdEnnm}
+                                                   onChange={(event) => onChangeDetailEditForm(index, 'comdEnnm', event.target.value)}
                                                    /></td>
                                         <td><input value={form.codeExpl}
                                                    onChange={(event) => onChangeDetailEditForm(index, 'codeExpl', event.target.value)}
@@ -258,7 +265,7 @@ export function CodeDetailPage({
                                         </td>
                                     </tr>
                                     {expanded && <ExtensionRow form={form} index={index} disabled={false}
-                                                               colSpan={8} onChange={onChangeDetailEditForm}/>}
+                                                               colSpan={9} onChange={onChangeDetailEditForm}/>}
                                 </Fragment>
                             )
                         })}
@@ -283,6 +290,7 @@ export function CodeDetailPage({
                                 <tr>
                                     <th className="col-code">세부코드</th>
                                     <th className="col-code-name">세부코드명</th>
+                                    <th className="col-code-name">영문 세부코드명</th>
                                     <th>설명</th>
                                     <th className="col-sort">정렬</th>
                                     <th className="col-usee">사용여부</th>
@@ -301,6 +309,9 @@ export function CodeDetailPage({
                                                 </td>
                                                 <td className="col-code-name"><input value={form.comdName}
                                                            onChange={(event) => onChangeDetailForm(index, 'comdName', event.target.value)}/>
+                                                </td>
+                                                <td className="col-code-name"><input value={form.comdEnnm}
+                                                           onChange={(event) => onChangeDetailForm(index, 'comdEnnm', event.target.value)}/>
                                                 </td>
                                                 <td><input value={form.codeExpl}
                                                            onChange={(event) => onChangeDetailForm(index, 'codeExpl', event.target.value)}/>
@@ -330,7 +341,7 @@ export function CodeDetailPage({
                                                 </td>
                                             </tr>
                                             {expanded &&
-                                                <ExtensionRow form={form} index={index} disabled={false} colSpan={7}
+                                                <ExtensionRow form={form} index={index} disabled={false} colSpan={8}
                                                               onChange={onChangeDetailForm}/>}
                                         </Fragment>
                                     )
@@ -417,6 +428,8 @@ function ExtensionRow({form, index, disabled, colSpan, onChange}: ExtensionRowPr
                         <td><input value={form.opt1Name}
                                    onChange={(event) => onChange(index, 'opt1Name', event.target.value)}
                                    readOnly={disabled}/></td>
+                        <th>확장1 영문명</th>
+                        <td><input value={form.opt1Ennm} onChange={(event) => onChange(index, 'opt1Ennm', event.target.value)} readOnly={disabled}/></td>
                     </tr>
                     <tr>
                         <th>확장2 코드</th>
@@ -427,6 +440,8 @@ function ExtensionRow({form, index, disabled, colSpan, onChange}: ExtensionRowPr
                         <td><input value={form.opt2Name}
                                    onChange={(event) => onChange(index, 'opt2Name', event.target.value)}
                                    readOnly={disabled}/></td>
+                        <th>확장2 영문명</th>
+                        <td><input value={form.opt2Ennm} onChange={(event) => onChange(index, 'opt2Ennm', event.target.value)} readOnly={disabled}/></td>
                     </tr>
                     <tr>
                         <th>확장3 코드</th>
@@ -437,6 +452,8 @@ function ExtensionRow({form, index, disabled, colSpan, onChange}: ExtensionRowPr
                         <td><input value={form.opt3Name}
                                    onChange={(event) => onChange(index, 'opt3Name', event.target.value)}
                                    readOnly={disabled}/></td>
+                        <th>확장3 영문명</th>
+                        <td><input value={form.opt3Ennm} onChange={(event) => onChange(index, 'opt3Ennm', event.target.value)} readOnly={disabled}/></td>
                     </tr>
                     <tr>
                         <th>확장4 코드</th>
@@ -447,6 +464,8 @@ function ExtensionRow({form, index, disabled, colSpan, onChange}: ExtensionRowPr
                         <td><input value={form.opt4Name}
                                    onChange={(event) => onChange(index, 'opt4Name', event.target.value)}
                                    readOnly={disabled}/></td>
+                        <th>확장4 영문명</th>
+                        <td><input value={form.opt4Ennm} onChange={(event) => onChange(index, 'opt4Ennm', event.target.value)} readOnly={disabled}/></td>
                     </tr>
                     </tbody>
                 </table>

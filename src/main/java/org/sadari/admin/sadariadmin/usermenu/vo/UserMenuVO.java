@@ -33,6 +33,9 @@ public class UserMenuVO {
     /** 메뉴명 */
     private String menuName;
 
+    // 사용자 메뉴 영문명
+    private String menuEnnm;
+
     /** 메뉴 URL */
     private String menuUrlx;
 

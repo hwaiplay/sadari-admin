@@ -167,7 +167,9 @@ public class AlimTempServiceImpl implements AlimTempService {
                 || StringUtil.isEmpty(alimTemp.getAlimSitu())
                 || StringUtil.isEmpty(alimTemp.getTempCode())
                 || StringUtil.isEmpty(alimTemp.getTempTitl())
-                || StringUtil.isEmpty(alimTemp.getTempCont())) {
+                || StringUtil.isEmpty(alimTemp.getAlimEntl())
+                || StringUtil.isEmpty(alimTemp.getTempCont())
+                || StringUtil.isEmpty(alimTemp.getTempEnct())) {
             throw new BusinessException(HttpStatus.BAD_REQUEST, ResultEnum.COMMON_REQUIRED_VALUE);
         }
         // 템플릿 코드는 영문 대문자와 밑줄만 허용한다

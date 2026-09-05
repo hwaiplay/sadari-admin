@@ -4,7 +4,9 @@ export type ServiceInfo = {
   cateName: string
   versNumb: number
   svciTitl: string
+  svciEntl: string
   svciCntn: string
+  svciEnct: string
   dplyYsno: 'Y' | 'N'
   regiAdmn: number
   regiAdmnName: string | null
@@ -20,5 +22,7 @@ export type ServiceInfo = {
 export type ServiceInfoForm = {
   cateCode: string
   svciTitl: string
+  svciEntl: string
   svciCntn: string
+  svciEnct: string
 }

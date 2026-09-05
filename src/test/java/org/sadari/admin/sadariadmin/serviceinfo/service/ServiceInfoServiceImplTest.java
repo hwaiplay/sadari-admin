@@ -29,6 +29,7 @@ import org.sadari.admin.sadariadmin.serviceinfo.vo.ServiceInfoVO;
  * DATE              AUTHOR             NOTE
  * -----------------------------------------------------------
  * 2026-08-10        SeungHyeon.Kang    최초 생성
+ * 2026-09-05        Codex               영문 서비스 정보 필수값 반영
  */
 @ExtendWith(MockitoExtension.class)
 class ServiceInfoServiceImplTest {
@@ -112,7 +113,9 @@ class ServiceInfoServiceImplTest {
         ServiceInfoVO request = new ServiceInfoVO();
         request.setCateCode("PRIVACY");
         request.setSvciTitl("개인정보처리방침");
+        request.setSvciEntl("Privacy Policy");
         request.setSvciCntn("<p>정책 본문</p>");
+        request.setSvciEnct("<p>Policy content</p>");
         // 필수값을 갖춘 서비스 정보 저장 요청을 반환한다.
         return request;
     }

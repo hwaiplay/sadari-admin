@@ -30,7 +30,8 @@ type PreviewPage = Pick<WelcomePageForm, 'subxTitl' | 'mainTitl' | 'pageDesc' | 
 }
 
 const EMPTY_FORM: WelcomePageForm = {
-  subxTitl: '', mainTitl: '', pageDesc: '', imgeUrlx: null, sortOrdr: 1,
+  subxTitl: '', subxEntl: '', mainTitl: '', mainEntl: '', pageDesc: '', pageEnct: '',
+  imgeUrlx: null, imgeEnur: null, sortOrdr: 1,
 }
 
 /** 관리자 웰컴페이지 문구와 이미지 및 사용자 화면 미리보기를 관리한다. */
@@ -101,9 +102,13 @@ export const WelcomePageManagePage = ({ currentPath, onMovePath, onError }: Welc
       setPages(foundPages)
       setForm({
         subxTitl: found.subxTitl,
+        subxEntl: found.subxEntl,
         mainTitl: found.mainTitl,
+        mainEntl: found.mainEntl,
         pageDesc: found.pageDesc,
+        pageEnct: found.pageEnct,
         imgeUrlx: found.imgeUrlx,
+        imgeEnur: found.imgeEnur,
         sortOrdr: found.sortOrdr,
       })
     } catch (error: unknown) {
@@ -156,7 +161,7 @@ export const WelcomePageManagePage = ({ currentPath, onMovePath, onError }: Welc
     onError(null)
     try {
       const imageUrl = await uploadWelcomePageImage(file)
-      setForm((current) => ({ ...current, imgeUrlx: imageUrl }))
+      setForm((current) => ({ ...current, imgeUrlx: imageUrl, imgeEnur: current.imgeEnur ?? imageUrl }))
     } catch (error: unknown) {
       onError(error instanceof Error ? error.message : '웰컴페이지 이미지를 업로드하지 못했습니다.')
     } finally {
@@ -167,8 +172,9 @@ export const WelcomePageManagePage = ({ currentPath, onMovePath, onError }: Welc
   /** 신규 또는 기존 웰컴페이지 버전을 저장한다. */
   const savePage = async (event: FormEvent<HTMLFormElement>): Promise<void> => {
     event.preventDefault()
-    if (!form.subxTitl.trim() || !form.mainTitl.trim() || !form.pageDesc.trim() || !form.imgeUrlx || form.sortOrdr < 1) {
-      onError('소제목, 제목, 설명, 이미지와 1 이상의 노출 순서를 입력해 주세요.')
+    if (!form.subxTitl.trim() || !form.subxEntl.trim() || !form.mainTitl.trim() || !form.mainEntl.trim()
+        || !form.pageDesc.trim() || !form.pageEnct.trim() || !form.imgeUrlx || !form.imgeEnur || form.sortOrdr < 1) {
+      onError('한글·영문 소제목, 제목, 설명, 이미지와 1 이상의 노출 순서를 입력해 주세요.')
       return
     }
     setSaving(true)
@@ -290,12 +296,24 @@ export const WelcomePageManagePage = ({ currentPath, onMovePath, onError }: Welc
                     <td colSpan={5}><input maxLength={200} value={form.subxTitl} placeholder="예: 표지에서 시작하는 책장" onChange={(event) => setForm({ ...form, subxTitl: event.target.value })} /></td>
                   </tr>
                   <tr>
+                    <th>영문 소제목</th>
+                    <td colSpan={5}><input maxLength={200} value={form.subxEntl} onChange={(event) => setForm({ ...form, subxEntl: event.target.value })} /></td>
+                  </tr>
+                  <tr>
                     <th>제목</th>
                     <td colSpan={5}><textarea maxLength={300} rows={3} value={form.mainTitl} placeholder={'예: 책 표지의 분위기를\n내 책장 색으로'} onChange={(event) => setForm({ ...form, mainTitl: event.target.value })} /></td>
                   </tr>
                   <tr>
+                    <th>영문 제목</th>
+                    <td colSpan={5}><textarea maxLength={300} rows={3} value={form.mainEntl} onChange={(event) => setForm({ ...form, mainEntl: event.target.value })} /></td>
+                  </tr>
+                  <tr>
                     <th>설명</th>
                     <td colSpan={5}><textarea maxLength={1000} rows={4} value={form.pageDesc} placeholder="페이지를 설명하는 문구를 입력해 주세요." onChange={(event) => setForm({ ...form, pageDesc: event.target.value })} /></td>
+                  </tr>
+                  <tr>
+                    <th>영문 설명</th>
+                    <td colSpan={5}><textarea maxLength={1000} rows={4} value={form.pageEnct} onChange={(event) => setForm({ ...form, pageEnct: event.target.value })} /></td>
                   </tr>
                   <tr>
                     <th>이미지</th>
@@ -313,6 +331,10 @@ export const WelcomePageManagePage = ({ currentPath, onMovePath, onError }: Welc
                         </div>
                       )}
                     </td>
+                  </tr>
+                  <tr>
+                    <th>영문 이미지 URL</th>
+                    <td colSpan={5}><input maxLength={500} value={form.imgeEnur ?? ''} placeholder="같은 이미지를 사용하면 위 URL을 입력합니다." onChange={(event) => setForm({ ...form, imgeEnur: event.target.value || null })} /></td>
                   </tr>
                 </tbody>
               </table>

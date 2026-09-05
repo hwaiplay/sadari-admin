@@ -362,19 +362,29 @@ public class ServiceInfoServiceImpl implements ServiceInfoService {
 
         String categoryCode = StringUtil.isEmpty(serviceInfo.getCateCode()) ? "" : serviceInfo.getCateCode().trim();
         String title = StringUtil.isEmpty(serviceInfo.getSvciTitl()) ? "" : serviceInfo.getSvciTitl().trim();
+        String englishTitle = StringUtil.isEmpty(serviceInfo.getSvciEntl()) ? "" : serviceInfo.getSvciEntl().trim();
         String content = sanitizeHtml(serviceInfo.getSvciCntn());
+        String englishContent = sanitizeHtml(serviceInfo.getSvciEnct());
         Document contentDocument = Jsoup.parseBodyFragment(content);
+        Document englishContentDocument = Jsoup.parseBodyFragment(englishContent);
         boolean hasContent = !contentDocument.text().isBlank() || !contentDocument.select("img").isEmpty();
+        boolean hasEnglishContent = !englishContentDocument.text().isBlank()
+                || !englishContentDocument.select("img").isEmpty();
         // 공통코드와 필수값 및 저장 길이가 모두 정상일 때만 저장한다.
         if (categoryCode.isBlank() || serviceInfoMapper.getServiceInfoCategoryCnt(SVIF_CATE, categoryCode, YES) != 1
-                || title.isBlank() || !hasContent || title.getBytes(StandardCharsets.UTF_8).length > TITLE_MAX_BYTES
-                || content.getBytes(StandardCharsets.UTF_8).length > CONTENT_MAX_BYTES) {
+                || title.isBlank() || englishTitle.isBlank() || !hasContent || !hasEnglishContent
+                || title.getBytes(StandardCharsets.UTF_8).length > TITLE_MAX_BYTES
+                || englishTitle.getBytes(StandardCharsets.UTF_8).length > TITLE_MAX_BYTES
+                || content.getBytes(StandardCharsets.UTF_8).length > CONTENT_MAX_BYTES
+                || englishContent.getBytes(StandardCharsets.UTF_8).length > CONTENT_MAX_BYTES) {
             throw new BusinessException(HttpStatus.BAD_REQUEST, ResultEnum.SERVICE_INFO_INVALID);
         }
 
         serviceInfo.setCateCode(categoryCode);
         serviceInfo.setSvciTitl(title);
+        serviceInfo.setSvciEntl(englishTitle);
         serviceInfo.setSvciCntn(content);
+        serviceInfo.setSvciEnct(englishContent);
     }
 
     /** 서비스 정보 카테고리와 버전 복합키 형식을 검증한다. */

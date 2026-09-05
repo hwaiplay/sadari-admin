@@ -88,7 +88,7 @@ function App() {
   const [alimTemps, setAlimTemps] = useState<AlimTemp[]>([])
   const [alimPageData, setAlimPageData] = useState<PageData<AlimTemp>>(emptyPageData())
   const [alimTempDetail, setAlimTempDetail] = useState<AlimTemp | null>(null)
-  const [alimTempForm, setAlimTempForm] = useState<AlimTempForm>({ alimSitu: '', tempCode: '', tempTitl: '', alimTitl: '', tempCont: '', useeYsno: DEFAULT_USEE_YSNO })
+  const [alimTempForm, setAlimTempForm] = useState<AlimTempForm>({ alimSitu: '', tempCode: '', tempTitl: '', alimTitl: '', alimEntl: '', tempCont: '', tempEnct: '', useeYsno: DEFAULT_USEE_YSNO })
   const [alimIcons, setAlimIcons] = useState<AlimIcon[]>([])
   const [alimIconPageData, setAlimIconPageData] = useState<PageData<AlimIcon>>(emptyPageData())
   const [alimIconDetail, setAlimIconDetail] = useState<AlimIcon | null>(null)
@@ -440,7 +440,7 @@ function App() {
     setError(null)
     const [situCodes] = await Promise.all([loadAlimSituCodeList(), loadUseeYsnoCodeList()])
     setAlimTempDetail(null)
-    setAlimTempForm({ alimSitu: situCodes[0]?.comdCode ?? '', tempCode: '', tempTitl: '', alimTitl: '', tempCont: '', useeYsno: DEFAULT_USEE_YSNO })
+    setAlimTempForm({ alimSitu: situCodes[0]?.comdCode ?? '', tempCode: '', tempTitl: '', alimTitl: '', alimEntl: '', tempCont: '', tempEnct: '', useeYsno: DEFAULT_USEE_YSNO })
   }
 
   /**
@@ -454,7 +454,7 @@ function App() {
     setError(null)
     const [detail] = await Promise.all([getAlimTempDetail(alimSitu, tempCode), loadAlimSituCodeList(), loadUseeYsnoCodeList()])
     setAlimTempDetail(detail)
-    setAlimTempForm({ alimSitu: detail.alimSitu, tempCode: detail.tempCode, tempTitl: detail.tempTitl, alimTitl: detail.alimTitl ?? '', tempCont: detail.tempCont, useeYsno: detail.useeYsno ?? DEFAULT_USEE_YSNO })
+    setAlimTempForm({ alimSitu: detail.alimSitu, tempCode: detail.tempCode, tempTitl: detail.tempTitl, alimTitl: detail.alimTitl ?? '', alimEntl: detail.alimEntl ?? '', tempCont: detail.tempCont, tempEnct: detail.tempEnct, useeYsno: detail.useeYsno ?? DEFAULT_USEE_YSNO })
   }
 
   /** 알림 아이콘 목록 화면을 조회한다. */
@@ -666,8 +666,9 @@ function App() {
    */
   const saveAllCodeDetail = async () => {
     if (!selectedMaster || !masterEditForm) return
-    if (!masterEditForm.codeName.trim() || detailEditForms.some((form) => !form.comdName.trim())
-      || detailForms.some((form) => !form.comdCode.trim() || !form.comdName.trim())) {
+    if (!masterEditForm.codeName.trim()
+      || detailEditForms.some((form) => !form.comdName.trim() || !form.comdEnnm.trim())
+      || detailForms.some((form) => !form.comdCode.trim() || !form.comdName.trim() || !form.comdEnnm.trim())) {
       alert('필수값을 입력해 주세요.')
       return
     }
@@ -909,16 +910,21 @@ function App() {
   const toDetailPayload = (form: DetailCodeForm): DetailCodePayload => ({
     comdCode: form.comdCode.trim(),
     comdName: form.comdName.trim(),
+    comdEnnm: form.comdEnnm.trim(),
     codeExpl: form.codeExpl.trim(),
     upprCode: form.upprCode.trim() || null,
     opt1Code: form.opt1Code.trim(),
     opt1Name: form.opt1Name.trim(),
+    opt1Ennm: form.opt1Ennm.trim(),
     opt2Code: form.opt2Code.trim(),
     opt2Name: form.opt2Name.trim(),
+    opt2Ennm: form.opt2Ennm.trim(),
     opt3Code: form.opt3Code.trim(),
     opt3Name: form.opt3Name.trim(),
+    opt3Ennm: form.opt3Ennm.trim(),
     opt4Code: form.opt4Code.trim(),
     opt4Name: form.opt4Name.trim(),
+    opt4Ennm: form.opt4Ennm.trim(),
     sortOrdr: Number(form.sortOrdr),
     useeYsno: form.useeYsno,
   })
@@ -931,10 +937,11 @@ function App() {
   const validateNewDetailForms = () => {
     const existingCodes = detailCodes.map((detail) => detail.comdCode)
     const screenCodes = detailForms.map((detail) => detail.comdCode.trim()).filter(Boolean)
-    const hasEmptyRequired = detailForms.some((detail) => !detail.comdCode.trim() || !detail.comdName.trim())
+    const hasEmptyRequired = detailForms.some((detail) => !detail.comdCode.trim()
+      || !detail.comdName.trim() || !detail.comdEnnm.trim())
     const hasDuplicatedCode = screenCodes.some((code, index) => screenCodes.indexOf(code) !== index || existingCodes.includes(code))
     if (hasEmptyRequired) {
-      setError('세부코드와 세부코드명을 입력해 주세요.')
+      setError('세부코드와 한글·영문 세부코드명을 입력해 주세요.')
       return false
     }
     if (hasDuplicatedCode) {
@@ -962,10 +969,12 @@ function App() {
    * @return
    */
   const validateAlimTempForm = () => {
-    const hasRequired = alimTempForm.alimSitu.trim() && alimTempForm.tempCode.trim() && alimTempForm.tempTitl.trim() && alimTempForm.tempCont.trim()
+    const hasRequired = alimTempForm.alimSitu.trim() && alimTempForm.tempCode.trim()
+      && alimTempForm.tempTitl.trim() && alimTempForm.alimEntl.trim()
+      && alimTempForm.tempCont.trim() && alimTempForm.tempEnct.trim()
     // 필수값이 하나라도 없으면 저장 요청을 보내지 않는다
     if (!hasRequired) {
-      setError('알림상황, 템플릿코드, 관리용 제목과 템플릿 내용을 입력해 주세요.')
+      setError('알림상황, 템플릿코드, 관리용 제목, 영문 알림 제목과 한글·영문 템플릿 내용을 입력해 주세요.')
       return false
     }
     // 템플릿 코드는 영문 대문자와 밑줄만 허용한다

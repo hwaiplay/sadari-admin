@@ -31,15 +31,23 @@ public class PopupContentVO {
 
     // 첫 번째 목록 영역의 JSON 문자열 배열
     private String contFirs;
+    // 첫 번째 영문 목록 영역의 JSON 문자열 배열
+    private String englFirs;
 
     // 두 번째 목록 영역의 JSON 문자열 배열
     private String contSeco;
+    // 두 번째 영문 목록 영역의 JSON 문자열 배열
+    private String englSeco;
 
     // 세 번째 목록 영역의 JSON 문자열 배열
     private String contThir;
+    // 세 번째 영문 목록 영역의 JSON 문자열 배열
+    private String englThir;
 
     // 네 번째 목록 영역의 JSON 문자열 배열
     private String contFour;
+    // 네 번째 영문 목록 영역의 JSON 문자열 배열
+    private String englFour;
 
     // 등록 관리자 식별값
     private String regiAdmn;

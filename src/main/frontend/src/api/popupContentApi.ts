@@ -62,9 +62,13 @@ export function savePopupContentApi(form: PopupContentForm, detail: boolean) {
     popuCode: form.popuCode.trim(),
     mngmTitl: form.mngmTitl.trim(),
     contFirs: popupLinesToJson(form.contFirs),
+    englFirs: popupLinesToJson(form.englFirs),
     contSeco: popupLinesToJson(form.contSeco),
+    englSeco: popupLinesToJson(form.englSeco),
     contThir: popupLinesToJson(form.contThir),
+    englThir: popupLinesToJson(form.englThir),
     contFour: popupLinesToJson(form.contFour),
+    englFour: popupLinesToJson(form.englFour),
   }
   // 상세에서는 기존 복합키 URL을 사용하고 신규 화면에서는 컬렉션 URL을 사용한다
   const requestPath = detail

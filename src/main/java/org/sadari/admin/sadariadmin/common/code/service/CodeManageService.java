@@ -169,6 +169,7 @@ public class CodeManageService {
                 || StringUtil.isEmpty(code)
                 || StringUtil.isEmpty(code.getComdCode())
                 || StringUtil.isEmpty(code.getComdName())
+                || StringUtil.isEmpty(code.getComdEnnm())
                 || StringUtil.isEmpty(admin)) {
             throw new BusinessException(HttpStatus.BAD_REQUEST, ResultEnum.COMMON_REQUIRED_VALUE);
         }
@@ -211,6 +212,7 @@ public class CodeManageService {
                 || StringUtil.isEmpty(comdCode)
                 || StringUtil.isEmpty(code)
                 || StringUtil.isEmpty(code.getComdName())
+                || StringUtil.isEmpty(code.getComdEnnm())
                 || StringUtil.isEmpty(admin)) {
             throw new BusinessException(HttpStatus.BAD_REQUEST, ResultEnum.COMMON_REQUIRED_VALUE);
         }

@@ -160,16 +160,21 @@
                COMM_CODE
              , COMD_CODE
              , COMD_NAME
+             , COMD_ENNM
              , CODE_EXPL
              , UPPR_CODE
              , OPT1_CODE
              , OPT1_NAME
+             , OPT1_ENNM
              , OPT2_CODE
              , OPT2_NAME
+             , OPT2_ENNM
              , OPT3_CODE
              , OPT3_NAME
+             , OPT3_ENNM
              , OPT4_CODE
              , OPT4_NAME
+             , OPT4_ENNM
              , USEE_YSNO
              , FN_GET_CODE_NAME(#{commYsno}, USEE_YSNO, #{useeYsnoCode}) AS USEE_YSNO_NAME
              , REGI_ADMN
@@ -191,16 +196,21 @@
                COMM_CODE
              , COMD_CODE
              , COMD_NAME
+             , COMD_ENNM
              , CODE_EXPL
              , UPPR_CODE
              , OPT1_CODE
              , OPT1_NAME
+             , OPT1_ENNM
              , OPT2_CODE
              , OPT2_NAME
+             , OPT2_ENNM
              , OPT3_CODE
              , OPT3_NAME
+             , OPT3_ENNM
              , OPT4_CODE
              , OPT4_NAME
+             , OPT4_ENNM
              , USEE_YSNO
              , FN_GET_CODE_NAME(#{commYsno}, USEE_YSNO, #{useeYsnoCode}) AS USEE_YSNO_NAME
              , REGI_ADMN
@@ -262,16 +272,21 @@
                     COMM_CODE
                   , COMD_CODE
                   , COMD_NAME
+                  , COMD_ENNM
                   , CODE_EXPL
                   , UPPR_CODE
                   , OPT1_CODE
                   , OPT1_NAME
+                  , OPT1_ENNM
                   , OPT2_CODE
                   , OPT2_NAME
+                  , OPT2_ENNM
                   , OPT3_CODE
                   , OPT3_NAME
+                  , OPT3_ENNM
                   , OPT4_CODE
                   , OPT4_NAME
+                  , OPT4_ENNM
                   , USEE_YSNO
                   , REGI_ADMN
                   , REGI_DATE
@@ -281,16 +296,21 @@
         ) VALUES (  #{commCode}
                   , #{comdCode}
                   , #{comdName}
+                  , #{comdEnnm}
                   , #{codeExpl,jdbcType=VARCHAR}
                   , #{upprCode,jdbcType=VARCHAR}
                   , #{opt1Code,jdbcType=VARCHAR}
                   , #{opt1Name,jdbcType=VARCHAR}
+                  , #{opt1Ennm,jdbcType=VARCHAR}
                   , #{opt2Code,jdbcType=VARCHAR}
                   , #{opt2Name,jdbcType=VARCHAR}
+                  , #{opt2Ennm,jdbcType=VARCHAR}
                   , #{opt3Code,jdbcType=VARCHAR}
                   , #{opt3Name,jdbcType=VARCHAR}
+                  , #{opt3Ennm,jdbcType=VARCHAR}
                   , #{opt4Code,jdbcType=VARCHAR}
                   , #{opt4Name,jdbcType=VARCHAR}
+                  , #{opt4Ennm,jdbcType=VARCHAR}
                   , #{useeYsno}
                   , #{regiAdmn}
                   , CURRENT_TIMESTAMP
@@ -305,16 +325,21 @@
         UPDATE /* uptComdCode */
                TB_CODEXD
            SET COMD_NAME = #{comdName}
+             , COMD_ENNM = #{comdEnnm}
              , CODE_EXPL = #{codeExpl,jdbcType=VARCHAR}
              , UPPR_CODE = #{upprCode,jdbcType=VARCHAR}
              , OPT1_CODE = #{opt1Code,jdbcType=VARCHAR}
              , OPT1_NAME = #{opt1Name,jdbcType=VARCHAR}
+             , OPT1_ENNM = #{opt1Ennm,jdbcType=VARCHAR}
              , OPT2_CODE = #{opt2Code,jdbcType=VARCHAR}
              , OPT2_NAME = #{opt2Name,jdbcType=VARCHAR}
+             , OPT2_ENNM = #{opt2Ennm,jdbcType=VARCHAR}
              , OPT3_CODE = #{opt3Code,jdbcType=VARCHAR}
              , OPT3_NAME = #{opt3Name,jdbcType=VARCHAR}
+             , OPT3_ENNM = #{opt3Ennm,jdbcType=VARCHAR}
              , OPT4_CODE = #{opt4Code,jdbcType=VARCHAR}
              , OPT4_NAME = #{opt4Name,jdbcType=VARCHAR}
+             , OPT4_ENNM = #{opt4Ennm,jdbcType=VARCHAR}
              , USEE_YSNO = #{useeYsno}
              , UPDT_ADMN = #{updtAdmn}
              , UPDT_DATE = CURRENT_TIMESTAMP

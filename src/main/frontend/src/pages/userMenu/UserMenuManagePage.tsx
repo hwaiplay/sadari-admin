@@ -45,6 +45,7 @@ const emptyUserMenuForm = (): UserMenuForm => ({
   menuNumb: '',
   parnNumb: '',
   menuName: '',
+  menuEnnm: '',
   menuUrlx: '/',
   sortOrdr: '1',
   showYsno: DEFAULT_USEE_YSNO,
@@ -56,6 +57,7 @@ const toUserMenuForm = (menu: UserMenu): UserMenuForm => ({
   menuNumb: String(menu.menuNumb),
   parnNumb: menu.parnNumb == null ? '' : String(menu.parnNumb),
   menuName: menu.menuName,
+  menuEnnm: menu.menuEnnm,
   menuUrlx: menu.menuUrlx,
   sortOrdr: menu.showYsno === DEFAULT_USEE_YSNO ? String(menu.sortOrdr ?? 1) : '',
   showYsno: menu.showYsno ?? DEFAULT_USEE_YSNO,
@@ -394,9 +396,9 @@ export function UserMenuManagePage({ currentPath, onMovePath, onError }: UserMen
     // 버튼과 폼 제출 모두 같은 저장 함수를 사용하도록 기본 제출을 막는다.
     event?.preventDefault()
     // 메뉴명이 없으면 저장 요청을 실행하지 않는다.
-    if (!form.menuName.trim()) {
+    if (!form.menuName.trim() || !form.menuEnnm.trim()) {
       // "메뉴명을 입력해 주세요."
-      alert('메뉴명을 입력해 주세요.')
+      alert('메뉴명과 영문 메뉴명을 입력해 주세요.')
       return
     }
 
@@ -415,15 +417,15 @@ export function UserMenuManagePage({ currentPath, onMovePath, onError }: UserMen
     }
 
     // 추가할 하위 메뉴 중 메뉴명이 비어 있으면 저장 요청을 실행하지 않는다.
-    if (childForms.some((childForm) => !childForm.menuName.trim())) {
+    if (childForms.some((childForm) => !childForm.menuName.trim() || !childForm.menuEnnm.trim())) {
       // "추가할 하위 메뉴의 메뉴명을 입력해 주세요."
-      alert('추가할 하위 메뉴의 메뉴명을 입력해 주세요.')
+      alert('추가할 하위 메뉴의 메뉴명과 영문 메뉴명을 입력해 주세요.')
       return
     }
 
     // 수정할 기존 하위 메뉴 중 메뉴명이 비어 있으면 저장 요청을 실행하지 않는다.
-    if (childEditForms.some((childForm) => !childForm.menuName.trim())) {
-      alert('하위 메뉴의 메뉴명을 입력해 주세요.')
+    if (childEditForms.some((childForm) => !childForm.menuName.trim() || !childForm.menuEnnm.trim())) {
+      alert('하위 메뉴의 메뉴명과 영문 메뉴명을 입력해 주세요.')
       return
     }
 
@@ -648,6 +650,7 @@ export function UserMenuManagePage({ currentPath, onMovePath, onError }: UserMen
               <thead>
                 <tr>
                   <th>메뉴명</th>
+                  <th>영문 메뉴명</th>
                   <th>URL</th>
                   <th>단계</th>
                   <th className="col-usee">햄버거 노출</th>
@@ -660,7 +663,7 @@ export function UserMenuManagePage({ currentPath, onMovePath, onError }: UserMen
               </thead>
               <tbody>
                 {childMenus.length === 0 ? (
-                  <tr className="empty-row"><td colSpan={9}>하위 메뉴가 없습니다.</td></tr>
+                  <tr className="empty-row"><td colSpan={10}>하위 메뉴가 없습니다.</td></tr>
                 ) : childEditForms.map((childForm, index) => {
                   const menu = childMenus[index]
                   return (
@@ -670,6 +673,13 @@ export function UserMenuManagePage({ currentPath, onMovePath, onError }: UserMen
                       <input
                         value={childForm.menuName}
                         onChange={(event) => changeChildEditForm(index, 'menuName', event.target.value)}
+                        required
+                      />
+                    </td>
+                    <td>
+                      <input
+                        value={childForm.menuEnnm}
+                        onChange={(event) => changeChildEditForm(index, 'menuEnnm', event.target.value)}
                         required
                       />
                     </td>
@@ -744,6 +754,7 @@ export function UserMenuManagePage({ currentPath, onMovePath, onError }: UserMen
                 <thead>
                   <tr>
                     <th>메뉴명</th>
+                    <th>영문 메뉴명</th>
                     <th>URL</th>
                     <th>단계</th>
                     <th className="col-usee">햄버거 노출</th>
@@ -760,6 +771,13 @@ export function UserMenuManagePage({ currentPath, onMovePath, onError }: UserMen
                         <input
                           value={childForm.menuName}
                           onChange={(event) => changeChildForm(index, 'menuName', event.target.value)}
+                          required
+                        />
+                      </td>
+                      <td>
+                        <input
+                          value={childForm.menuEnnm}
+                          onChange={(event) => changeChildForm(index, 'menuEnnm', event.target.value)}
                           required
                         />
                       </td>
@@ -866,6 +884,7 @@ function UserMenuFormTable({
             <th>상위 메뉴</th>
             <th>단계</th>
             <th>메뉴명</th>
+            <th>영문 메뉴명</th>
             <th>URL</th>
             <th className="col-usee">햄버거 노출</th>
             <th className="col-usee">사용여부</th>
@@ -884,6 +903,7 @@ function UserMenuFormTable({
             </td>
             <td>{expectedMenuLevl}뎁스</td>
             <td><input value={form.menuName} onChange={(event) => onChange('menuName', event.target.value)} required /></td>
+            <td><input value={form.menuEnnm} onChange={(event) => onChange('menuEnnm', event.target.value)} required /></td>
             <td>
               <input
                 value={form.menuUrlx}

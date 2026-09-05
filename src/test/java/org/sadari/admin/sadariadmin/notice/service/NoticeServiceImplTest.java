@@ -34,6 +34,7 @@ import org.sadari.admin.sadariadmin.notice.vo.NoticeVO;
  * 2026-08-07        SeungHyeon.Kang    공지 전체 삭제 범위 검증 추가
  * 2026-08-08        SeungHyeon.Kang    현재 배포 상태별 버전 저장 검증 추가
  * 2026-08-08        SeungHyeon.Kang    관리자 목록의 배포 버전 선택 기준 검증 추가
+ * 2026-09-05        Codex               영문 공지 필수값 반영
  */
 @ExtendWith(MockitoExtension.class)
 class NoticeServiceImplTest {
@@ -76,9 +77,11 @@ class NoticeServiceImplTest {
         request.setCateCode("GUIDE");
         request.setTopxYsno("Y");
         request.setNotiTitl(" 새 공지 ");
+        request.setNotiEntl(" New notice ");
         request.setNotiCntn("<p>본문</p><script>alert(1)</script>"
                 + "<img src=\"https://example.com/tracker.png\">"
                 + "<img src=\"/uploads/notice/260807/123e4567-e89b-12d3-a456-426614174000.png\">");
+        request.setNotiEnct("<p>English content</p>");
         when(noticeMapper.getLatestVersionForUpdate(9L)).thenReturn(4);
         when(noticeMapper.getNoticeCategoryCnt("NOTI_CATE", "GUIDE", "Y")).thenReturn(1);
         NoticeVO deployed = new NoticeVO();
@@ -108,7 +111,9 @@ class NoticeServiceImplTest {
         request.setCateCode("GUIDE");
         request.setTopxYsno("N");
         request.setNotiTitl("수정 공지");
+        request.setNotiEntl("Updated notice");
         request.setNotiCntn("<p>수정 본문</p>");
+        request.setNotiEnct("<p>Updated content</p>");
         NoticeVO notDeployed = new NoticeVO();
         notDeployed.setDplyYsno("N");
         notDeployed.setDplyDate(LocalDateTime.now());

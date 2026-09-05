@@ -26,8 +26,10 @@ public class ServiceInfoVO {
     private Integer versNumb;
     // 서비스 정보 제목
     private String svciTitl;
+    private String svciEntl;
     // 정제된 서비스 정보 HTML 본문
     private String svciCntn;
+    private String svciEnct;
     // 현재 배포 여부
     private String dplyYsno;
     // 등록 관리자 번호

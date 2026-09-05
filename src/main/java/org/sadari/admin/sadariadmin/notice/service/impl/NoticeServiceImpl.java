@@ -301,17 +301,27 @@ public class NoticeServiceImpl implements NoticeService {
         String categoryCode = notice.getCateCode() == null ? "" : notice.getCateCode().trim();
         String topFixed = notice.getTopxYsno() == null ? NO : notice.getTopxYsno().trim();
         String title = notice.getNotiTitl() == null ? "" : notice.getNotiTitl().trim();
+        String englishTitle = notice.getNotiEntl() == null ? "" : notice.getNotiEntl().trim();
         String content = sanitizeHtml(notice.getNotiCntn());
+        String englishContent = sanitizeHtml(notice.getNotiEnct());
         Document contentDocument = Jsoup.parseBodyFragment(content);
+        Document englishContentDocument = Jsoup.parseBodyFragment(englishContent);
         boolean hasContent = !contentDocument.text().isBlank() || !contentDocument.select("img").isEmpty();
+        boolean hasEnglishContent = !englishContentDocument.text().isBlank()
+                || !englishContentDocument.select("img").isEmpty();
         if (categoryCode.isBlank() || noticeMapper.getNoticeCategoryCnt(NOTI_CATE, categoryCode, YES) != 1
-                || (!YES.equals(topFixed) && !NO.equals(topFixed)) || title.isBlank() || !hasContent
+                || (!YES.equals(topFixed) && !NO.equals(topFixed)) || title.isBlank() || englishTitle.isBlank()
+                || !hasContent || !hasEnglishContent
                 || title.getBytes(StandardCharsets.UTF_8).length > TITLE_MAX_BYTES
-                || content.getBytes(StandardCharsets.UTF_8).length > CONTENT_MAX_BYTES) {
+                || englishTitle.getBytes(StandardCharsets.UTF_8).length > TITLE_MAX_BYTES
+                || content.getBytes(StandardCharsets.UTF_8).length > CONTENT_MAX_BYTES
+                || englishContent.getBytes(StandardCharsets.UTF_8).length > CONTENT_MAX_BYTES) {
             throw new BusinessException(HttpStatus.BAD_REQUEST, ResultEnum.NOTICE_INVALID);
         }
         notice.setNotiTitl(title);
+        notice.setNotiEntl(englishTitle);
         notice.setNotiCntn(content);
+        notice.setNotiEnct(englishContent);
         notice.setCateCode(categoryCode);
         notice.setTopxYsno(topFixed);
     }

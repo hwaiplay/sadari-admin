@@ -79,6 +79,10 @@ export function AlimTempDetailPage({ isNewPage, pageTitle, saving, alimTempForm,
                 <td><input value={alimTempForm.alimTitl} onChange={(event) => onChange('alimTitl', event.target.value)} /></td>
               </tr>
               <tr>
+                <th>영문 알림 제목</th>
+                <td colSpan={3}><input value={alimTempForm.alimEntl} onChange={(event) => onChange('alimEntl', event.target.value)} required /></td>
+              </tr>
+              <tr>
                 <th>사용여부</th>
                 <td colSpan={3}>
                   <select value={alimTempForm.useeYsno} onChange={(event) => onChange('useeYsno', event.target.value)}>
@@ -90,6 +94,12 @@ export function AlimTempDetailPage({ isNewPage, pageTitle, saving, alimTempForm,
                 <th>템플릿 내용</th>
                 <td colSpan={3}>
                   <textarea className="content-textarea" value={alimTempForm.tempCont} onChange={(event) => onChange('tempCont', event.target.value)} required />
+                </td>
+              </tr>
+              <tr>
+                <th>영문 템플릿 내용</th>
+                <td colSpan={3}>
+                  <textarea className="content-textarea" value={alimTempForm.tempEnct} onChange={(event) => onChange('tempEnct', event.target.value)} required />
                 </td>
               </tr>
             </tbody>

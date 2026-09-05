@@ -35,8 +35,14 @@ public class AlimTempVO {
     /** 알림 제목 */
     private String alimTitl;
 
+    /** 알림 영문 제목 */
+    private String alimEntl;
+
     /** 템플릿 내용 */
     private String tempCont;
+
+    /** 템플릿 영문 내용 */
+    private String tempEnct;
 
     /** 사용 여부 */
     private String useeYsno;

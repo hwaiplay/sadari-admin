@@ -187,6 +187,12 @@ export function PopupContentDetailPage({
               />
             </label>
 
+            <label className="popup-content-field">
+              <span>영문 내용 1 <strong>필수</strong></span>
+              <textarea name="englFirs" value={popupContentForm.englFirs} onChange={handleInputChange}
+                className="popup-content-textarea" rows={5} disabled={loading} required />
+            </label>
+
             {/* 두 번째 선택 목록 콘텐츠 영역 */}
             <label className="popup-content-field">
               {/* "내용 2" */}
@@ -199,6 +205,12 @@ export function PopupContentDetailPage({
                 rows={5}
                 disabled={loading}
               />
+            </label>
+
+            <label className="popup-content-field">
+              <span>영문 내용 2 <em>선택</em></span>
+              <textarea name="englSeco" value={popupContentForm.englSeco} onChange={handleInputChange}
+                className="popup-content-textarea" rows={5} disabled={loading} />
             </label>
 
             {/* 세 번째 선택 목록 콘텐츠 영역 */}
@@ -215,6 +227,12 @@ export function PopupContentDetailPage({
               />
             </label>
 
+            <label className="popup-content-field">
+              <span>영문 내용 3 <em>선택</em></span>
+              <textarea name="englThir" value={popupContentForm.englThir} onChange={handleInputChange}
+                className="popup-content-textarea" rows={5} disabled={loading} />
+            </label>
+
             {/* 네 번째 선택 목록 콘텐츠 영역 */}
             <label className="popup-content-field">
               {/* "내용 4" */}
@@ -227,6 +245,12 @@ export function PopupContentDetailPage({
                 rows={5}
                 disabled={loading}
               />
+            </label>
+
+            <label className="popup-content-field">
+              <span>영문 내용 4 <em>선택</em></span>
+              <textarea name="englFour" value={popupContentForm.englFour} onChange={handleInputChange}
+                className="popup-content-textarea" rows={5} disabled={loading} />
             </label>
           </section>
         </section>

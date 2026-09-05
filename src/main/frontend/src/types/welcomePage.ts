@@ -2,9 +2,13 @@ export type WelcomePage = {
   wlcmNumb: number
   versNumb: number
   subxTitl: string
+  subxEntl: string
   mainTitl: string
+  mainEntl: string
   pageDesc: string
+  pageEnct: string
   imgeUrlx: string | null
+  imgeEnur: string | null
   sortOrdr: number
   dplyYsno: 'Y' | 'N'
   regiAdmn: number
@@ -20,8 +24,12 @@ export type WelcomePage = {
 
 export type WelcomePageForm = {
   subxTitl: string
+  subxEntl: string
   mainTitl: string
+  mainEntl: string
   pageDesc: string
+  pageEnct: string
   imgeUrlx: string | null
+  imgeEnur: string | null
   sortOrdr: number
 }

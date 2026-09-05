@@ -33,6 +33,7 @@ import org.sadari.admin.sadariadmin.usermenu.vo.UserMenuVO;
  * 2026-08-10        SeungHyeon.Kang    최초 생성
  * 2026-08-10        SeungHyeon.Kang    직계 하위 메뉴 목록 조회 검증 추가
  * 2026-08-22        SeungHyeon.Kang    메뉴 트리 단위 페이징 검증 추가
+ * 2026-09-05        Codex               영문 사용자 메뉴명 필수값 반영
  */
 @ExtendWith(MockitoExtension.class)
 class UserMenuServiceImplTest {
@@ -190,6 +191,8 @@ class UserMenuServiceImplTest {
         menu.setMenuLevl(menuLevl);
         // 필수 메뉴명을 설정한다
         menu.setMenuName("테스트 메뉴");
+        // 필수 영문 메뉴명을 설정한다
+        menu.setMenuEnnm("Test menu");
         // 그룹 메뉴도 허용되도록 빈 URL을 설정한다
         menu.setMenuUrlx("");
         // 생성한 사용자 메뉴 테스트 데이터를 반환한다

@@ -343,8 +343,10 @@
         SELECT /* getResultEvent */
                C.CMPL_NUMB AS TRIG_CMPL, C.TAGT_TYPE, C.TAGT_NUMB, C.TAGT_HASH, C.TAGT_USER
              , FN_GET_CODE_NAME(#{cmplTagt}, C.TAGT_TYPE, NULL) AS TAGT_NAME
+             , FN_GET_CODE_NAME_LANG(#{cmplTagt}, C.TAGT_TYPE, NULL, 'Y') AS TAGT_ENNM
              , 1 AS RSON_CNTT, C.CMPL_RSON AS RSON_CODE
              , FN_GET_CODE_NAME(#{cmplRsonGroup}, C.CMPL_RSON, NULL) AS RSON_NAME
+             , FN_GET_CODE_NAME_LANG(#{cmplRsonGroup}, C.CMPL_RSON, NULL, 'Y') AS RSON_ENNM
              , C.PROC_DATE
           FROM TH_CMPLNT C
          WHERE C.CMPL_NUMB = #{cmplNumb}
@@ -361,8 +363,10 @@
                MIN(C.CMPL_NUMB) AS TRIG_CMPL, C.TAGT_TYPE, C.TAGT_NUMB, MAX(C.TAGT_HASH) AS TAGT_HASH
              , MAX(C.TAGT_USER) AS TAGT_USER
              , FN_GET_CODE_NAME(#{cmplTagt}, C.TAGT_TYPE, NULL) AS TAGT_NAME
+             , FN_GET_CODE_NAME_LANG(#{cmplTagt}, C.TAGT_TYPE, NULL, 'Y') AS TAGT_ENNM
              , COUNT(DISTINCT C.CMPL_RSON) AS RSON_CNTT, MIN(C.CMPL_RSON) AS RSON_CODE
              , FN_GET_CODE_NAME(#{cmplRsonGroup}, MIN(C.CMPL_RSON), NULL) AS RSON_NAME
+             , FN_GET_CODE_NAME_LANG(#{cmplRsonGroup}, MIN(C.CMPL_RSON), NULL, 'Y') AS RSON_ENNM
              , MAX(C.PROC_DATE) AS PROC_DATE
           FROM TH_CMPLNT C
          WHERE C.TAGT_TYPE = #{tagtType}
@@ -377,12 +381,13 @@
     <insert id="setResultEvent" useGeneratedKeys="true" keyProperty="evntNumb" keyColumn="EVNT_NUMB">
         /* setResultEvent */
         INSERT INTO TH_CMREVT (
-                    TRIG_CMPL, TAGT_TYPE, TAGT_NUMB, TAGT_HASH, TAGT_USER, TAGT_NAME
-                  , RSON_SUMM, RSON_CODE, RSON_NAME, ACTN_TYPE, RPTR_CNTN, TGTR_CNTN, PROC_DATE
+                    TRIG_CMPL, TAGT_TYPE, TAGT_NUMB, TAGT_HASH, TAGT_USER, TAGT_NAME, TAGT_ENNM
+                  , RSON_SUMM, RSON_CODE, RSON_NAME, RSON_ENNM, ACTN_TYPE
+                  , RPTR_CNTN, RPTR_ENCT, TGTR_CNTN, TGTR_ENCT, PROC_DATE
         ) VALUES (  #{trigCmpl}, #{tagtType}, #{tagtNumb}, #{tagtHash,jdbcType=CHAR}
-                  , #{tagtUser,jdbcType=NUMERIC}, #{tagtName}, #{rsonSumm}
-                  , #{rsonCode,jdbcType=VARCHAR}, #{rsonName}, #{actnType}
-                  , #{rptrCntn}, #{tgtrCntn}, #{procDate}
+                  , #{tagtUser,jdbcType=NUMERIC}, #{tagtName}, #{tagtEnnm}, #{rsonSumm}
+                  , #{rsonCode,jdbcType=VARCHAR}, #{rsonName}, #{rsonEnnm}, #{actnType}
+                  , #{rptrCntn}, #{rptrEnct}, #{tgtrCntn}, #{tgtrEnct}, #{procDate}
         )
     </insert>
 

@@ -30,9 +30,13 @@
         , C.POPU_CODE
         , C.MNGM_TITL
         , C.CONT_FIRS
+        , C.ENGL_FIRS
         , C.CONT_SECO
+        , C.ENGL_SECO
         , C.CONT_THIR
+        , C.ENGL_THIR
         , C.CONT_FOUR
+        , C.ENGL_FOUR
         , C.REGI_ADMN
         , FN_GET_ADMIN_NAME(C.REGI_ADMN) AS REGI_ADMN_NAME
         , C.REGI_DATE
@@ -48,9 +52,13 @@
         , P.POPU_CODE
         , P.MNGM_TITL
         , P.CONT_FIRS
+        , P.ENGL_FIRS
         , P.CONT_SECO
+        , P.ENGL_SECO
         , P.CONT_THIR
+        , P.ENGL_THIR
         , P.CONT_FOUR
+        , P.ENGL_FOUR
         , P.REGI_ADMN
         , P.REGI_ADMN_NAME
         , P.REGI_DATE
@@ -70,9 +78,13 @@
                        , R.POPU_CODE
                        , R.MNGM_TITL
                        , R.CONT_FIRS
+                       , R.ENGL_FIRS
                        , R.CONT_SECO
+                       , R.ENGL_SECO
                        , R.CONT_THIR
+                       , R.ENGL_THIR
                        , R.CONT_FOUR
+                       , R.ENGL_FOUR
                        , R.REGI_ADMN
                        , R.REGI_ADMN_NAME
                        , R.REGI_DATE
@@ -149,9 +161,13 @@
                   , POPU_CODE
                   , MNGM_TITL
                   , CONT_FIRS
+                  , ENGL_FIRS
                   , CONT_SECO
+                  , ENGL_SECO
                   , CONT_THIR
+                  , ENGL_THIR
                   , CONT_FOUR
+                  , ENGL_FOUR
                   , REGI_ADMN
                   , REGI_DATE
                   , UPDT_ADMN
@@ -160,9 +176,13 @@
                   , #{popuCode}
                   , #{mngmTitl}
                   , #{contFirs}
+                  , #{englFirs}
                   , #{contSeco,jdbcType=VARCHAR}
+                  , #{englSeco,jdbcType=VARCHAR}
                   , #{contThir,jdbcType=VARCHAR}
+                  , #{englThir,jdbcType=VARCHAR}
                   , #{contFour,jdbcType=VARCHAR}
+                  , #{englFour,jdbcType=VARCHAR}
                   , #{regiAdmn}
                   , CURRENT_TIMESTAMP
                   , #{updtAdmn}
@@ -176,9 +196,13 @@
                CT_POPUPX
            SET MNGM_TITL = #{mngmTitl}
              , CONT_FIRS = #{contFirs}
+             , ENGL_FIRS = #{englFirs}
              , CONT_SECO = #{contSeco,jdbcType=VARCHAR}
+             , ENGL_SECO = #{englSeco,jdbcType=VARCHAR}
              , CONT_THIR = #{contThir,jdbcType=VARCHAR}
+             , ENGL_THIR = #{englThir,jdbcType=VARCHAR}
              , CONT_FOUR = #{contFour,jdbcType=VARCHAR}
+             , ENGL_FOUR = #{englFour,jdbcType=VARCHAR}
              , UPDT_ADMN = #{updtAdmn}
              , UPDT_DATE = CURRENT_TIMESTAMP
          WHERE POPU_SITU = #{popuSitu}

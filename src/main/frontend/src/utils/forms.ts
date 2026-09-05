@@ -56,16 +56,21 @@ export const emptyMenuForm = (parentMenuNumb = ''): MenuForm => ({
 export const emptyDetailForm = (upprCode = ''): DetailCodeForm => ({
   comdCode: '',
   comdName: '',
+  comdEnnm: '',
   codeExpl: '',
   upprCode,
   opt1Code: '',
   opt1Name: '',
+  opt1Ennm: '',
   opt2Code: '',
   opt2Name: '',
+  opt2Ennm: '',
   opt3Code: '',
   opt3Name: '',
+  opt3Ennm: '',
   opt4Code: '',
   opt4Name: '',
+  opt4Ennm: '',
   sortOrdr: '1',
   useeYsno: DEFAULT_USEE_YSNO,
 })
@@ -79,31 +84,41 @@ export const emptyDetailForm = (upprCode = ''): DetailCodeForm => ({
 export const toDetailCodeForm = (code: {
   comdCode: string
   comdName: string
+  comdEnnm: string
   codeExpl: string | null
   upprCode: string | null
   opt1Code?: string | null
   opt1Name?: string | null
+  opt1Ennm?: string | null
   opt2Code?: string | null
   opt2Name?: string | null
+  opt2Ennm?: string | null
   opt3Code?: string | null
   opt3Name?: string | null
+  opt3Ennm?: string | null
   opt4Code?: string | null
   opt4Name?: string | null
+  opt4Ennm?: string | null
   sortOrdr: number | null
   useeYsno: string | null
 }): DetailCodeForm => ({
   comdCode: code.comdCode,
   comdName: code.comdName,
+  comdEnnm: code.comdEnnm,
   codeExpl: code.codeExpl ?? '',
   upprCode: code.upprCode ?? '',
   opt1Code: code.opt1Code ?? '',
   opt1Name: code.opt1Name ?? '',
+  opt1Ennm: code.opt1Ennm ?? '',
   opt2Code: code.opt2Code ?? '',
   opt2Name: code.opt2Name ?? '',
+  opt2Ennm: code.opt2Ennm ?? '',
   opt3Code: code.opt3Code ?? '',
   opt3Name: code.opt3Name ?? '',
+  opt3Ennm: code.opt3Ennm ?? '',
   opt4Code: code.opt4Code ?? '',
   opt4Name: code.opt4Name ?? '',
+  opt4Ennm: code.opt4Ennm ?? '',
   sortOrdr: String(code.sortOrdr ?? 1),
   useeYsno: code.useeYsno ?? DEFAULT_USEE_YSNO,
 })

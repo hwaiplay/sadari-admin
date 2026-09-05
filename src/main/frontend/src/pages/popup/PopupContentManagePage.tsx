@@ -236,9 +236,10 @@ export function PopupContentManagePage({
   const validatePopupContentForm = (): boolean => {
     // 복합키와 관리 제목 및 첫 번째 목록 영역은 사용자 팝업 연결에 필수이다
     if (!popupContentForm.popuSitu.trim() || !popupContentForm.popuCode.trim()
-        || !popupContentForm.mngmTitl.trim() || !popupLinesToJson(popupContentForm.contFirs)) {
+        || !popupContentForm.mngmTitl.trim() || !popupLinesToJson(popupContentForm.contFirs)
+        || !popupLinesToJson(popupContentForm.englFirs)) {
       // "사용 화면, 팝업 코드, 관리용 제목, 내용 1을 입력해 주세요."
-      onError('사용 화면, 팝업 코드, 관리용 제목, 내용 1을 입력해 주세요.')
+      onError('사용 화면, 팝업 코드, 관리용 제목, 내용 1과 영문 내용 1을 입력해 주세요.')
       // 필수값이 누락되어 저장할 수 없음을 반환한다
       return false
     }

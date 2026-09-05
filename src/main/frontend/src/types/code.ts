@@ -2,16 +2,21 @@ export type Code = {
   commCode: string
   comdCode: string
   comdName: string
+  comdEnnm: string
   codeExpl: string | null
   upprCode: string | null
   opt1Code?: string | null
   opt1Name?: string | null
+  opt1Ennm?: string | null
   opt2Code?: string | null
   opt2Name?: string | null
+  opt2Ennm?: string | null
   opt3Code?: string | null
   opt3Name?: string | null
+  opt3Ennm?: string | null
   opt4Code?: string | null
   opt4Name?: string | null
+  opt4Ennm?: string | null
   useeYsno: string | null
   useeYsnoName?: string | null
   regiAdmn: string | null
@@ -40,16 +45,21 @@ export type CodeMaster = {
 export type DetailCodeForm = {
   comdCode: string
   comdName: string
+  comdEnnm: string
   codeExpl: string
   upprCode: string
   opt1Code: string
   opt1Name: string
+  opt1Ennm: string
   opt2Code: string
   opt2Name: string
+  opt2Ennm: string
   opt3Code: string
   opt3Name: string
+  opt3Ennm: string
   opt4Code: string
   opt4Name: string
+  opt4Ennm: string
   sortOrdr: string
   useeYsno: string
 }
@@ -57,16 +67,21 @@ export type DetailCodeForm = {
 export type DetailCodePayload = {
   comdCode: string
   comdName: string
+  comdEnnm: string
   codeExpl: string
   upprCode: string | null
   opt1Code: string
   opt1Name: string
+  opt1Ennm: string
   opt2Code: string
   opt2Name: string
+  opt2Ennm: string
   opt3Code: string
   opt3Name: string
+  opt3Ennm: string
   opt4Code: string
   opt4Name: string
+  opt4Ennm: string
   sortOrdr: number
   useeYsno: string
 }

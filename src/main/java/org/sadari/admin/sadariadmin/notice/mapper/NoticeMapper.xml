@@ -23,6 +23,7 @@
              , C.COMD_NAME AS CATE_NAME
              , N.TOPX_YSNO
              , N.NOTI_TITL
+             , N.NOTI_ENTL
              , N.DPLY_YSNO
              , N.REGI_ADMN
              , FN_GET_ADMIN_NAME(N.REGI_ADMN) AS REGI_ADMN_NAME
@@ -82,7 +83,9 @@
              , N.CATE_CODE
              , C.COMD_NAME AS CATE_NAME
              , N.NOTI_TITL
+             , N.NOTI_ENTL
              , N.NOTI_CNTN
+             , N.NOTI_ENCT
              , N.TOPX_YSNO
              , N.DPLY_YSNO
              , N.REGI_ADMN
@@ -111,6 +114,7 @@
              , C.COMD_NAME AS CATE_NAME
              , N.TOPX_YSNO
              , N.NOTI_TITL
+             , N.NOTI_ENTL
              , N.DPLY_YSNO
              , N.REGI_ADMN
              , FN_GET_ADMIN_NAME(N.REGI_ADMN) AS REGI_ADMN_NAME
@@ -135,6 +139,11 @@
                NOTI_CNTN
           FROM CT_NOTICE
          WHERE NOTI_NUMB = #{notiNumb}
+        UNION ALL
+        SELECT NOTI_ENCT
+          FROM CT_NOTICE
+         WHERE NOTI_NUMB = #{notiNumb}
+           AND NOTI_ENCT IS NOT NULL
     </select>
 
     <!-- 사용 중인 공지사항 카테고리 상세코드인지 확인한다 -->
@@ -177,7 +186,9 @@
              , CATE_CGRP
              , CATE_CODE
              , NOTI_TITL
+             , NOTI_ENTL
              , NOTI_CNTN
+             , NOTI_ENCT
              , TOPX_YSNO
              , DPLY_YSNO
              , REGI_ADMN
@@ -190,7 +201,9 @@
              , #{cateCgrp}
              , #{cateCode}
              , #{notiTitl}
+             , #{notiEntl}
              , #{notiCntn}
+             , #{notiEnct}
              , #{topxYsno}
              , #{dplyYsno}
              , #{regiAdmn}
@@ -207,7 +220,9 @@
            SET CATE_CGRP = #{cateCgrp}
              , CATE_CODE = #{cateCode}
              , NOTI_TITL = #{notiTitl}
+             , NOTI_ENTL = #{notiEntl}
              , NOTI_CNTN = #{notiCntn}
+             , NOTI_ENCT = #{notiEnct}
              , TOPX_YSNO = #{topxYsno}
              , UPDT_ADMN = #{updtAdmn}
              , UPDT_DATE = CURRENT_TIMESTAMP

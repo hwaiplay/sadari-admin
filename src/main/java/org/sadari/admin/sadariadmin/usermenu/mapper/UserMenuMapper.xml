@@ -60,6 +60,7 @@
         , P.MENU_NAME AS PARN_NAME
         , M.MENU_LEVL
         , M.MENU_NAME
+        , M.MENU_ENNM
         , M.MENU_URLX
         , M.SORT_ORDR
         , M.SHOW_YSNO
@@ -109,6 +110,7 @@
                      , PAGE.PARN_NAME
                      , PAGE.MENU_LEVL
                      , PAGE.MENU_NAME
+                     , PAGE.MENU_ENNM
                      , PAGE.MENU_URLX
                      , PAGE.SORT_ORDR
                      , PAGE.SHOW_YSNO
@@ -246,6 +248,7 @@
                     PARN_NUMB
                   , MENU_LEVL
                   , MENU_NAME
+                  , MENU_ENNM
                   , MENU_URLX
                   , SORT_ORDR
                   , SHOW_YSNO
@@ -257,6 +260,7 @@
         ) VALUES (  #{parnNumb,jdbcType=BIGINT}
                   , #{menuLevl}
                   , #{menuName}
+                  , #{menuEnnm}
                   , #{menuUrlx}
                   , #{sortOrdr,jdbcType=NUMERIC}
                   , #{showYsno}
@@ -275,6 +279,7 @@
            SET PARN_NUMB = #{parnNumb,jdbcType=BIGINT}
              , MENU_LEVL = #{menuLevl}
              , MENU_NAME = #{menuName}
+             , MENU_ENNM = #{menuEnnm}
              , MENU_URLX = #{menuUrlx}
              , SORT_ORDR = #{sortOrdr,jdbcType=NUMERIC}
              , SHOW_YSNO = #{showYsno}

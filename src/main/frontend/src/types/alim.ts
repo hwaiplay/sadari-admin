@@ -4,7 +4,9 @@ export type AlimTemp = {
   tempCode: string
   tempTitl: string
   alimTitl: string | null
+  alimEntl: string | null
   tempCont: string
+  tempEnct: string
   useeYsno: string | null
   useeYsnoName?: string | null
   regiAdmn: string | null
@@ -20,7 +22,9 @@ export type AlimTempForm = {
   tempCode: string
   tempTitl: string
   alimTitl: string
+  alimEntl: string
   tempCont: string
+  tempEnct: string
   useeYsno: string
 }
 

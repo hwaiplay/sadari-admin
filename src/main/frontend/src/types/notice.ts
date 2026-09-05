@@ -5,7 +5,9 @@ export type Notice = {
   cateCode: string
   cateName: string
   notiTitl: string
+  notiEntl: string
   notiCntn: string
+  notiEnct: string
   topxYsno: 'Y' | 'N'
   dplyYsno: 'Y' | 'N'
   dplyDate: string | null
@@ -22,6 +24,8 @@ export type Notice = {
 export type NoticeForm = {
   cateCode: string
   notiTitl: string
+  notiEntl: string
   notiCntn: string
+  notiEnct: string
   topxYsno: 'Y' | 'N'
 }

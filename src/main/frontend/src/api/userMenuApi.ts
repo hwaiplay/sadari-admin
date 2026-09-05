@@ -33,6 +33,7 @@ export const saveUserMenuApi = (form: UserMenuForm, detail: boolean) => {
   const payload = {
     parnNumb: form.parnNumb ? Number(form.parnNumb) : null,
     menuName: form.menuName.trim(),
+    menuEnnm: form.menuEnnm.trim(),
     menuUrlx: form.menuUrlx.trim(),
     sortOrdr: form.showYsno === DEFAULT_USEE_YSNO && form.sortOrdr ? Number(form.sortOrdr) : null,
     showYsno: form.showYsno,

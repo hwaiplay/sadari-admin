@@ -174,7 +174,8 @@ public class UserMenuServiceImpl implements UserMenuService {
     /** 사용자 메뉴 필수 입력값을 확인한다. */
     private void checkRequired(UserMenuVO menu) {
         // 메뉴 객체 또는 메뉴명이 없으면 저장할 수 없는 요청으로 분기한다
-        if (StringUtil.isEmpty(menu) || StringUtil.isEmpty(menu.getMenuName())) {
+        if (StringUtil.isEmpty(menu) || StringUtil.isEmpty(menu.getMenuName())
+                || StringUtil.isEmpty(menu.getMenuEnnm())) {
             // "필수값을 입력해 주세요."
             throw new BusinessException(HttpStatus.BAD_REQUEST, ResultEnum.COMMON_REQUIRED_VALUE);
         }

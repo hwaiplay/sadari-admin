@@ -27,6 +27,7 @@ import static org.mockito.Mockito.when;
  * DATE              AUTHOR             NOTE
  * -----------------------------------------------------------
  * 2026-08-05        SeungHyeon.Kang       최초 생성
+ * 2026-09-05        Codex                  영문 코드명 필수값 반영
  */
 @ExtendWith(MockitoExtension.class)
 class CodeManageServiceTests {
@@ -121,6 +122,8 @@ class CodeManageServiceTests {
         code.setComdCode(comdCode);
         // 필수 표시명을 설정한다
         code.setComdName("테스트 코드");
+        // 필수 영문 표시명을 설정한다
+        code.setComdEnnm("Test code");
         // 검증할 상위 세부코드를 설정한다
         code.setUpprCode(upprCode);
         // 완성된 테스트 세부코드를 반환한다

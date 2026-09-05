@@ -26,6 +26,8 @@ public class CodeVO {
 
     /** 세부코드명 */
     private String comdName;
+    // 세부코드 영문 이름
+    private String comdEnnm;
 
     /** 코드 설명 */
     private String codeExpl;
@@ -37,18 +39,22 @@ public class CodeVO {
     private String opt1Code;
 
     private String opt1Name;
+    private String opt1Ennm;
 
     private String opt2Code;
 
     private String opt2Name;
+    private String opt2Ennm;
 
     private String opt3Code;
 
     private String opt3Name;
+    private String opt3Ennm;
 
     private String opt4Code;
 
     private String opt4Name;
+    private String opt4Ennm;
 
     private String useeYsno;
 

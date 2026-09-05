@@ -26,6 +26,7 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
  * -----------------------------------------------------------
  * 2026-07-30        SeungHyeon.Kang    최초 생성
  * 2026-07-31        SeungHyeon.Kang    목록 검색 조건 반영
+ * 2026-09-05        Codex               영문 팝업 필수값 반영
  */
 @SpringBootTest
 @ActiveProfiles("loc")
@@ -53,6 +54,8 @@ class PopupContentServiceTests {
         // 회원 계정 처리 정책 팝업의 상세 JSON 목록을 조회한다
         PopupContentVO popupContent = popupContentService.getPopupContentDtl("ACCOUNT", "WITHDRAWAL_POLICY"
                                                                            , createAdminSession());
+        // 기존 영문 데이터가 없는 로컬 DB에서도 새 필수값 검증을 통과하도록 대응값을 설정한다
+        setEnglishContent(popupContent);
         // 조회된 관리 제목을 유지하면서 수정 Mapper와 감사정보 갱신을 실행한다
         PopupContentVO updatedContent = popupContentService.uptPopupContent("ACCOUNT", "WITHDRAWAL_POLICY"
                                                                           , popupContent, createAdminSession());
@@ -72,6 +75,8 @@ class PopupContentServiceTests {
         // 회원 계정 처리 정책 팝업의 현재 상세를 조회한다
         PopupContentVO popupContent = popupContentService.getPopupContentDtl("ACCOUNT", "WITHDRAWAL_POLICY"
                                                                            , createAdminSession());
+        // 검증 대상인 한글 JSON 이외 영문 필수값은 정상 상태로 설정한다
+        setEnglishContent(popupContent);
         // 사용자 화면에서 비어 있는 목록 항목이 생기는 잘못된 JSON을 설정한다
         popupContent.setContFirs("[\"\"]");
         // 잘못된 JSON 목록 문구가 DB 수정 전에 업무 예외로 차단되는지 확인한다
@@ -93,5 +98,14 @@ class PopupContentServiceTests {
         admin.setAdmnNumb(1L);
         // 관리자 서비스 인증 확인을 통과할 테스트 세션을 반환한다
         return admin;
+    }
+
+    /** 현재 팝업의 한글 JSON을 영문 필수 테스트값으로 복사한다. */
+    private void setEnglishContent(PopupContentVO popupContent) {
+        // 네 개 팝업 영역의 구조를 유지한 채 영문 필수값을 준비한다
+        popupContent.setEnglFirs(popupContent.getContFirs());
+        popupContent.setEnglSeco(popupContent.getContSeco());
+        popupContent.setEnglThir(popupContent.getContThir());
+        popupContent.setEnglFour(popupContent.getContFour());
     }
 }

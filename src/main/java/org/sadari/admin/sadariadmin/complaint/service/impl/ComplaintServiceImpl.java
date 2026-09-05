@@ -799,10 +799,12 @@ public class ComplaintServiceImpl implements ComplaintService {
         event.setActnType(Constant.CMPL_ACTION_REVIEW);
         // 신고자에게 공개할 일반 처리 완료 문구를 설정한다
         event.setRptrCntn("신고 내용을 검토하여 운영정책에 따른 조치를 완료했습니다.");
+        event.setRptrEnct("We reviewed your report and completed the action required by our community policy.");
         // 단일 신고의 사유를 피신고자 공개 정책에 맞춰 요약한다
         setReasonSummary(event);
         // 피신고자에게 건수와 제재 기간 없이 누적 및 정책 조치 사실만 안내한다
         event.setTgtrCntn(getReasonContent(event) + "가 누적되어 운영정책에 따른 조치를 적용했습니다.");
+        event.setTgtrEnct(getEnglishReasonContent(event) + " accumulated. Action was applied under our community policy.");
         // 사용자 안내 이벤트와 수신자 연결을 같은 트랜잭션에서 저장한다
         saveResultEvent(event, false, null, null);
     }
@@ -817,10 +819,12 @@ public class ComplaintServiceImpl implements ComplaintService {
         event.setActnType(getManualActionType(tagtType));
         // 신고자에게 공개할 실제 콘텐츠 조치 문구를 설정한다
         event.setRptrCntn(getPublicResult(tagtType));
+        event.setRptrEnct(getPublicEnglishResult(tagtType));
         // 여러 신고 사유를 대표값 없이 피신고자 공개 정책에 맞춰 요약한다
         setReasonSummary(event);
         // 피신고자에게 정확한 건수 없이 누적 사실과 실제 콘텐츠 조치를 안내한다
         event.setTgtrCntn(getReasonContent(event) + "가 누적되어 " + getPublicResult(tagtType));
+        event.setTgtrEnct(getEnglishReasonContent(event) + " accumulated. " + getPublicEnglishResult(tagtType));
         // 하나의 이벤트에 종결 신고자 전원과 피신고자를 연결한다
         saveResultEvent(event, true, procCntn, procAdmn);
     }
@@ -857,6 +861,7 @@ public class ComplaintServiceImpl implements ComplaintService {
             event.setRsonSumm(Constant.CMPL_REASON_SUMMARY_UNKNOWN);
             // 피신고자에게 표시할 일반 운영정책 문구를 설정한다
             event.setRsonName("운영정책 관련 신고");
+            event.setRsonEnnm("Reports related to the community policy");
             // 단일 사유 코드가 잘못 노출되지 않도록 제거한다
             event.setRsonCode(null);
             return;
@@ -867,6 +872,7 @@ public class ComplaintServiceImpl implements ComplaintService {
             event.setRsonSumm(Constant.CMPL_REASON_SUMMARY_MULTIPLE);
             // 정확한 건수 없이 복수 유형으로 표시한다
             event.setRsonName("복수 유형의 신고");
+            event.setRsonEnnm("Multiple types of reports");
             // 대표 사유처럼 보이지 않도록 단일 사유 코드를 제거한다
             event.setRsonCode(null);
             return;
@@ -877,6 +883,7 @@ public class ComplaintServiceImpl implements ComplaintService {
             event.setRsonSumm(Constant.CMPL_REASON_SUMMARY_OTHER);
             // 피신고자에게 기타 유형만 표시한다
             event.setRsonName("기타 사유 신고");
+            event.setRsonEnnm("Reports for other reasons");
             return;
         }
         // 모두 같은 단일 사유이면 실제 공통코드 표시명을 사용한다
@@ -888,6 +895,12 @@ public class ComplaintServiceImpl implements ComplaintService {
         // 단일 실제 사유만 자연스러운 문장을 위해 관련 신고라는 표현을 덧붙인다
         return Constant.CMPL_REASON_SUMMARY_SINGLE.equals(event.getRsonSumm())
                 ? event.getRsonName() + " 관련 신고" : event.getRsonName();
+    }
+
+    /** 피신고자 영문 안내 문장에 사용할 신고 유형 누적 표현을 생성한다. */
+    private String getEnglishReasonContent(ComplaintResultEventVO event) {
+        return Constant.CMPL_REASON_SUMMARY_SINGLE.equals(event.getRsonSumm())
+                ? "Reports related to " + event.getRsonEnnm() : event.getRsonEnnm();
     }
 
     /** 대상 유형에 대응하는 관리자 수동 조치 유형 코드를 조회한다. */
@@ -915,6 +928,19 @@ public class ComplaintServiceImpl implements ComplaintService {
             case Constant.CMPL_TARGET_INTRODUCTION -> "신고된 한줄소개를 초기화했습니다.";
             case Constant.CMPL_TARGET_CLUB -> "신고된 모임 소개를 초기화했습니다.";
             default -> "신고 내용을 검토하여 운영정책에 따른 조치를 완료했습니다.";
+        };
+    }
+
+    /** 신고자와 피신고자에게 공개할 대상별 영문 조치 문구를 조회한다. */
+    private String getPublicEnglishResult(String tagtType) {
+        return switch (tagtType) {
+            case Constant.CMPL_TARGET_BOOK_REPORT -> "The reported reading report was removed.";
+            case Constant.CMPL_TARGET_REPLY -> "The reported comment was removed.";
+            case Constant.CMPL_TARGET_PROFILE_IMAGE -> "The reported profile photo was reset to the default image.";
+            case Constant.CMPL_TARGET_BACKGROUND_IMAGE -> "The reported background photo was reset to the default image.";
+            case Constant.CMPL_TARGET_INTRODUCTION -> "The reported profile introduction was cleared.";
+            case Constant.CMPL_TARGET_CLUB -> "The reported club introduction was cleared.";
+            default -> "We reviewed the report and completed the action required by our community policy.";
         };
     }
 

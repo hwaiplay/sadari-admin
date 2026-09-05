@@ -35,7 +35,7 @@ const EMPTY_PAGE: PageData<ServiceInfo> = {
   items: [], totalCount: 0, pageNumber: 1, pageSize: 20, totalPages: 0,
 }
 
-const EMPTY_FORM: ServiceInfoForm = { cateCode: '', svciTitl: '', svciCntn: '' }
+const EMPTY_FORM: ServiceInfoForm = { cateCode: '', svciTitl: '', svciEntl: '', svciCntn: '', svciEnct: '' }
 
 /** 카테고리별 단일 서비스 정보의 목록과 버전 및 배포 화면을 관리한다. */
 export function ServiceInfoManagePage({ currentPath, onMovePath, onError }: ServiceInfoManagePageProps) {
@@ -123,7 +123,7 @@ export function ServiceInfoManagePage({ currentPath, onMovePath, onError }: Serv
           setDetail(result)
           setVersions(versionList)
           setCategoryCodes(codes)
-          setForm({ cateCode: result.cateCode, svciTitl: result.svciTitl, svciCntn: result.svciCntn })
+          setForm({ cateCode: result.cateCode, svciTitl: result.svciTitl, svciEntl: result.svciEntl, svciCntn: result.svciCntn, svciEnct: result.svciEnct })
         }).catch((error: unknown) => {
           onError(error instanceof Error ? error.message : '서비스 정보 상세 조회에 실패했습니다.')
         }).finally(() => setLoading(false))
@@ -152,7 +152,8 @@ export function ServiceInfoManagePage({ currentPath, onMovePath, onError }: Serv
   /** 서비스 정보 초안을 저장하고 서버가 결정한 버전 상세로 이동한다. */
   const save = async (): Promise<void> => {
     // 필수 입력값이 없으면 API 요청을 실행하지 않는다.
-    if (!form.cateCode || !form.svciTitl.trim() || !form.svciCntn.trim()) {
+    if (!form.cateCode || !form.svciTitl.trim() || !form.svciEntl.trim()
+        || !form.svciCntn.trim() || !form.svciEnct.trim()) {
       alert('카테고리와 제목 및 내용을 모두 입력해 주세요.')
       return
     }
@@ -275,8 +276,8 @@ export function ServiceInfoManagePage({ currentPath, onMovePath, onError }: Serv
     <section className="notice-page">
       <section className="content-header"><h1>{isNewPage ? '서비스 정보 등록' : '서비스 정보 상세'}</h1></section>
       <section className="detail-panel">
-        <section className="table-wrap notice-detail-table"><table><tbody><tr><th>카테고리</th><td><select value={form.cateCode} disabled={!isNewPage} onChange={(event) => setForm({ ...form, cateCode: event.target.value })}><option value="">선택</option>{categoryCodes.map((code) => <option key={code.comdCode} value={code.comdCode}>{code.comdName}</option>)}</select></td><th>버전</th><td>{detail ? detail.versNumb : '신규'}</td><th>배포 상태</th><td>{detail?.dplyYsno === 'Y' ? '배포 중' : '미배포'}</td></tr><tr><th>제목</th><td colSpan={5}><input value={form.svciTitl} onChange={(event) => setForm({ ...form, svciTitl: event.target.value })} /></td></tr></tbody></table></section>
-        <div className="notice-form"><label><span>내용</span><SummernoteEditor value={form.svciCntn} disabled={saving} placeholder="서비스 정보 내용을 입력해 주세요." uploadImage={uploadServiceInfoImage} uploadErrorMessage="서비스 정보 이미지 업로드에 실패했습니다." onChange={(svciCntn) => setForm((current) => ({ ...current, svciCntn }))} onError={onError} /></label></div>
+        <section className="table-wrap notice-detail-table"><table><tbody><tr><th>카테고리</th><td><select value={form.cateCode} disabled={!isNewPage} onChange={(event) => setForm({ ...form, cateCode: event.target.value })}><option value="">선택</option>{categoryCodes.map((code) => <option key={code.comdCode} value={code.comdCode}>{code.comdName}</option>)}</select></td><th>버전</th><td>{detail ? detail.versNumb : '신규'}</td><th>배포 상태</th><td>{detail?.dplyYsno === 'Y' ? '배포 중' : '미배포'}</td></tr><tr><th>제목</th><td colSpan={5}><input value={form.svciTitl} onChange={(event) => setForm({ ...form, svciTitl: event.target.value })} /></td></tr><tr><th>영문 제목</th><td colSpan={5}><input value={form.svciEntl} onChange={(event) => setForm({ ...form, svciEntl: event.target.value })} /></td></tr></tbody></table></section>
+        <div className="notice-form"><label><span>내용</span><SummernoteEditor value={form.svciCntn} disabled={saving} placeholder="서비스 정보 내용을 입력해 주세요." uploadImage={uploadServiceInfoImage} uploadErrorMessage="서비스 정보 이미지 업로드에 실패했습니다." onChange={(svciCntn) => setForm((current) => ({ ...current, svciCntn }))} onError={onError} /></label><label><span>영문 내용</span><SummernoteEditor value={form.svciEnct} disabled={saving} placeholder="영문 서비스 정보 내용을 입력해 주세요." uploadImage={uploadServiceInfoImage} uploadErrorMessage="서비스 정보 이미지 업로드에 실패했습니다." onChange={(svciEnct) => setForm((current) => ({ ...current, svciEnct }))} onError={onError} /></label></div>
         {!isNewPage && versions.length > 0 && <section className="notice-version-section"><div className="detail-title"><div><h2>버전 이력</h2><p>카테고리에는 하나의 글만 존재하며 수정 이력은 버전으로 관리됩니다.</p></div></div><section className="table-wrap"><table><thead><tr><th>버전</th><th>제목</th><th>배포</th><th>수정일</th></tr></thead><tbody>{versions.map((version) => <tr key={version.versNumb} className="notice-version-row" onClick={() => onMovePath(`${SERVICE_INFO_DETAIL_PREFIX}/${encodeURIComponent(version.cateCode)}/${version.versNumb}`)}><td>{version.versNumb}</td><td>{version.svciTitl}</td><td>{version.dplyYsno === 'Y' ? '배포 중' : '미배포'}</td><td>{formatDate(version.updtDate ?? version.regiDate)}</td></tr>)}</tbody></table></section></section>}
       </section>
       {!isNewPage && detail && <AuditInfoTable regiAdmn={detail.regiAdmn} regiAdmnName={detail.regiAdmnName} regiDate={detail.regiDate} updtAdmn={detail.updtAdmn} updtAdmnName={detail.updtAdmnName} updtDate={detail.updtDate} dplyAdmn={detail.dplyAdmn} dplyAdmnName={detail.dplyAdmnName} dplyDate={detail.dplyDate} showDeployInfo />}

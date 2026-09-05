@@ -34,7 +34,9 @@
         , A.TEMP_CODE
         , A.TEMP_TITL
         , A.ALIM_TITL
+        , A.ALIM_ENTL
         , A.TEMP_CONT
+        , A.TEMP_ENCT
         , A.USEE_YSNO
         , FN_GET_CODE_NAME(#{commYsno}, A.USEE_YSNO, #{useeYsnoCode}) AS USEE_YSNO_NAME
         , A.REGI_ADMN
@@ -52,7 +54,9 @@
         , P.TEMP_CODE
         , P.TEMP_TITL
         , P.ALIM_TITL
+        , P.ALIM_ENTL
         , P.TEMP_CONT
+        , P.TEMP_ENCT
         , P.USEE_YSNO
         , P.USEE_YSNO_NAME
         , P.REGI_ADMN
@@ -74,7 +78,9 @@
                        , R.TEMP_CODE
                        , R.TEMP_TITL
                        , R.ALIM_TITL
+                       , R.ALIM_ENTL
                        , R.TEMP_CONT
+                       , R.TEMP_ENCT
                        , R.USEE_YSNO
                        , R.USEE_YSNO_NAME
                        , R.REGI_ADMN
@@ -136,7 +142,9 @@
                   , TEMP_CODE
                   , TEMP_TITL
                   , ALIM_TITL
+                  , ALIM_ENTL
                   , TEMP_CONT
+                  , TEMP_ENCT
                   , USEE_YSNO
                   , REGI_ADMN
                   , REGI_DATE
@@ -146,7 +154,9 @@
                   , #{tempCode}
                   , #{tempTitl}
                   , #{alimTitl}
+                  , #{alimEntl}
                   , #{tempCont}
+                  , #{tempEnct}
                   , #{useeYsno}
                   , #{regiAdmn}
                   , CURRENT_TIMESTAMP
@@ -163,7 +173,9 @@
              , TEMP_CODE = #{alimTemp.tempCode}
              , TEMP_TITL = #{alimTemp.tempTitl}
              , ALIM_TITL = #{alimTemp.alimTitl}
+             , ALIM_ENTL = #{alimTemp.alimEntl}
              , TEMP_CONT = #{alimTemp.tempCont}
+             , TEMP_ENCT = #{alimTemp.tempEnct}
              , USEE_YSNO = #{alimTemp.useeYsno}
              , UPDT_ADMN = #{alimTemp.updtAdmn}
              , UPDT_DATE = CURRENT_TIMESTAMP

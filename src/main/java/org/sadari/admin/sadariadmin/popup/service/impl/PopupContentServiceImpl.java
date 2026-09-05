@@ -188,7 +188,8 @@ public class PopupContentServiceImpl implements PopupContentService {
         if (StringUtil.isEmpty(popupContent) || StringUtil.hasEmpty(popupContent.getPopuSitu()
                                                                  , popupContent.getPopuCode()
                                                                  , popupContent.getMngmTitl()
-                                                                 , popupContent.getContFirs())) {
+                                                                 , popupContent.getContFirs()
+                                                                 , popupContent.getEnglFirs())) {
             throw new BusinessException(HttpStatus.BAD_REQUEST, ResultEnum.COMMON_REQUIRED_VALUE);
         }
 
@@ -198,12 +199,17 @@ public class PopupContentServiceImpl implements PopupContentService {
         validateByteLength(popupContent.getMngmTitl().trim(), TITLE_MAX_BYTES);
         // 첫 번째 콘텐츠는 사용자 화면의 필수 목록이므로 하나 이상의 문구를 유지하도록 정규화한다
         popupContent.setContFirs(normalizeContent(popupContent.getContFirs(), true));
+        // 첫 번째 영문 콘텐츠도 사용자 화면의 필수 목록으로 정규화한다
+        popupContent.setEnglFirs(normalizeContent(popupContent.getEnglFirs(), true));
         // 선택 콘텐츠는 문구가 없을 때 Null로 통일하여 화면 영역 존재 여부를 명확히 한다
         popupContent.setContSeco(normalizeContent(popupContent.getContSeco(), false));
+        popupContent.setEnglSeco(normalizeContent(popupContent.getEnglSeco(), false));
         // 선택 콘텐츠는 문구가 없을 때 Null로 통일하여 화면 영역 존재 여부를 명확히 한다
         popupContent.setContThir(normalizeContent(popupContent.getContThir(), false));
+        popupContent.setEnglThir(normalizeContent(popupContent.getEnglThir(), false));
         // 선택 콘텐츠는 문구가 없을 때 Null로 통일하여 화면 영역 존재 여부를 명확히 한다
         popupContent.setContFour(normalizeContent(popupContent.getContFour(), false));
+        popupContent.setEnglFour(normalizeContent(popupContent.getEnglFour(), false));
         // 관리 화면과 목록에 동일한 제목이 보이도록 앞뒤 공백을 제거한다
         popupContent.setMngmTitl(popupContent.getMngmTitl().trim());
     }

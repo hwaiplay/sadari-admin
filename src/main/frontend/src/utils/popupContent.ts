@@ -14,9 +14,13 @@ export function emptyPopupContentForm(popuSitu = ''): PopupContentForm {
     popuCode: '',
     mngmTitl: '',
     contFirs: '',
+    englFirs: '',
     contSeco: '',
+    englSeco: '',
     contThir: '',
+    englThir: '',
     contFour: '',
+    englFour: '',
   }
 }
 
@@ -71,9 +75,13 @@ export function toPopupContentForm(popupContent: PopupContent): PopupContentForm
     popuCode: popupContent.popuCode,
     mngmTitl: popupContent.mngmTitl,
     contFirs: popupJsonToLines(popupContent.contFirs),
+    englFirs: popupJsonToLines(popupContent.englFirs),
     contSeco: popupJsonToLines(popupContent.contSeco),
+    englSeco: popupJsonToLines(popupContent.englSeco),
     contThir: popupJsonToLines(popupContent.contThir),
+    englThir: popupJsonToLines(popupContent.englThir),
     contFour: popupJsonToLines(popupContent.contFour),
+    englFour: popupJsonToLines(popupContent.englFour),
   }
 }
 

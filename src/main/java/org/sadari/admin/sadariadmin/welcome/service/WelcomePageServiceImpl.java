@@ -150,21 +150,34 @@ public class WelcomePageServiceImpl implements WelcomePageService {
             throw new BusinessException(HttpStatus.BAD_REQUEST, ResultEnum.WELCOME_PAGE_INVALID);
         }
         String subtitle = welcomePage.getSubxTitl() == null ? "" : welcomePage.getSubxTitl().trim();
+        String englishSubtitle = welcomePage.getSubxEntl() == null ? "" : welcomePage.getSubxEntl().trim();
         String title = welcomePage.getMainTitl() == null ? "" : welcomePage.getMainTitl().trim();
+        String englishTitle = welcomePage.getMainEntl() == null ? "" : welcomePage.getMainEntl().trim();
         String description = welcomePage.getPageDesc() == null ? "" : welcomePage.getPageDesc().trim();
+        String englishDescription = welcomePage.getPageEnct() == null ? "" : welcomePage.getPageEnct().trim();
         String imageUrl = welcomePage.getImgeUrlx() == null ? null : welcomePage.getImgeUrlx().trim();
-        if (subtitle.isBlank() || title.isBlank() || description.isBlank() || welcomePage.getSortOrdr() == null
+        String englishImageUrl = welcomePage.getImgeEnur() == null ? null : welcomePage.getImgeEnur().trim();
+        if (subtitle.isBlank() || englishSubtitle.isBlank() || title.isBlank() || englishTitle.isBlank()
+                || description.isBlank() || englishDescription.isBlank() || welcomePage.getSortOrdr() == null
                 || welcomePage.getSortOrdr() < 1 || welcomePage.getSortOrdr() > 9999
                 || subtitle.getBytes(StandardCharsets.UTF_8).length > SUBTITLE_MAX_BYTES
+                || englishSubtitle.getBytes(StandardCharsets.UTF_8).length > SUBTITLE_MAX_BYTES
                 || title.getBytes(StandardCharsets.UTF_8).length > TITLE_MAX_BYTES
+                || englishTitle.getBytes(StandardCharsets.UTF_8).length > TITLE_MAX_BYTES
                 || description.getBytes(StandardCharsets.UTF_8).length > DESCRIPTION_MAX_BYTES
-                || (imageUrl != null && !imageUrl.isEmpty() && !imageUrl.matches(IMAGE_PATH))) {
+                || englishDescription.getBytes(StandardCharsets.UTF_8).length > DESCRIPTION_MAX_BYTES
+                || (imageUrl != null && !imageUrl.isEmpty() && !imageUrl.matches(IMAGE_PATH))
+                || (englishImageUrl != null && !englishImageUrl.isEmpty() && !englishImageUrl.matches(IMAGE_PATH))) {
             throw new BusinessException(HttpStatus.BAD_REQUEST, ResultEnum.WELCOME_PAGE_INVALID);
         }
         welcomePage.setSubxTitl(subtitle);
+        welcomePage.setSubxEntl(englishSubtitle);
         welcomePage.setMainTitl(title);
+        welcomePage.setMainEntl(englishTitle);
         welcomePage.setPageDesc(description);
+        welcomePage.setPageEnct(englishDescription);
         welcomePage.setImgeUrlx(imageUrl == null || imageUrl.isEmpty() ? null : imageUrl);
+        welcomePage.setImgeEnur(englishImageUrl == null || englishImageUrl.isEmpty() ? null : englishImageUrl);
     }
 
     /** 웰컴페이지 복합키 형식을 검증한다. */

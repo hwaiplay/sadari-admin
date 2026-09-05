@@ -4,7 +4,7 @@
     <!-- 페이지별 배포본을 우선하고 배포 이력이 없으면 최신 초안을 조회한다 -->
     <select id="getWelcomePageList" resultType="org.sadari.admin.sadariadmin.welcome.vo.WelcomePageVO">
         SELECT /* getWelcomePageList */
-               W.WLCM_NUMB, W.VERS_NUMB, W.SUBX_TITL, W.MAIN_TITL, W.PAGE_DESC, W.IMGE_URLX
+               W.WLCM_NUMB, W.VERS_NUMB, W.SUBX_TITL, W.SUBX_ENTL, W.MAIN_TITL, W.MAIN_ENTL, W.PAGE_DESC, W.PAGE_ENCT, W.IMGE_URLX, W.IMGE_ENUR
              , W.SORT_ORDR, W.DPLY_YSNO
              , W.REGI_ADMN, FN_GET_ADMIN_NAME(W.REGI_ADMN) AS REGI_ADMN_NAME, W.REGI_DATE
              , W.UPDT_ADMN, FN_GET_ADMIN_NAME(W.UPDT_ADMN) AS UPDT_ADMN_NAME, W.UPDT_DATE
@@ -24,7 +24,7 @@
     <!-- 웰컴페이지 복합키로 상세를 조회한다 -->
     <select id="getWelcomePageDtl" resultType="org.sadari.admin.sadariadmin.welcome.vo.WelcomePageVO">
         SELECT /* getWelcomePageDtl */
-               W.WLCM_NUMB, W.VERS_NUMB, W.SUBX_TITL, W.MAIN_TITL, W.PAGE_DESC, W.IMGE_URLX
+               W.WLCM_NUMB, W.VERS_NUMB, W.SUBX_TITL, W.SUBX_ENTL, W.MAIN_TITL, W.MAIN_ENTL, W.PAGE_DESC, W.PAGE_ENCT, W.IMGE_URLX, W.IMGE_ENUR
              , W.SORT_ORDR, W.DPLY_YSNO
              , W.REGI_ADMN, FN_GET_ADMIN_NAME(W.REGI_ADMN) AS REGI_ADMN_NAME, W.REGI_DATE
              , W.UPDT_ADMN, FN_GET_ADMIN_NAME(W.UPDT_ADMN) AS UPDT_ADMN_NAME, W.UPDT_DATE
@@ -37,7 +37,7 @@
     <!-- 같은 페이지의 전체 버전을 최신순으로 조회한다 -->
     <select id="getWelcomePageVersionList" resultType="org.sadari.admin.sadariadmin.welcome.vo.WelcomePageVO">
         SELECT /* getWelcomePageVersionList */
-               WLCM_NUMB, VERS_NUMB, SUBX_TITL, MAIN_TITL, PAGE_DESC, IMGE_URLX, SORT_ORDR, DPLY_YSNO
+               WLCM_NUMB, VERS_NUMB, SUBX_TITL, SUBX_ENTL, MAIN_TITL, MAIN_ENTL, PAGE_DESC, PAGE_ENCT, IMGE_URLX, IMGE_ENUR, SORT_ORDR, DPLY_YSNO
              , REGI_ADMN, FN_GET_ADMIN_NAME(REGI_ADMN) AS REGI_ADMN_NAME, REGI_DATE
              , UPDT_ADMN, FN_GET_ADMIN_NAME(UPDT_ADMN) AS UPDT_ADMN_NAME, UPDT_DATE
              , DPLY_ADMN, FN_GET_ADMIN_NAME(DPLY_ADMN) AS DPLY_ADMN_NAME, DPLY_DATE
@@ -68,11 +68,12 @@
     <insert id="setWelcomePage" useGeneratedKeys="true" keyProperty="wlcmNumb" keyColumn="WLCM_NUMB">
         INSERT /* setWelcomePage */
           INTO CT_WLCMPG (
-               WLCM_NUMB, VERS_NUMB, SUBX_TITL, MAIN_TITL, PAGE_DESC, IMGE_URLX, SORT_ORDR, DPLY_YSNO
+               WLCM_NUMB, VERS_NUMB, SUBX_TITL, SUBX_ENTL, MAIN_TITL, MAIN_ENTL, PAGE_DESC, PAGE_ENCT, IMGE_URLX, IMGE_ENUR, SORT_ORDR, DPLY_YSNO
              , REGI_ADMN, REGI_DATE, UPDT_ADMN, UPDT_DATE
         ) VALUES (
-               #{wlcmNumb,jdbcType=BIGINT}, #{versNumb}, #{subxTitl}, #{mainTitl}, #{pageDesc}
-             , #{imgeUrlx,jdbcType=VARCHAR}, #{sortOrdr}, #{dplyYsno}
+               #{wlcmNumb,jdbcType=BIGINT}, #{versNumb}, #{subxTitl}, #{subxEntl}
+             , #{mainTitl}, #{mainEntl}, #{pageDesc}, #{pageEnct}
+             , #{imgeUrlx,jdbcType=VARCHAR}, #{imgeEnur,jdbcType=VARCHAR}, #{sortOrdr}, #{dplyYsno}
              , #{regiAdmn}, COALESCE(#{regiDate,jdbcType=TIMESTAMP}, CURRENT_TIMESTAMP)
              , #{updtAdmn,jdbcType=BIGINT}
              , CASE WHEN #{updtAdmn,jdbcType=BIGINT} IS NULL THEN NULL ELSE CURRENT_TIMESTAMP END
@@ -82,8 +83,9 @@
     <!-- 현재 미배포 버전의 편집 내용을 같은 버전에 반영한다 -->
     <update id="uptWelcomePage">
         UPDATE /* uptWelcomePage */ CT_WLCMPG
-           SET SUBX_TITL = #{subxTitl}, MAIN_TITL = #{mainTitl}, PAGE_DESC = #{pageDesc}
-             , IMGE_URLX = #{imgeUrlx,jdbcType=VARCHAR}, SORT_ORDR = #{sortOrdr}
+           SET SUBX_TITL = #{subxTitl}, SUBX_ENTL = #{subxEntl}, MAIN_TITL = #{mainTitl}, MAIN_ENTL = #{mainEntl}
+             , PAGE_DESC = #{pageDesc}, PAGE_ENCT = #{pageEnct}
+             , IMGE_URLX = #{imgeUrlx,jdbcType=VARCHAR}, IMGE_ENUR = #{imgeEnur,jdbcType=VARCHAR}, SORT_ORDR = #{sortOrdr}
              , UPDT_ADMN = #{updtAdmn}, UPDT_DATE = CURRENT_TIMESTAMP
          WHERE WLCM_NUMB = #{wlcmNumb}
            AND VERS_NUMB = #{versNumb}

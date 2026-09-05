@@ -4,6 +4,7 @@ export type UserMenu = {
   parnName?: string | null
   menuLevl: number
   menuName: string
+  menuEnnm: string
   menuUrlx: string
   sortOrdr: number | null
   showYsno: string | null
@@ -22,6 +23,7 @@ export type UserMenuForm = {
   menuNumb: string
   parnNumb: string
   menuName: string
+  menuEnnm: string
   menuUrlx: string
   sortOrdr: string
   showYsno: string

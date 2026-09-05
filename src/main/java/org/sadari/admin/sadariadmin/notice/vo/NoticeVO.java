@@ -28,8 +28,12 @@ public class NoticeVO {
     private String cateName;
     // 공지사항 제목
     private String notiTitl;
+    // 공지사항 영문 제목
+    private String notiEntl;
     // 정제된 공지사항 HTML 본문
     private String notiCntn;
+    // 공지사항 영문 본문
+    private String notiEnct;
     // 상단 고정 여부
     private String topxYsno;
     // 현재 배포 여부

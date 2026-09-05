@@ -4,9 +4,13 @@ export type PopupContent = {
   popuCode: string
   mngmTitl: string
   contFirs: string
+  englFirs: string
   contSeco: string | null
+  englSeco: string | null
   contThir: string | null
+  englThir: string | null
   contFour: string | null
+  englFour: string | null
   regiAdmn: string | null
   regiAdmnName?: string | null
   regiDate: string | null
@@ -20,9 +24,13 @@ export type PopupContentForm = {
   popuCode: string
   mngmTitl: string
   contFirs: string
+  englFirs: string
   contSeco: string
+  englSeco: string
   contThir: string
+  englThir: string
   contFour: string
+  englFour: string
 }
 
 export type PopupContentKey = {
