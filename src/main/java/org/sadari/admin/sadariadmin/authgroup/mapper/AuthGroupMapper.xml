@@ -52,7 +52,7 @@
                     FROM (  SELECT A.AUTH_CODE
                                  , A.AUTH_NAME
                                  , A.USEE_YSNO
-                                 , FN_GET_CODE_NAME(#{commYsno}, A.USEE_YSNO, #{useeYsnoCode}) AS USEE_YSNO_NAME
+                                 , FN_GET_CODE_NAME(#{commYsno}, A.USEE_YSNO, #{useeYsnoCode}, 'ko') AS USEE_YSNO_NAME
                                  , A.REGI_ADMN
                                  , FN_GET_ADMIN_NAME(A.REGI_ADMN) AS REGI_ADMN_NAME
                                  , A.REGI_DATE
@@ -86,7 +86,7 @@
                A.AUTH_CODE
              , A.AUTH_NAME
              , A.USEE_YSNO
-             , FN_GET_CODE_NAME(#{commYsno}, A.USEE_YSNO, #{useeYsnoCode}) AS USEE_YSNO_NAME
+             , FN_GET_CODE_NAME(#{commYsno}, A.USEE_YSNO, #{useeYsnoCode}, 'ko') AS USEE_YSNO_NAME
              , A.REGI_ADMN
              , FN_GET_ADMIN_NAME(A.REGI_ADMN) AS REGI_ADMN_NAME
              , A.REGI_DATE

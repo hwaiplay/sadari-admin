@@ -30,7 +30,7 @@
     <!-- 알림 템플릿 공통 조회 컬럼 목록 -->
     <sql id="alimTempColumns">
           A.ALIM_SITU
-        , FN_GET_CODE_NAME(#{alimSituCode}, A.ALIM_SITU, #{alimSituCode}) AS ALIM_SITU_NAME
+        , FN_GET_CODE_NAME(#{alimSituCode}, A.ALIM_SITU, #{alimSituCode}, 'ko') AS ALIM_SITU_NAME
         , A.TEMP_CODE
         , A.TEMP_TITL
         , A.ALIM_TITL
@@ -38,7 +38,7 @@
         , A.TEMP_CONT
         , A.TEMP_ENCT
         , A.USEE_YSNO
-        , FN_GET_CODE_NAME(#{commYsno}, A.USEE_YSNO, #{useeYsnoCode}) AS USEE_YSNO_NAME
+        , FN_GET_CODE_NAME(#{commYsno}, A.USEE_YSNO, #{useeYsnoCode}, 'ko') AS USEE_YSNO_NAME
         , A.REGI_ADMN
         , FN_GET_ADMIN_NAME(A.REGI_ADMN) AS REGI_ADMN_NAME
         , A.REGI_DATE

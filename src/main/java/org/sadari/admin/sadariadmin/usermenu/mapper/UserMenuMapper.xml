@@ -64,9 +64,9 @@
         , M.MENU_URLX
         , M.SORT_ORDR
         , M.SHOW_YSNO
-        , FN_GET_CODE_NAME(#{commYsno}, M.SHOW_YSNO, #{useeYsnoCode}) AS SHOW_YSNO_NAME
+        , FN_GET_CODE_NAME(#{commYsno}, M.SHOW_YSNO, #{useeYsnoCode}, 'ko') AS SHOW_YSNO_NAME
         , M.USEE_YSNO
-        , FN_GET_CODE_NAME(#{commYsno}, M.USEE_YSNO, #{useeYsnoCode}) AS USEE_YSNO_NAME
+        , FN_GET_CODE_NAME(#{commYsno}, M.USEE_YSNO, #{useeYsnoCode}, 'ko') AS USEE_YSNO_NAME
         , M.REGI_ADMN
         , FN_GET_ADMIN_NAME(M.REGI_ADMN) AS REGI_ADMN_NAME
         , M.REGI_DATE

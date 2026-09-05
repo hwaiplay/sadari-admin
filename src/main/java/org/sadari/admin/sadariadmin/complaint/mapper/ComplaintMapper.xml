@@ -48,7 +48,7 @@
         , C.USER_NUMB
         , R.USER_NICK AS REPORTER_NICK
         , C.TAGT_TYPE
-        , FN_GET_CODE_NAME(#{cmplTagt}, C.TAGT_TYPE, #{cmplTagt}) AS TAGT_TYPE_NAME
+        , FN_GET_CODE_NAME(#{cmplTagt}, C.TAGT_TYPE, #{cmplTagt}, 'ko') AS TAGT_TYPE_NAME
         , C.TAGT_NUMB
         , C.TAGT_HASH
         , C.TAGT_USER
@@ -56,10 +56,10 @@
         , CASE WHEN C.EVDC_NUMB IS NULL THEN 0 ELSE 1 END AS EVIDENCE_AVAILABLE
         , T.USER_NICK AS TARGET_USER_NICK
         , C.CMPL_RSON
-        , FN_GET_CODE_NAME(#{cmplRsonGroup}, C.CMPL_RSON, #{cmplRsonGroup}) AS CMPL_RSON_NAME
+        , FN_GET_CODE_NAME(#{cmplRsonGroup}, C.CMPL_RSON, #{cmplRsonGroup}, 'ko') AS CMPL_RSON_NAME
         , C.CMPL_CNTN
         , C.CMPL_STAT
-        , FN_GET_CODE_NAME(#{cmplStatGroup}, C.CMPL_STAT, #{cmplStatGroup}) AS CMPL_STAT_NAME
+        , FN_GET_CODE_NAME(#{cmplStatGroup}, C.CMPL_STAT, #{cmplStatGroup}, 'ko') AS CMPL_STAT_NAME
         , C.PROC_CNTN
         , C.PROC_ADMN
         , FN_GET_ADMIN_NAME(C.PROC_ADMN) AS PROC_ADMN_NAME
@@ -267,9 +267,9 @@
              , A.TAGT_HASH
              , A.TAGT_USER
              , A.ACTN_TYPE
-             , FN_GET_CODE_NAME(#{cmplActnGroup}, A.ACTN_TYPE, #{cmplActnGroup}) AS ACTN_TYPE_NAME
+             , FN_GET_CODE_NAME(#{cmplActnGroup}, A.ACTN_TYPE, #{cmplActnGroup}, 'ko') AS ACTN_TYPE_NAME
              , A.RSLT_CODE
-             , FN_GET_CODE_NAME(#{cmplRsltGroup}, A.RSLT_CODE, #{cmplRsltGroup}) AS RSLT_CODE_NAME
+             , FN_GET_CODE_NAME(#{cmplRsltGroup}, A.RSLT_CODE, #{cmplRsltGroup}, 'ko') AS RSLT_CODE_NAME
              , A.THRS_CNTT
              , A.CMPL_CNTT
              , A.ACTN_ORDR
@@ -342,11 +342,11 @@
               value="@org.sadari.admin.sadariadmin.common.constant.Constant@CMPL_STATUS_ACTIONED"/>
         SELECT /* getResultEvent */
                C.CMPL_NUMB AS TRIG_CMPL, C.TAGT_TYPE, C.TAGT_NUMB, C.TAGT_HASH, C.TAGT_USER
-             , FN_GET_CODE_NAME(#{cmplTagt}, C.TAGT_TYPE, NULL) AS TAGT_NAME
-             , FN_GET_CODE_NAME_LANG(#{cmplTagt}, C.TAGT_TYPE, NULL, 'Y') AS TAGT_ENNM
+             , FN_GET_CODE_NAME(#{cmplTagt}, C.TAGT_TYPE, NULL, 'ko') AS TAGT_NAME
+             , FN_GET_CODE_NAME(#{cmplTagt}, C.TAGT_TYPE, NULL, 'en') AS TAGT_ENNM
              , 1 AS RSON_CNTT, C.CMPL_RSON AS RSON_CODE
-             , FN_GET_CODE_NAME(#{cmplRsonGroup}, C.CMPL_RSON, NULL) AS RSON_NAME
-             , FN_GET_CODE_NAME_LANG(#{cmplRsonGroup}, C.CMPL_RSON, NULL, 'Y') AS RSON_ENNM
+             , FN_GET_CODE_NAME(#{cmplRsonGroup}, C.CMPL_RSON, NULL, 'ko') AS RSON_NAME
+             , FN_GET_CODE_NAME(#{cmplRsonGroup}, C.CMPL_RSON, NULL, 'en') AS RSON_ENNM
              , C.PROC_DATE
           FROM TH_CMPLNT C
          WHERE C.CMPL_NUMB = #{cmplNumb}
@@ -362,11 +362,11 @@
         SELECT /* getManualResultEvent */
                MIN(C.CMPL_NUMB) AS TRIG_CMPL, C.TAGT_TYPE, C.TAGT_NUMB, MAX(C.TAGT_HASH) AS TAGT_HASH
              , MAX(C.TAGT_USER) AS TAGT_USER
-             , FN_GET_CODE_NAME(#{cmplTagt}, C.TAGT_TYPE, NULL) AS TAGT_NAME
-             , FN_GET_CODE_NAME_LANG(#{cmplTagt}, C.TAGT_TYPE, NULL, 'Y') AS TAGT_ENNM
+             , FN_GET_CODE_NAME(#{cmplTagt}, C.TAGT_TYPE, NULL, 'ko') AS TAGT_NAME
+             , FN_GET_CODE_NAME(#{cmplTagt}, C.TAGT_TYPE, NULL, 'en') AS TAGT_ENNM
              , COUNT(DISTINCT C.CMPL_RSON) AS RSON_CNTT, MIN(C.CMPL_RSON) AS RSON_CODE
-             , FN_GET_CODE_NAME(#{cmplRsonGroup}, MIN(C.CMPL_RSON), NULL) AS RSON_NAME
-             , FN_GET_CODE_NAME_LANG(#{cmplRsonGroup}, MIN(C.CMPL_RSON), NULL, 'Y') AS RSON_ENNM
+             , FN_GET_CODE_NAME(#{cmplRsonGroup}, MIN(C.CMPL_RSON), NULL, 'ko') AS RSON_NAME
+             , FN_GET_CODE_NAME(#{cmplRsonGroup}, MIN(C.CMPL_RSON), NULL, 'en') AS RSON_ENNM
              , MAX(C.PROC_DATE) AS PROC_DATE
           FROM TH_CMPLNT C
          WHERE C.TAGT_TYPE = #{tagtType}

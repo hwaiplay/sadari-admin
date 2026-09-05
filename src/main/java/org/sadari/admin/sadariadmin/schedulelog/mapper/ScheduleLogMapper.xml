@@ -30,7 +30,7 @@
     <sql id="scheduleLogColumns">
           S.RUNX_NUMB
         , S.SCHD_CODE
-        , FN_GET_CODE_NAME(#{scheduleCode}, S.SCHD_CODE, #{scheduleCode}) AS SCHD_CODE_NAME
+        , FN_GET_CODE_NAME(#{scheduleCode}, S.SCHD_CODE, #{scheduleCode}, 'ko') AS SCHD_CODE_NAME
         , S.METH_NAME
         , S.EXEC_STAT
         , S.STRT_DATE

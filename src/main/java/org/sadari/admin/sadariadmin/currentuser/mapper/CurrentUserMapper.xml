@@ -33,10 +33,10 @@
           U.USER_NUMB
         , U.USER_NICK
         , U.USER_PROV
-        , FN_GET_CODE_NAME(#{userProvCode}, U.USER_PROV, NULL) AS USER_PROV_NAME
+        , FN_GET_CODE_NAME(#{userProvCode}, U.USER_PROV, NULL, 'ko') AS USER_PROV_NAME
         , U.USER_ROLE
         , U.USER_STAT
-        , FN_GET_CODE_NAME(#{userStatCode}, U.USER_STAT, #{userStatCode}) AS USER_STAT_NAME
+        , FN_GET_CODE_NAME(#{userStatCode}, U.USER_STAT, #{userStatCode}, 'ko') AS USER_STAT_NAME
         , U.ONBD_YSNO
         , CASE U.ONBD_YSNO WHEN #{yes} THEN '완료' ELSE '미완료' END AS ONBD_YSNO_NAME
         , U.JOIN_DATE
@@ -130,10 +130,10 @@
                U.USER_NUMB
              , U.USER_NICK
              , U.USER_PROV
-             , FN_GET_CODE_NAME(#{userProvCode}, U.USER_PROV, NULL) AS USER_PROV_NAME
+             , FN_GET_CODE_NAME(#{userProvCode}, U.USER_PROV, NULL, 'ko') AS USER_PROV_NAME
              , U.USER_ROLE
              , U.USER_STAT
-             , FN_GET_CODE_NAME(#{userStatCode}, U.USER_STAT, #{userStatCode}) AS USER_STAT_NAME
+             , FN_GET_CODE_NAME(#{userStatCode}, U.USER_STAT, #{userStatCode}, 'ko') AS USER_STAT_NAME
              , COALESCE(E.SYNC_STAT, #{userStatusSyncCompleted}) AS USER_STATUS_SYNC_STAT
              , U.ONBD_YSNO
              , CASE U.ONBD_YSNO WHEN #{yes} THEN '완료' ELSE '미완료' END AS ONBD_YSNO_NAME
@@ -263,7 +263,10 @@
                                  , H.USER_AGNT
                                  , H.PROV_CODE
                                  , FN_GET_CODE_NAME(
-                                       #{userProvCode}, H.PROV_CODE, NULL
+                                       #{userProvCode}
+                                     , H.PROV_CODE
+                                     , NULL
+                                     , 'ko'
                                    ) AS PROV_CODE_NAME
                               FROM TB_LOGHIS H
                              WHERE H.USER_NUMB = #{userNumb}
@@ -406,11 +409,11 @@
                          ) AS ROW_NUMB
                     FROM (  SELECT W.WTHD_NUMB
                                  , W.WTHD_TYPE
-                                 , FN_GET_CODE_NAME(#{wthdType}, W.WTHD_TYPE, #{wthdType}) AS WTHD_TYPE_NAME
+                                 , FN_GET_CODE_NAME(#{wthdType}, W.WTHD_TYPE, #{wthdType}, 'ko') AS WTHD_TYPE_NAME
                                  , W.WTHD_RSON
-                                 , FN_GET_CODE_NAME(#{wthdRson}, W.WTHD_RSON, #{wthdRson}) AS WTHD_RSON_NAME
+                                 , FN_GET_CODE_NAME(#{wthdRson}, W.WTHD_RSON, #{wthdRson}, 'ko') AS WTHD_RSON_NAME
                                  , W.WTHD_STAT
-                                 , FN_GET_CODE_NAME(#{wthdStat}, W.WTHD_STAT, #{wthdStat}) AS WTHD_STAT_NAME
+                                 , FN_GET_CODE_NAME(#{wthdStat}, W.WTHD_STAT, #{wthdStat}, 'ko') AS WTHD_STAT_NAME
                                  , W.REQU_DATE
                                  , W.DELT_DATE
                                  , W.PROC_DATE
@@ -459,14 +462,14 @@
                        , C.USER_NUMB AS REPORTER_USER_NUMB
                        , R.USER_NICK AS REPORTER_NICK
                        , C.TAGT_TYPE
-                       , FN_GET_CODE_NAME(#{cmplTagt}, C.TAGT_TYPE, #{cmplTagt}) AS TAGT_TYPE_NAME
+                       , FN_GET_CODE_NAME(#{cmplTagt}, C.TAGT_TYPE, #{cmplTagt}, 'ko') AS TAGT_TYPE_NAME
                        , C.TAGT_NUMB
                        , C.TAGT_CNTN
                        , C.CMPL_RSON
-                       , FN_GET_CODE_NAME(#{cmplRson}, C.CMPL_RSON, #{cmplRson}) AS CMPL_RSON_NAME
+                       , FN_GET_CODE_NAME(#{cmplRson}, C.CMPL_RSON, #{cmplRson}, 'ko') AS CMPL_RSON_NAME
                        , C.CMPL_CNTN
                        , C.CMPL_STAT
-                       , FN_GET_CODE_NAME(#{cmplStat}, C.CMPL_STAT, #{cmplStat}) AS CMPL_STAT_NAME
+                       , FN_GET_CODE_NAME(#{cmplStat}, C.CMPL_STAT, #{cmplStat}, 'ko') AS CMPL_STAT_NAME
                        , FN_GET_ADMIN_NAME(C.PROC_ADMN) AS PROC_ADMN_NAME
                        , C.PROC_DATE
                        , C.REGI_DATE
@@ -688,12 +691,12 @@
                                  , S.USER_NUMB
                                  , S.PREV_STAT
                                  , S.SPND_TYPE
-                                 , FN_GET_CODE_NAME(#{spndType}, S.SPND_TYPE, #{spndType}) AS SPND_TYPE_NAME
+                                 , FN_GET_CODE_NAME(#{spndType}, S.SPND_TYPE, #{spndType}, 'ko') AS SPND_TYPE_NAME
                                  , S.SPND_RSON
-                                 , FN_GET_CODE_NAME(#{spndRson}, S.SPND_RSON, #{spndRson}) AS SPND_RSON_NAME
+                                 , FN_GET_CODE_NAME(#{spndRson}, S.SPND_RSON, #{spndRson}, 'ko') AS SPND_RSON_NAME
                                  , S.SPND_CNTN
                                  , S.SPND_STAT
-                                 , FN_GET_CODE_NAME(#{spndStat}, S.SPND_STAT, #{spndStat}) AS SPND_STAT_NAME
+                                 , FN_GET_CODE_NAME(#{spndStat}, S.SPND_STAT, #{spndStat}, 'ko') AS SPND_STAT_NAME
                                  , S.SYNC_STAT
                                  , S.STRT_DATE
                                  , S.ENDX_DATE
@@ -752,12 +755,12 @@
                                  , S.USER_NUMB
                                  , S.PREV_STAT
                                  , S.SPND_TYPE
-                                 , FN_GET_CODE_NAME(#{spndType}, S.SPND_TYPE, #{spndType}) AS SPND_TYPE_NAME
+                                 , FN_GET_CODE_NAME(#{spndType}, S.SPND_TYPE, #{spndType}, 'ko') AS SPND_TYPE_NAME
                                  , S.SPND_RSON
-                                 , FN_GET_CODE_NAME(#{spndRson}, S.SPND_RSON, #{spndRson}) AS SPND_RSON_NAME
+                                 , FN_GET_CODE_NAME(#{spndRson}, S.SPND_RSON, #{spndRson}, 'ko') AS SPND_RSON_NAME
                                  , S.SPND_CNTN
                                  , S.SPND_STAT
-                                 , FN_GET_CODE_NAME(#{spndStat}, S.SPND_STAT, #{spndStat}) AS SPND_STAT_NAME
+                                 , FN_GET_CODE_NAME(#{spndStat}, S.SPND_STAT, #{spndStat}, 'ko') AS SPND_STAT_NAME
                                  , S.STRT_DATE
                                  , S.ENDX_DATE
                                  , S.REGI_ADMN

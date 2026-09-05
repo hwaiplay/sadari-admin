@@ -64,7 +64,7 @@
                                  , C.CODE_NAME
                                  , C.CODE_EXPL
                                  , C.USEE_YSNO
-                                 , FN_GET_CODE_NAME(#{commYsno}, C.USEE_YSNO, #{useeYsnoCode}) AS USEE_YSNO_NAME
+                                 , FN_GET_CODE_NAME(#{commYsno}, C.USEE_YSNO, #{useeYsnoCode}, 'ko') AS USEE_YSNO_NAME
                                  , C.REGI_ADMN
                                  , FN_GET_ADMIN_NAME(C.REGI_ADMN) AS REGI_ADMN_NAME
                                  , C.REGI_DATE
@@ -99,7 +99,7 @@
              , CODE_NAME
              , CODE_EXPL
              , USEE_YSNO
-             , FN_GET_CODE_NAME(#{commYsno}, USEE_YSNO, #{useeYsnoCode}) AS USEE_YSNO_NAME
+             , FN_GET_CODE_NAME(#{commYsno}, USEE_YSNO, #{useeYsnoCode}, 'ko') AS USEE_YSNO_NAME
              , REGI_ADMN
              , FN_GET_ADMIN_NAME(REGI_ADMN) AS REGI_ADMN_NAME
              , REGI_DATE
@@ -176,7 +176,7 @@
              , OPT4_NAME
              , OPT4_ENNM
              , USEE_YSNO
-             , FN_GET_CODE_NAME(#{commYsno}, USEE_YSNO, #{useeYsnoCode}) AS USEE_YSNO_NAME
+             , FN_GET_CODE_NAME(#{commYsno}, USEE_YSNO, #{useeYsnoCode}, 'ko') AS USEE_YSNO_NAME
              , REGI_ADMN
              , FN_GET_ADMIN_NAME(REGI_ADMN) AS REGI_ADMN_NAME
              , REGI_DATE
@@ -212,7 +212,7 @@
              , OPT4_NAME
              , OPT4_ENNM
              , USEE_YSNO
-             , FN_GET_CODE_NAME(#{commYsno}, USEE_YSNO, #{useeYsnoCode}) AS USEE_YSNO_NAME
+             , FN_GET_CODE_NAME(#{commYsno}, USEE_YSNO, #{useeYsnoCode}, 'ko') AS USEE_YSNO_NAME
              , REGI_ADMN
              , FN_GET_ADMIN_NAME(REGI_ADMN) AS REGI_ADMN_NAME
              , REGI_DATE
