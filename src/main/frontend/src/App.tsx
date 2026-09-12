@@ -245,8 +245,18 @@ function App() {
    * @return
    */
   const loadSidebarMenuList = async () => {
-    setMenus(await getSidebarMenus())
+    const sidebarMenus = await getSidebarMenus()
+    setMenus(sidebarMenus)
+    return sidebarMenus
   }
+
+  /** 로그인 뒤 루트 경로에서 열 첫 번째 사용 가능 메뉴 경로를 반환한다. */
+  const getFirstMenuPath = (sidebarMenus: Menu[]): string => (
+    sidebarMenus.find((menu) => {
+      const menuPath = menu.menuUrlx?.trim()
+      return Boolean(menuPath && menuPath !== '#')
+    })?.menuUrlx ?? HOME_PATH
+  )
 
   /**
    * 권한 코드 목록 로드
@@ -306,8 +316,11 @@ function App() {
           movePath(LOGIN_PATH)
           return
         }
-        await loadSidebarMenuList()
-        movePath(initialPath.startsWith('/sadari/adm') && initialPath !== LOGIN_PATH ? initialPath : HOME_PATH)
+        const sidebarMenus = await loadSidebarMenuList()
+        const targetPath = initialPath === HOME_PATH
+          ? getFirstMenuPath(sidebarMenus)
+          : initialPath.startsWith('/sadari/adm') && initialPath !== LOGIN_PATH ? initialPath : getFirstMenuPath(sidebarMenus)
+        movePath(targetPath)
       })
       .catch((err: unknown) => {
         setError(err instanceof Error ? err.message : '세션 확인 중 오류가 발생했습니다.')
@@ -543,8 +556,8 @@ function App() {
       const session = await loginAdmin(admnIdxx, passWord)
       setAdmin(session)
       setPassWord('')
-      await loadSidebarMenuList()
-      movePath(HOME_PATH)
+      const sidebarMenus = await loadSidebarMenuList()
+      movePath(getFirstMenuPath(sidebarMenus))
     } catch (err: unknown) {
       setError(err instanceof Error ? err.message : '로그인 중 오류가 발생했습니다.')
     } finally {

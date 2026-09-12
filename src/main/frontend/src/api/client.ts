@@ -20,7 +20,7 @@ export const getResultData = async <T,>(response: Response): Promise<T> => {
  * @return
  */
 export const fetchJson = async <T,>(input: RequestInfo | URL, init?: RequestInit, errorMessage = '요청에 실패했습니다.') => {
-  const response = await fetch(input, init)
+  const response = await fetch(input, withCsrfHeader(init))
   const result = await getResult<T>(response, errorMessage)
   return result.data
 }
@@ -34,8 +34,18 @@ export const fetchJson = async <T,>(input: RequestInfo | URL, init?: RequestInit
  * @return
  */
 export const fetchResult = async <T,>(input: RequestInfo | URL, init?: RequestInit, errorMessage = '요청에 실패했습니다.') => {
-  const response = await fetch(input, init)
+  const response = await fetch(input, withCsrfHeader(init))
   return getResult<T>(response, errorMessage)
+}
+
+/** 상태 변경 요청에 CSRF 방어 헤더를 추가한다. */
+export const withCsrfHeader = (init?: RequestInit): RequestInit | undefined => {
+  const method = (init?.method ?? 'GET').toUpperCase()
+  if (['GET', 'HEAD', 'OPTIONS', 'TRACE'].includes(method)) return init
+
+  const headers = new Headers(init?.headers)
+  headers.set('X-SADARI-CSRF', '1')
+  return { ...init, headers }
 }
 
 /**

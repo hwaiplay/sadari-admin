@@ -14,6 +14,8 @@
             <bind name="userKeywordLike" value="'%' + userKeyword.toUpperCase() + '%'"/>
             AND (CAST(I.USER_NUMB AS CHAR) LIKE #{userKeywordLike} OR UPPER(U.USER_NICK) LIKE #{userKeywordLike})
         </if>
+        <if test="regiDateFrom != null"> AND I.REGI_DATE &gt;= #{regiDateFrom}</if>
+        <if test="regiDateTo != null"> AND I.REGI_DATE &lt; DATE_ADD(#{regiDateTo}, INTERVAL 1 DAY)</if>
     </sql>
     <sql id="columns">
         I.INQR_NUMB, I.USER_NUMB, U.USER_NICK, U.USER_STAT,

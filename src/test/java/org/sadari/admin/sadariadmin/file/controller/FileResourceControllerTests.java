@@ -60,6 +60,25 @@ class FileResourceControllerTests {
         assertArrayEquals(imageBytes, response.getBody());
     }
 
+    /** 웰컴페이지 WebP 이미지가 관리자 미리보기 경로에서 반환되는지 검증한다. */
+    @Test
+    void returnsWelcomeWebp() throws IOException {
+
+        byte[] imageBytes = {4, 5, 6};
+        String storedName = "123e4567-e89b-12d3-a456-426614174001.webp";
+        // 웰컴페이지 객체 키에 WebP 이미지가 반환되도록 저장소 응답을 구성한다
+        when(fileStorage.getFile("welcome/260912/" + storedName))
+                .thenReturn(Optional.of(new StoredFile(imageBytes, "image/webp")));
+        // 관리자 웰컴페이지 이미지 조회 계약을 실행한다
+        ResponseEntity<byte[]> response = new FileResourceController(fileStorage)
+                .getFile("welcome", "260912", storedName);
+
+        // 정상 응답과 WebP 유형 및 저장된 바이트를 확인한다
+        assertEquals(200, response.getStatusCode().value());
+        assertEquals("image/webp", response.getHeaders().getContentType().toString());
+        assertArrayEquals(imageBytes, response.getBody());
+    }
+
     /**
      * 경로 이동 문자가 포함된 파일명은 저장소 접근 전에 차단되는지 검증한다
      *

@@ -201,6 +201,16 @@
          WHERE MENU_NUMB = #{menuNumb}
     </select>
 
+    <!-- 공백을 제거한 URL이 같은 다른 메뉴 수를 조회한다 -->
+    <select id="getMenuUrlCount" resultType="int">
+        SELECT /* getMenuUrlCount */ COUNT(1)
+          FROM TM_ADMENU
+         WHERE TRIM(MENU_URLX) = #{menuUrlx}
+        <if test="menuNumb != null and menuNumb != '' and subxNumb != null and subxNumb != ''">
+           AND NOT (MENU_NUMB = #{menuNumb} AND SUBX_NUMB = #{subxNumb})
+        </if>
+    </select>
+
     <!-- 메뉴 정보를 등록한다 -->
     <insert id="setMenu">
         /* setMenu */

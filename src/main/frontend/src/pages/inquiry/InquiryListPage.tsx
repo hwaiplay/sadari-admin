@@ -8,7 +8,7 @@ import type { Inquiry, InquirySearch } from '../../types/inquiry'
 import { formatDate } from '../../utils/code'
 
 type Props = { onMovePath: (path: string) => void; onError: (message: string | null) => void }
-const DEFAULT_SEARCH: InquirySearch = { inqrNumb: '', inqrCatg: '', inqrStat: '', userKeyword: '' }
+const DEFAULT_SEARCH: InquirySearch = { inqrNumb: '', inqrCatg: '', inqrStat: '', userKeyword: '', regiDateFrom: '', regiDateTo: '' }
 const EMPTY_PAGE: PageData<Inquiry> = { items: [], totalCount: 0, pageNumber: 1, pageSize: 20, totalPages: 0 }
 
 /** 관리자 고객문의 검색과 처리 상태 목록을 제공한다 */
@@ -25,7 +25,23 @@ export function InquiryListPage({ onMovePath, onError }: Props) {
     finally { setLoading(false) }
   }
 
-  useEffect(() => { void load(1, DEFAULT_SEARCH) }, [])
+  useEffect(() => {
+    let active = true
+    void getInquiries(1, DEFAULT_SEARCH)
+      .then((result) => {
+        if (!active) return
+        setPageData(result)
+        onError(null)
+      })
+      .catch((error: unknown) => {
+        if (!active) return
+        onError(error instanceof Error ? error.message : '고객문의 목록을 불러오지 못했습니다.')
+      })
+      .finally(() => {
+        if (active) setLoading(false)
+      })
+    return () => { active = false }
+  }, [onError])
   const submit = (event: FormEvent) => { event.preventDefault(); const next = { ...search }; setApplied(next); void load(1, next) }
 
   return <section className="complaint-page">
@@ -35,6 +51,8 @@ export function InquiryListPage({ onMovePath, onError }: Props) {
       <label>사용자<input value={search.userKeyword} placeholder="회원번호 또는 닉네임" onChange={event => setSearch({ ...search, userKeyword: event.target.value })} /></label>
       <label>카테고리<select value={search.inqrCatg} onChange={event => setSearch({ ...search, inqrCatg: event.target.value })}><option value="">전체</option><option value="GENERAL">일반 문의</option><option value="ACCOUNT">계정 문의</option><option value="SUSPENSION_APPEAL">이용정지 이의제기</option><option value="BUG">오류 신고</option><option value="SUGGESTION">제안</option></select></label>
       <label>처리상태<select value={search.inqrStat} onChange={event => setSearch({ ...search, inqrStat: event.target.value })}><option value="">전체</option><option value="INQR_RECEIVED">접수</option><option value="INQR_REVIEWING">검토 중</option><option value="INQR_ANSWERED">답변 완료</option></select></label>
+      <label>접수 시작일<input type="date" value={search.regiDateFrom} onChange={event => setSearch({ ...search, regiDateFrom: event.target.value })} /></label>
+      <label>접수 종료일<input type="date" value={search.regiDateTo} onChange={event => setSearch({ ...search, regiDateTo: event.target.value })} /></label>
       <div className="complaint-search-actions"><button type="button" className="subtle-button" onClick={() => { setSearch({ ...DEFAULT_SEARCH }); setApplied({ ...DEFAULT_SEARCH }); void load(1, DEFAULT_SEARCH) }}>초기화</button><button type="submit">검색</button></div>
     </form>
     <section className="table-wrap complaint-list-table"><table><thead><tr><th>문의번호</th><th>상태</th><th>카테고리</th><th>제목</th><th>사용자</th><th>담당자</th><th>접수일시</th></tr></thead><tbody>

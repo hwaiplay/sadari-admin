@@ -3,6 +3,8 @@ export type InquirySearch = {
   inqrCatg: string
   inqrStat: string
   userKeyword: string
+  regiDateFrom: string
+  regiDateTo: string
 }
 
 export type InquiryAnswer = {

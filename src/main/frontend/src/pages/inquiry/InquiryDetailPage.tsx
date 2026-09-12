@@ -16,7 +16,20 @@ export function InquiryDetailPage({ inqrNumb, onMovePath, onError }: Props) {
   const [saving, setSaving] = useState(false)
 
   const refresh = async () => setInquiry(await getInquiry(inqrNumb))
-  useEffect(() => { void refresh().then(() => onError(null)).catch((error: unknown) => onError(error instanceof Error ? error.message : '고객문의 상세를 불러오지 못했습니다.')) }, [inqrNumb])
+  useEffect(() => {
+    let active = true
+    void getInquiry(inqrNumb)
+      .then((result) => {
+        if (!active) return
+        setInquiry(result)
+        onError(null)
+      })
+      .catch((error: unknown) => {
+        if (!active) return
+        onError(error instanceof Error ? error.message : '고객문의 상세를 불러오지 못했습니다.')
+      })
+    return () => { active = false }
+  }, [inqrNumb, onError])
 
   const startReview = async () => {
     if (!inquiry || !window.confirm('이 고객문의의 검토를 시작하시겠습니까?')) return

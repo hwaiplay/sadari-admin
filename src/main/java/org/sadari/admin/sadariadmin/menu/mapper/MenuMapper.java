@@ -87,6 +87,11 @@ public interface MenuMapper {
      */
     String getSubxNumb(@Param("menuNumb") String menuNumb);
 
+    /** 같은 URL을 사용하는 다른 메뉴 수를 조회한다. */
+    int getMenuUrlCount(@Param("menuUrlx") String menuUrlx
+                      , @Param("menuNumb") String menuNumb
+                      , @Param("subxNumb") String subxNumb);
+
     /**
      * 메뉴 등록
      * @author SeungHyeon.Kang

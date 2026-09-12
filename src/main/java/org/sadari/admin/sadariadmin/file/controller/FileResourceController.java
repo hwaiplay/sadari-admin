@@ -28,12 +28,12 @@ import org.springframework.web.bind.annotation.RestController;
 public class FileResourceController {
 
     // 관리자 화면에서 조회할 수 있는 사용자 이미지 유형
-    private static final Set<String> ALLOWED_DIRECTORIES = Set.of("profile", "background", "notice");
+    private static final Set<String> ALLOWED_DIRECTORIES = Set.of("profile", "background", "notice", "welcome");
     // 업로드 날짜 경로가 yyMMdd 숫자로만 구성되는지 검증하는 패턴
     private static final Pattern UPLOAD_DATE_PATTERN = Pattern.compile("[0-9]{6}");
     // 서버가 생성한 UUID 이미지 파일명만 허용하는 패턴
     private static final Pattern STORED_NAME_PATTERN = Pattern.compile(
-            "[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}\\.(jpg|png)"
+            "[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}\\.(jpg|png|webp)"
     );
 
     // 실행 환경에 따라 로컬 또는 S3로 연결되는 사용자 이미지 저장소

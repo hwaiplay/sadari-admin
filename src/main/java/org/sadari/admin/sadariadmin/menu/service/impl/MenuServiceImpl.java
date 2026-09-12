@@ -134,6 +134,7 @@ public class MenuServiceImpl implements MenuService {
         checkLogin(admin);
         setMenuKey(menu);
         setMenuDefault(menu, admin);
+        validateMenuUrl(menu);
         menuMapper.setMenu(menu);
         menuMapper.setMenuAuth(menu);
         return menuMapper.getMenuDtl(menu.getMenuNumb(), menu.getSubxNumb());
@@ -151,6 +152,7 @@ public class MenuServiceImpl implements MenuService {
     public MenuVO uptMenu(MenuVO menu, AdminSessionVO admin) {
         checkLogin(admin);
         setMenuDefault(menu, admin);
+        validateMenuUrl(menu);
         menu.setUpdtAdmn(admin.getAdmnNumb());
         menuMapper.uptMenu(menu);
         return menuMapper.getMenuDtl(menu.getMenuNumb(), menu.getSubxNumb());
@@ -168,8 +170,22 @@ public class MenuServiceImpl implements MenuService {
     @Transactional
     public void delMenu(String menuNumb, String subxNumb, AdminSessionVO admin) {
         checkLogin(admin);
+        if (Constant.TOP_MENU_SUBX_NUMB.equals(subxNumb) && !menuMapper.getSubMenuList(menuNumb).isEmpty()) {
+            throw new BusinessException(HttpStatus.BAD_REQUEST, ResultEnum.COMMON_INVALID_REQUEST);
+        }
         menuMapper.delMenuAuth(menuNumb, subxNumb);
         menuMapper.delMenu(menuNumb, subxNumb);
+    }
+
+    /** 메뉴 URL을 정규화하고 다른 메뉴와의 중복을 차단한다. */
+    private void validateMenuUrl(MenuVO menu) {
+        if (StringUtil.isEmpty(menu) || StringUtil.isEmpty(menu.getMenuUrlx())) {
+            throw new BusinessException(HttpStatus.BAD_REQUEST, ResultEnum.COMMON_REQUIRED_VALUE);
+        }
+        menu.setMenuUrlx(menu.getMenuUrlx().trim());
+        if (menuMapper.getMenuUrlCount(menu.getMenuUrlx(), menu.getMenuNumb(), menu.getSubxNumb()) > 0) {
+            throw new BusinessException(HttpStatus.BAD_REQUEST, ResultEnum.COMMON_INVALID_REQUEST);
+        }
     }
 
     /**

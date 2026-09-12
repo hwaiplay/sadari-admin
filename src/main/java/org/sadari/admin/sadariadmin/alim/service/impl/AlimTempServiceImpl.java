@@ -15,6 +15,10 @@ import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.Set;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
+
 import java.util.List;
 
 /**
@@ -36,6 +40,14 @@ public class AlimTempServiceImpl implements AlimTempService {
 
     /** 템플릿 코드 입력 형식 */
     private static final String TEMP_CODE_PATTERN = "^[A-Z_]+$";
+
+    /** 사용자 알림 서비스가 제공하는 치환값 이름 */
+    private static final Set<String> ALLOWED_PLACEHOLDERS = Set.of(
+            "userName", "clubName", "exitReason", "bookTitl", "timerTime"
+    );
+
+    /** 알림 본문 치환값 형식 */
+    private static final Pattern PLACEHOLDER_PATTERN = Pattern.compile("#\\{([A-Za-z][A-Za-z0-9]*)}");
 
     /** 알림 템플릿 Mapper */
     private final AlimTempMapper alimTempMapper;
@@ -174,6 +186,26 @@ public class AlimTempServiceImpl implements AlimTempService {
         }
         // 템플릿 코드는 영문 대문자와 밑줄만 허용한다
         if (!alimTemp.getTempCode().matches(TEMP_CODE_PATTERN)) {
+            throw new BusinessException(HttpStatus.BAD_REQUEST, ResultEnum.COMMON_INVALID_REQUEST);
+        }
+        validatePlaceholders(alimTemp.getAlimTitl());
+        validatePlaceholders(alimTemp.getAlimEntl());
+        validatePlaceholders(alimTemp.getTempCont());
+        validatePlaceholders(alimTemp.getTempEnct());
+    }
+
+    /** 지원하지 않거나 형식이 잘못된 치환값을 저장 전에 차단한다. */
+    private void validatePlaceholders(String value) {
+        if (StringUtil.isEmpty(value)) {
+            return;
+        }
+        Matcher matcher = PLACEHOLDER_PATTERN.matcher(value);
+        while (matcher.find()) {
+            if (!ALLOWED_PLACEHOLDERS.contains(matcher.group(1))) {
+                throw new BusinessException(HttpStatus.BAD_REQUEST, ResultEnum.COMMON_INVALID_REQUEST);
+            }
+        }
+        if (matcher.replaceAll("").contains("#{")) {
             throw new BusinessException(HttpStatus.BAD_REQUEST, ResultEnum.COMMON_INVALID_REQUEST);
         }
     }

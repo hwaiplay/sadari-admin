@@ -1,4 +1,4 @@
-import { fetchJson, getResultData } from './client'
+import { fetchJson, getResultData, withCsrfHeader } from './client'
 import type { AdminSession } from '../types/admin'
 
 /**
@@ -33,5 +33,5 @@ export const loginAdmin = (admnIdxx: string, passWord: string) =>
  * @return
  */
 export const logoutAdmin = async () => {
-  await fetch('/api/auth/logout', { method: 'POST' })
+  await fetch('/api/auth/logout', withCsrfHeader({ method: 'POST' }))
 }

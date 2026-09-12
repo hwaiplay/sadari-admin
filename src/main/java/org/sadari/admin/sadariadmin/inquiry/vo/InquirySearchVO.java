@@ -1,5 +1,6 @@
 package org.sadari.admin.sadariadmin.inquiry.vo;
 
+import java.time.LocalDate;
 import lombok.Data;
 
 /**
@@ -25,6 +26,10 @@ public class InquirySearchVO {
     private String inqrStat;
     // 사용자 번호 또는 닉네임 검색어
     private String userKeyword;
+    // 접수일 검색 시작일
+    private LocalDate regiDateFrom;
+    // 접수일 검색 종료일
+    private LocalDate regiDateTo;
     // 조회 시작 행
     private int startRow;
     // 조회 종료 행

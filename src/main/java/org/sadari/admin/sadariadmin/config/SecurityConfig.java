@@ -36,6 +36,9 @@ public class SecurityConfig {
     /** Redis 인증 필터 */
     private final RedisAuthenticationFilter redisAuthenticationFilter;
 
+    /** 쿠키 인증 상태 변경 요청 CSRF 필터 */
+    private final CsrfRequestFilter csrfRequestFilter;
+
     /**
      * 관리자 API 보안 설정 생성
      * @author SeungHyeon.Kang
@@ -43,9 +46,11 @@ public class SecurityConfig {
      * @return
      */
     public SecurityConfig(
-            RedisAuthenticationFilter redisAuthenticationFilter
+            RedisAuthenticationFilter redisAuthenticationFilter,
+            CsrfRequestFilter csrfRequestFilter
     ) {
         this.redisAuthenticationFilter = redisAuthenticationFilter;
+        this.csrfRequestFilter = csrfRequestFilter;
     }
 
     /**
@@ -83,7 +88,8 @@ public class SecurityConfig {
                         .accessDeniedHandler((request, response, accessDeniedException) ->
                                 writeResult(response, HttpServletResponse.SC_FORBIDDEN, ResultData.fail(ResultEnum.FORBIDDEN)))
                 )
-                .addFilterBefore(redisAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);
+                .addFilterBefore(redisAuthenticationFilter, UsernamePasswordAuthenticationFilter.class)
+                .addFilterBefore(csrfRequestFilter, RedisAuthenticationFilter.class);
 
         return http.build();
     }
