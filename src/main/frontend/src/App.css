@@ -2006,6 +2006,26 @@ tbody tr:last-child > td {
   margin-top: 14px;
 }
 
+.reading-club-action-form {
+  display: grid;
+  gap: 16px;
+}
+
+.reading-club-action-type {
+  width: min(100%, 360px);
+}
+
+.reading-club-action-form textarea {
+  min-height: 140px;
+  resize: vertical;
+}
+
+.reading-club-action-form .complaint-process-actions {
+  margin-top: 0;
+  padding-top: 16px;
+  border-top: 1px solid var(--border-light);
+}
+
 .complaint-related-table table {
   min-width: 920px;
 }

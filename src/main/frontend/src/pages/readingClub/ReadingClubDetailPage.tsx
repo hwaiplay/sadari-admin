@@ -101,7 +101,7 @@ export function ReadingClubDetailPage({ clubNumb, onMovePath, onError }: Reading
       return
     }
 
-    // 선택한 상태 조치의 비가역 가능성을 관리자에게 다시 확인한다.
+    // "선택한 독서 모임 조치를 적용하시겠습니까?"
     if (!window.confirm('선택한 독서 모임 조치를 적용하시겠습니까?')) {
       // 확인하지 않은 상태 변경 요청은 전송하지 않는다.
       return
@@ -176,29 +176,47 @@ export function ReadingClubDetailPage({ clubNumb, onMovePath, onError }: Reading
       </section>
 
       {permission.writYsno === 'Y' && (
-        <form className="complaint-search" onSubmit={(event) => void handleAction(event)}>
-          <label>
-            <span>관리자 조치</span>
-            <select value={actnType} onChange={(event) => setActnType(event.target.value as ReadingClubActionRequest['actnType'])}>
-              <option value="RECRUIT_STOP">모집 중지</option>
-              <option value="SUSPEND">이용 정지</option>
-              <option value="RESTORE">해제</option>
-              <option value="CLOSE">종료</option>
-            </select>
-          </label>
-          <label>
-            <span>조치 사유</span>
-            <textarea
-              value={actnRson}
-              maxLength={666}
-              placeholder="감사 이력에 남길 운영 판단 근거를 입력해 주세요."
-              onChange={(event) => setActnRson(event.target.value)}
-            />
-          </label>
-          <div className="complaint-search-actions">
-            <button type="submit" disabled={submitting}>{submitting ? '처리 중' : '조치 적용'}</button>
+        /* 독서 모임 관리자 조치 적용 영역 */
+        <section className="detail-panel">
+          {/* 조치 적용 안내 영역 */}
+          <div className="detail-title">
+            <div>
+              <h2>조치 적용</h2>
+              <p>모임 상태를 변경하고 관리자 조치 이력에 판단 근거를 남깁니다.</p>
+            </div>
+            <span>현재 상태: {club.clubStatName ?? club.clubStat}</span>
           </div>
-        </form>
+
+          {/* 조치 유형과 사유 입력 영역 */}
+          <form className="reading-club-action-form" onSubmit={(event) => void handleAction(event)}>
+            <label className="complaint-process-note reading-club-action-type">
+              {/* "관리자 조치" */}
+              관리자 조치
+              <select value={actnType} onChange={(event) => setActnType(event.target.value as ReadingClubActionRequest['actnType'])}>
+                <option value="RECRUIT_STOP">모집 중지</option>
+                <option value="SUSPEND">이용 정지</option>
+                <option value="RESTORE">해제</option>
+                <option value="CLOSE">종료</option>
+              </select>
+            </label>
+            <label className="complaint-process-note">
+              {/* "조치 사유" */}
+              조치 사유
+              {/* "감사 이력에 남길 운영 판단 근거를 입력해 주세요." */}
+              <textarea
+                value={actnRson}
+                maxLength={666}
+                placeholder="감사 이력에 남길 운영 판단 근거를 입력해 주세요."
+                onChange={(event) => setActnRson(event.target.value)}
+              />
+            </label>
+
+            {/* 조치 적용 버튼 영역 */}
+            <div className="complaint-process-actions">
+              <button type="submit" disabled={submitting}>{submitting ? '처리 중' : '조치 적용'}</button>
+            </div>
+          </form>
+        </section>
       )}
 
       <section className="content-header">
