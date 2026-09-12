@@ -33,6 +33,9 @@ public interface AuthGroupMapper {
     /** 권한그룹 중복 건수 조회 */
     int getAuthGroupCount(@Param("authCode") String authCode);
 
+    /** 권한그룹을 사용하는 관리자 건수 조회 */
+    int getAuthGroupAdminCount(@Param("authCode") String authCode);
+
     /** 권한그룹별 메뉴 권한 조회 */
     List<AuthMenuVO> getAuthMenuList(@Param("authCode") String authCode);
 

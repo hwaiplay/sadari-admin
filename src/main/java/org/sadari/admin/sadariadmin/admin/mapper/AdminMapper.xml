@@ -19,6 +19,9 @@
              , A.LGIN_DATE
              , A.REGI_DATE
           FROM TM_ADMINX A
+    INNER JOIN TM_AUTHXM G
+            ON G.AUTH_CODE = A.AUTH_CODE
+           AND COALESCE(G.USEE_YSNO, #{yes}) = #{yes}
      LEFT JOIN TB_CODEXD C
             ON C.COMM_CODE = #{authCode}
            AND C.COMD_CODE = A.AUTH_CODE

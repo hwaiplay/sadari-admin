@@ -24,6 +24,15 @@ public final class AuthConstant {
     /** 관리자 Redis 키 접두어 */
     public static final String REDIS_KEY_PREFIX = "sadari:adm:login";
 
+    /** 관리자 로그인 실패 횟수 Redis 키 접두어 */
+    public static final String LOGIN_ATTEMPT_KEY_PREFIX = "sadari:adm:login-attempt";
+
+    /** 로그인 실패 허용 횟수 */
+    public static final int LOGIN_MAX_FAILURES = 5;
+
+    /** 로그인 실패 제한 유지 시간 */
+    public static final long LOGIN_FAILURE_WINDOW_SECONDS = 900;
+
     /** 관리자 인증 쿠키명 */
     public static final String COOKIE_NAME = "SADARI_ADM_TOKEN";
 

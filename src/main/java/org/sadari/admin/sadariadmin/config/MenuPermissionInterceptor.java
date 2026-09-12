@@ -51,6 +51,8 @@ public class MenuPermissionInterceptor implements HandlerInterceptor {
         MENU_URL_BY_API.put(Constant.API_CODE_MANAGE_PREFIX, "/sadari/adm/code/list");
         MENU_URL_BY_API.put(Constant.API_ALIM_TEMP_PREFIX, "/sadari/adm/alimTemp/list");
         MENU_URL_BY_API.put(Constant.API_ALIM_ICON_PREFIX, "/sadari/adm/alimIcon/list");
+        MENU_URL_BY_API.put(Constant.API_NOTICE_PREFIX, "/sadari/adm/notice");
+        MENU_URL_BY_API.put(Constant.API_SERVICE_INFO_PREFIX, "/sadari/adm/serviceInfo/list");
         MENU_URL_BY_API.put(Constant.API_POPUP_CONTENT_PREFIX, "/sadari/adm/popup/list");
         MENU_URL_BY_API.put(Constant.API_CURRENT_USERS_PREFIX, "/sadari/adm/user/list");
         MENU_URL_BY_API.put(Constant.API_USER_STATISTICS_PREFIX, "/sadari/adm/statistics");

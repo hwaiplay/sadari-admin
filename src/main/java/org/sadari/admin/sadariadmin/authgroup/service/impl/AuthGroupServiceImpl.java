@@ -117,6 +117,12 @@ public class AuthGroupServiceImpl implements AuthGroupService {
     @Transactional
     public void delAuthGroup(String authCode, AdminSessionVO admin) {
         checkLogin(admin);
+        if (authGroupMapper.getAuthGroupCount(authCode) == 0) {
+            throw new BusinessException(HttpStatus.NOT_FOUND, ResultEnum.AUTH_GROUP_NOT_FOUND);
+        }
+        if (authGroupMapper.getAuthGroupAdminCount(authCode) > 0) {
+            throw new BusinessException(HttpStatus.CONFLICT, ResultEnum.AUTH_GROUP_IN_USE);
+        }
         authGroupMapper.delAuthMenu(authCode);
         authGroupMapper.delAuthGroup(authCode);
     }

@@ -319,8 +319,14 @@ public final class Constant {
     /** 공지사항 관리 API URL 접두어 */
     public static final String API_NOTICE_PREFIX = "/api/notices";
 
+    /** 공지사항 관리 API URL 패턴 */
+    public static final String API_NOTICE_PATTERN = "/api/notices/**";
+
     /** 서비스 정보 관리 API URL 접두어 */
     public static final String API_SERVICE_INFO_PREFIX = "/api/service-info";
+
+    /** 서비스 정보 관리 API URL 패턴 */
+    public static final String API_SERVICE_INFO_PATTERN = "/api/service-info/**";
 
     /** 웰컴페이지 관리 API URL 접두어 */
     public static final String API_WELCOME_PAGE_PREFIX = "/api/welcome-pages";

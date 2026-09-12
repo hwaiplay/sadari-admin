@@ -202,6 +202,14 @@
          WHERE AUTH_CODE = #{authCode}
     </delete>
 
+    <!-- 권한그룹을 사용하는 관리자 건수를 조회한다 -->
+    <select id="getAuthGroupAdminCount" resultType="int">
+        SELECT /* getAuthGroupAdminCount */
+               COUNT(*)
+          FROM TM_ADMINX
+         WHERE AUTH_CODE = #{authCode}
+    </select>
+
     <!-- 권한그룹을 삭제한다 -->
     <delete id="delAuthGroup">
         DELETE /* delAuthGroup */

@@ -73,7 +73,8 @@ public class SecurityConfig {
                         .requestMatchers(Constant.API_MENU_PERMISSION).authenticated()
                         .requestMatchers(Constant.API_MENUS_PATTERN, Constant.API_USER_MENUS_PATTERN
                                        , Constant.API_CODE_MANAGE_PATTERN, Constant.API_ALIM_TEMP_PATTERN
-                                       , Constant.API_ALIM_ICON_PATTERN
+                                       , Constant.API_ALIM_ICON_PATTERN, Constant.API_NOTICE_PATTERN
+                                       , Constant.API_SERVICE_INFO_PATTERN
                                        , Constant.API_POPUP_CONTENT_PATTERN, Constant.API_AUTH_GROUP_PATTERN
                                        , Constant.API_ADMIN_AUTHS_PATTERN, Constant.API_CURRENT_USERS_PATTERN
                                        , Constant.API_COMPLAINTS_PATTERN, Constant.API_READING_CLUBS_PATTERN
