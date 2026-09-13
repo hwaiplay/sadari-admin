@@ -137,6 +137,10 @@ TM_USERXM.USER_STAT 변경
 
 관리자 로그인 토큰은 Redis 세션으로 관리하고 `RedisAuthenticationFilter`가 요청마다 인증 정보를 복원합니다. 인증 이후에는 `MenuPermissionInterceptor`가 API 경로에 연결된 관리자 메뉴와 권한을 확인합니다.
 
+로그인 성공 후에는 특정 메뉴를 자동으로 열지 않고 관리자 홈(`/sadari/adm`)으로 이동합니다. 홈은 사이드바와 상단 관리자 정보·로그아웃 영역만 표시하며 본문은 비워 둡니다. 접근 가능한 메뉴가 없어도 같은 홈을 표시합니다. 홈을 새로고침하거나 로그인된 상태에서 로그인 화면에 접근해도 홈으로 이동하며, 기존 메뉴 화면을 새로고침하면 해당 경로를 유지합니다. 메뉴는 관리자가 사이드바에서 직접 선택합니다.
+
+- [로그인 및 홈 화면 테스트 케이스](src/main/frontend/README.md#관리자-로그인과-홈-화면-테스트-케이스)
+
 프론트엔드의 메뉴 숨김만 신뢰하지 않고 서버에서 직접 URL 접근도 차단합니다. 권한 그룹과 메뉴의 관계는 관리자 화면에서 관리하며, 등록자·수정자 정보는 `FN_GET_ADMIN_NAME`으로 일관되게 조회합니다.
 
 - [Redis 인증 필터](src/main/java/org/sadari/admin/sadariadmin/config/RedisAuthenticationFilter.java)

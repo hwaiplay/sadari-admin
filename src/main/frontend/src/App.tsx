@@ -250,14 +250,6 @@ function App() {
     return sidebarMenus
   }
 
-  /** 로그인 뒤 루트 경로에서 열 첫 번째 사용 가능 메뉴 경로를 반환한다. */
-  const getFirstMenuPath = (sidebarMenus: Menu[]): string => (
-    sidebarMenus.find((menu) => {
-      const menuPath = menu.menuUrlx?.trim()
-      return Boolean(menuPath && menuPath !== '#')
-    })?.menuUrlx ?? HOME_PATH
-  )
-
   /**
    * 권한 코드 목록 로드
    * @Author SeungHyeon.Kang
@@ -316,10 +308,12 @@ function App() {
           movePath(LOGIN_PATH)
           return
         }
-        const sidebarMenus = await loadSidebarMenuList()
-        const targetPath = initialPath === HOME_PATH
-          ? getFirstMenuPath(sidebarMenus)
-          : initialPath.startsWith('/sadari/adm') && initialPath !== LOGIN_PATH ? initialPath : getFirstMenuPath(sidebarMenus)
+        // 메뉴를 선택하지 않고 사이드바에 접근 가능한 메뉴만 표시한다
+        await loadSidebarMenuList()
+        // 기존 관리자 화면 경로를 복원하고 로그인 화면에서는 빈 홈으로 이동한다
+        const targetPath = initialPath.startsWith(`${HOME_PATH}/`) && initialPath !== LOGIN_PATH
+          ? initialPath : HOME_PATH
+        // 복원 경로나 빈 홈을 현재 화면에 반영한다
         movePath(targetPath)
       })
       .catch((err: unknown) => {
@@ -556,8 +550,10 @@ function App() {
       const session = await loginAdmin(admnIdxx, passWord)
       setAdmin(session)
       setPassWord('')
-      const sidebarMenus = await loadSidebarMenuList()
-      movePath(getFirstMenuPath(sidebarMenus))
+      // 로그인한 관리자가 직접 메뉴를 선택할 수 있도록 사이드바를 준비한다
+      await loadSidebarMenuList()
+      // 로그인 후 특정 메뉴 대신 본문이 비어 있는 홈으로 이동한다
+      movePath(HOME_PATH)
     } catch (err: unknown) {
       setError(err instanceof Error ? err.message : '로그인 중 오류가 발생했습니다.')
     } finally {
