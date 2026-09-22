@@ -36,16 +36,16 @@ Sadari Admin은 [Sadari 사용자 서비스](https://github.com/hwaiplay/sadari)
 
 ## 주요 기능
 
-| 영역 | 제공 기능 |
-| --- | --- |
-| 인증과 권한 | 관리자 로그인, Redis 세션 인증, 권한 그룹과 메뉴별 접근 권한 관리 |
-| 메뉴·공통 코드 | 관리자·사용자 메뉴의 계층·순서·노출 상태와 세부 코드 관리 |
-| 알림 | 상황별 템플릿, 이동 링크와 알림 아이콘 관리 |
-| 운영 콘텐츠 | 공지사항, 팝업, 서비스 정보의 작성·수정·버전·배포 관리 |
-| 사용자 | 회원 정보·활동 이력 조회, 계정 상태와 정지 이력 관리 |
-| 신고 | 신고 내역 조회, 처리 상태 변경과 대상 사용자 제재 연계 |
-| 스케줄러 | 사용자 백엔드 배치의 실행 이력과 실패 상세 조회 |
-| 파일 | 로컬 파일 시스템 또는 Private S3 기반 이미지 저장·조회 |
+| 영역 | 제공 기능 | 주요 구현 |
+| --- | --- | --- |
+| 인증과 권한 | 관리자 로그인, Redis 세션 인증, 권한 그룹과 메뉴별 접근 권한 관리 | [Redis 인증과 메뉴 권한을 API에서 함께 검증](docs/technical-review/admin-auth-menu-permission.md) |
+| 메뉴·공통 코드 | 관리자·사용자 메뉴의 계층·순서·노출 상태와 세부 코드 관리 | [메뉴 계층과 공통 기준 정보를 안전하게 운영](docs/technical-review/menu-code-management.md) |
+| 알림 | 상황별 템플릿, 이동 링크와 알림 아이콘 관리 | [알림 템플릿과 아이콘의 저장 책임을 분리](docs/technical-review/notification-template-icon.md) |
+| 운영 콘텐츠 | 공지사항, 팝업, 서비스 정보의 작성·수정·버전·배포 관리 | [운영 콘텐츠의 작성본과 사용자 노출본을 분리](docs/technical-review/operational-content-versioning.md) |
+| 사용자 | 회원 정보·활동 이력 조회, 계정 상태와 정지 이력 관리 | [회원 상태를 DB Outbox로 사용자 세션까지 전달](docs/technical-review/user-status-outbox.md) |
+| 신고 | 신고 내역 조회, 처리 상태 변경과 대상 사용자 제재 연계 | [신고 검토와 원본 조치 및 결과 전달을 한 흐름으로 관리](docs/technical-review/complaint-moderation.md) |
+| 스케줄러 | 사용자 백엔드 배치의 실행 이력과 실패 상세 조회 | [배치 실행과 관리자 관찰 책임을 분리](docs/technical-review/scheduler-log-observability.md) |
+| 파일 | 로컬 파일 시스템 또는 Private S3 기반 이미지 저장·조회 | [두 서비스가 같은 파일 저장소 계약을 사용](docs/technical-review/shared-file-storage.md) |
 
 ## 사용자 서비스 연동 구조
 
@@ -230,6 +230,12 @@ sadari-admin
 ├─ src/test                       백엔드 테스트
 └─ build.gradle                   백엔드 빌드 설정
 ```
+
+## 문서
+
+| 문서 | 내용 |
+| --- | --- |
+| [주요 기능 기술 글](docs/technical-review/README.md) | 관리자 주요 기능별 문제, 구현 흐름, 실패 처리와 트레이드오프 |
 
 ## 관련 저장소
 
