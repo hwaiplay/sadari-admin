@@ -27,4 +27,3 @@ Outbox는 Redis 장애를 관리자 요청과 분리하고 재시도를 가능�
 - 회원 상태·정지 업무 계층: [`CurrentUserServiceImpl`](../../src/main/java/org/sadari/admin/sadariadmin/currentuser/service/impl/CurrentUserServiceImpl.java)
 - 회원 상태 조회·저장 계층: [`CurrentUserMapper.xml`](../../src/main/java/org/sadari/admin/sadariadmin/currentuser/mapper/CurrentUserMapper.xml)
 - 사용자 프로젝트의 이벤트 소비 계층: [`UserStatusEventServiceImpl`](https://github.com/hwaiplay/sadari/blob/sprint/26.07/src/main/java/org/our/sadari/global/scheduler/service/UserStatusEventServiceImpl.java)
-

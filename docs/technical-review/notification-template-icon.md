@@ -34,4 +34,3 @@
 - 템플릿 조회·저장 계층: [`AlimTempMapper.xml`](../../src/main/java/org/sadari/admin/sadariadmin/alim/mapper/AlimTempMapper.xml)
 - 아이콘 검증 계층: [`AlimIconServiceImpl`](../../src/main/java/org/sadari/admin/sadariadmin/alimicon/service/impl/AlimIconServiceImpl.java)
 - 아이콘 조회·저장 계층: [`AlimIconMapper.xml`](../../src/main/java/org/sadari/admin/sadariadmin/alimicon/mapper/AlimIconMapper.xml)
-

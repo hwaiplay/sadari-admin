@@ -36,4 +36,3 @@ API와 메뉴의 연결을 명시적인 매핑으로 관리하면 검토하기 �
 - 메뉴 권한 계층: [`MenuPermissionInterceptor`](../../src/main/java/org/sadari/admin/sadariadmin/config/MenuPermissionInterceptor.java)
 - 권한 그룹 업무 계층: [`AuthGroupServiceImpl`](../../src/main/java/org/sadari/admin/sadariadmin/authgroup/service/impl/AuthGroupServiceImpl.java)
 - 권한 조회 계층: [`AuthGroupMapper.xml`](../../src/main/java/org/sadari/admin/sadariadmin/authgroup/mapper/AuthGroupMapper.xml)
-

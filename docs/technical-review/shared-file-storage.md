@@ -32,4 +32,3 @@
 - 환경별 저장소 선택: [`FileStorageConfig`](../../src/main/java/org/sadari/admin/sadariadmin/file/config/FileStorageConfig.java)
 - 로컬 구현: [`LocalFileStorage`](../../src/main/java/org/sadari/admin/sadariadmin/file/storage/LocalFileStorage.java)
 - S3 구현: [`S3FileStorage`](../../src/main/java/org/sadari/admin/sadariadmin/file/storage/S3FileStorage.java)
-

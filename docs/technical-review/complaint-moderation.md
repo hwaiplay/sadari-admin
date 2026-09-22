@@ -39,4 +39,3 @@
 - 신고 검토·원본 조치 계층: [`ComplaintServiceImpl`](../../src/main/java/org/sadari/admin/sadariadmin/complaint/service/impl/ComplaintServiceImpl.java)
 - 신고 조회·저장 계층: [`ComplaintMapper.xml`](../../src/main/java/org/sadari/admin/sadariadmin/complaint/mapper/ComplaintMapper.xml)
 - 회원 이용정지 연계 계층: [`CurrentUserServiceImpl`](../../src/main/java/org/sadari/admin/sadariadmin/currentuser/service/impl/CurrentUserServiceImpl.java)
-

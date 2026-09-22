@@ -25,4 +25,3 @@
 - 실행 결과 조회 계층: [`ScheduleLogServiceImpl`](../../src/main/java/org/sadari/admin/sadariadmin/schedulelog/service/impl/ScheduleLogServiceImpl.java)
 - 실행·실패 상세 조회 계층: [`ScheduleLogMapper.xml`](../../src/main/java/org/sadari/admin/sadariadmin/schedulelog/mapper/ScheduleLogMapper.xml)
 - 관리자 API 계층: [`ScheduleLogController`](../../src/main/java/org/sadari/admin/sadariadmin/schedulelog/controller/ScheduleLogController.java)
-
