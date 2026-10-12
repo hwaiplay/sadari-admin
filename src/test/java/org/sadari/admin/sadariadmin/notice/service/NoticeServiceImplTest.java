@@ -5,6 +5,7 @@ import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.lenient;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
@@ -35,6 +36,7 @@ import org.sadari.admin.sadariadmin.notice.vo.NoticeVO;
  * 2026-08-08        SeungHyeon.Kang    현재 배포 상태별 버전 저장 검증 추가
  * 2026-08-08        SeungHyeon.Kang    관리자 목록의 배포 버전 선택 기준 검증 추가
  * 2026-09-05        Codex               영문 공지 필수값 반영
+ * 2026-10-12        SeungHyeon.Kang    공통 본문 정책과 커밋 후 파일 정리 검증 반영
  */
 @ExtendWith(MockitoExtension.class)
 class NoticeServiceImplTest {
@@ -56,6 +58,8 @@ class NoticeServiceImplTest {
         noticeService = new NoticeServiceImpl(noticeMapper, noticeImageService);
         admin = new AdminSessionVO();
         admin.setAdmnNumb(3L);
+        // 본문 정책 서비스가 입력 HTML을 정제한 결과를 반환하도록 설정한다
+        lenient().when(noticeImageService.sanitizeContentHtml(any())).thenCallRealMethod();
     }
 
     /** 관리자 목록 조회에 현재 배포 여부 기준값을 서버 상수로 설정한다. */
@@ -143,6 +147,7 @@ class NoticeServiceImplTest {
 
         verify(noticeMapper).delNoticeView("NOTICE", 9L);
         verify(noticeMapper).delNotice(9L);
-        verify(noticeImageService).delNoticeImages(java.util.Set.of(imagePath));
+        verify(noticeImageService).getNoticeImagePaths(any());
+        verify(noticeImageService).setImageCleanupOnCommit(any());
     }
 }

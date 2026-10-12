@@ -4,16 +4,11 @@ import static org.sadari.admin.sadariadmin.common.constant.Constant.NO;
 import static org.sadari.admin.sadariadmin.common.constant.Constant.SVIF_CATE;
 import static org.sadari.admin.sadariadmin.common.constant.Constant.YES;
 
-import java.io.IOException;
 import java.nio.charset.StandardCharsets;
-import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Set;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
-import org.jsoup.nodes.Element;
-import org.jsoup.safety.Cleaner;
-import org.jsoup.safety.Safelist;
 import org.sadari.admin.sadariadmin.admin.vo.AdminSessionVO;
 import org.sadari.admin.sadariadmin.common.exception.BusinessException;
 import org.sadari.admin.sadariadmin.common.pagination.PageData;
@@ -38,6 +33,7 @@ import org.springframework.transaction.annotation.Transactional;
  * DATE              AUTHOR             NOTE
  * -----------------------------------------------------------
  * 2026-08-10        SeungHyeon.Kang    최초 생성
+ * 2026-10-12        SeungHyeon.Kang    공통 본문 정책과 커밋 후 이미지 정리 적용
  */
 @Service
 @Transactional(readOnly = true)
@@ -47,9 +43,6 @@ public class ServiceInfoServiceImpl implements ServiceInfoService {
     private static final int TITLE_MAX_BYTES = 300;
     // 서비스 정보 본문의 최대 UTF-8 바이트
     private static final int CONTENT_MAX_BYTES = 1_000_000;
-    // 공용 Summernote 이미지 업로드 경로 형식
-    private static final String CONTENT_IMAGE_PATH = "^/uploads/notice/[0-9]{6}/[0-9a-fA-F-]{36}\\.(jpg|png)$";
-
     // 서비스 정보 데이터 접근 객체
     private final ServiceInfoMapper serviceInfoMapper;
     // Summernote 본문 이미지 저장소 서비스
@@ -285,72 +278,14 @@ public class ServiceInfoServiceImpl implements ServiceInfoService {
         }
 
         // 여러 버전에서 중복 참조한 이미지 경로를 한 번만 삭제한다.
-        Set<String> imagePaths = collectContentImagePaths(contents);
+        Set<String> imagePaths = noticeImageService.getNoticeImagePaths(contents);
         // 카테고리의 모든 버전이 삭제되지 않으면 파일 삭제를 시작하지 않는다.
         if (serviceInfoMapper.delServiceInfo(SVIF_CATE, cateCode) < 1) {
             throw new BusinessException(HttpStatus.NOT_FOUND, ResultEnum.SERVICE_INFO_NOT_FOUND);
         }
 
-        // 저장소 실패 시 데이터베이스 삭제도 롤백되도록 같은 트랜잭션에서 처리한다.
-        try {
-            noticeImageService.delNoticeImages(imagePaths);
-        } catch (IOException exception) {
-            throw new BusinessException(HttpStatus.INTERNAL_SERVER_ERROR, ResultEnum.COMMON_SERVER_ERROR);
-        }
-    }
-
-    /** 모든 서비스 정보 버전에서 공용 Summernote 이미지 경로를 수집한다. */
-    private Set<String> collectContentImagePaths(List<String> contents) {
-        Set<String> imagePaths = new LinkedHashSet<>();
-        // 과거 버전에만 남은 이미지도 삭제 대상에 포함한다.
-        for (String content : contents) {
-            // 허용된 공용 업로드 경로만 실제 파일 삭제 대상으로 수집한다.
-            for (Element image : Jsoup.parseBodyFragment(StringUtil.isEmpty(content) ? "" : content).select("img[src]")) {
-                String imagePath = image.attr("src");
-                // 공용 Summernote 이미지 규격과 일치하는 경로만 저장한다.
-                if (imagePath.matches(CONTENT_IMAGE_PATH)) {
-                    imagePaths.add(imagePath);
-                }
-
-            }
-
-        }
-
-        // 중복이 제거된 서비스 정보 이미지 경로를 반환한다.
-        return imagePaths;
-    }
-
-    /** 실행 요소와 외부 이미지를 제거한 안전한 서비스 정보 HTML을 만든다. */
-    private String sanitizeHtml(String html) {
-        Safelist safelist = Safelist.relaxed()
-                .addTags("div", "span", "hr", "table", "thead", "tbody", "tr", "th", "td")
-                .addAttributes(":all", "class", "style")
-                .addAttributes("a", "target", "rel")
-                .addAttributes("img", "width", "height")
-                .removeProtocols("img", "src", "http", "https");
-        Document dirty = Jsoup.parseBodyFragment(StringUtil.isEmpty(html) ? "" : html);
-        Document clean = new Cleaner(safelist).clean(dirty);
-        // 허용되지 않은 이미지 경로는 사용자 본문에 노출하지 않는다.
-        for (Element image : clean.select("img")) {
-            // 공용 Summernote 이미지 경로가 아니면 요소 전체를 제거한다.
-            if (!image.attr("src").matches(CONTENT_IMAGE_PATH)) {
-                image.remove();
-            }
-
-        }
-
-        // CSS 실행이나 외부 요청을 만들 수 있는 위험한 스타일을 제거한다.
-        for (Element styled : clean.select("[style]")) {
-            String style = styled.attr("style").toLowerCase();
-            // 외부 리소스와 표현식이 포함된 style 속성을 제거한다.
-            if (style.contains("url(") || style.contains("expression") || style.contains("@import")) {
-                styled.removeAttr("style");
-            }
-
-        }
-
-        // 정제된 body 내부 HTML을 반환한다.
-        return clean.body().html().trim();
+        // 본문 행 삭제가 커밋된 뒤 실제 이미지 파일을 정리한다
+        noticeImageService.setImageCleanupOnCommit(imagePaths);
     }
 
     /** 서비스 정보 카테고리와 제목 및 본문을 정규화하고 저장 범위를 검증한다. */
@@ -363,8 +298,8 @@ public class ServiceInfoServiceImpl implements ServiceInfoService {
         String categoryCode = StringUtil.isEmpty(serviceInfo.getCateCode()) ? "" : serviceInfo.getCateCode().trim();
         String title = StringUtil.isEmpty(serviceInfo.getSvciTitl()) ? "" : serviceInfo.getSvciTitl().trim();
         String englishTitle = StringUtil.isEmpty(serviceInfo.getSvciEntl()) ? "" : serviceInfo.getSvciEntl().trim();
-        String content = sanitizeHtml(serviceInfo.getSvciCntn());
-        String englishContent = sanitizeHtml(serviceInfo.getSvciEnct());
+        String content = noticeImageService.sanitizeContentHtml(serviceInfo.getSvciCntn());
+        String englishContent = noticeImageService.sanitizeContentHtml(serviceInfo.getSvciEnct());
         Document contentDocument = Jsoup.parseBodyFragment(content);
         Document englishContentDocument = Jsoup.parseBodyFragment(englishContent);
         boolean hasContent = !contentDocument.text().isBlank() || !contentDocument.select("img").isEmpty();

@@ -11,6 +11,7 @@ import org.sadari.admin.sadariadmin.menu.mapper.MenuMapper;
 import org.sadari.admin.sadariadmin.menu.service.MenuService;
 import org.sadari.admin.sadariadmin.menu.vo.MenuPermissionVO;
 import org.sadari.admin.sadariadmin.menu.vo.MenuSearchVO;
+import org.sadari.admin.sadariadmin.menu.vo.MenuSaveVO;
 import org.sadari.admin.sadariadmin.menu.vo.MenuVO;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
@@ -28,6 +29,7 @@ import java.util.List;
  * -----------------------------------------------------------
  * 2026-07-08        SeungHyeon.Kang    최초 생성
  * 2026-07-31        SeungHyeon.Kang    메뉴 목록 검색 조건 추가
+ * 2026-10-12        SeungHyeon.Kang    메뉴 상세 일괄 저장 트랜잭션 추가
  */
 @Service
 @Transactional(readOnly = true)
@@ -156,6 +158,61 @@ public class MenuServiceImpl implements MenuService {
         menu.setUpdtAdmn(admin.getAdmnNumb());
         menuMapper.uptMenu(menu);
         return menuMapper.getMenuDtl(menu.getMenuNumb(), menu.getSubxNumb());
+    }
+
+    /**
+     * 기준 메뉴와 기존 및 신규 하위 메뉴를 한 트랜잭션으로 저장한다
+     *
+     * @author SeungHyeon.Kang
+     * @param save 메뉴 상세 일괄 저장 데이터
+     * @param admin 로그인한 관리자
+     * @return 저장된 기준 메뉴
+     */
+    @Override
+    @Transactional
+    public MenuVO setMenuBatch(MenuSaveVO save, AdminSessionVO admin) {
+        // 일괄 저장의 기준 메뉴와 관리자 정보가 없으면 일부 저장을 시작하지 않는다
+        if (StringUtil.isEmpty(save) || StringUtil.isEmpty(save.getMenu()) || StringUtil.isEmpty(admin)) {
+            throw new BusinessException(HttpStatus.BAD_REQUEST, ResultEnum.COMMON_REQUIRED_VALUE);
+        }
+
+        MenuVO savedMenu;
+        // 복합키가 모두 있으면 기존 메뉴를 수정한다
+        if (!StringUtil.hasEmpty(save.getMenu().getMenuNumb(), save.getMenu().getSubxNumb())) {
+            // 기준 메뉴의 변경 내용을 먼저 저장한다
+            savedMenu = uptMenu(save.getMenu(), admin);
+        }
+
+        // 복합키가 없으면 신규 상위 메뉴를 등록한다
+        else {
+            // 신규 기준 메뉴의 복합키를 생성하여 저장한다
+            savedMenu = setMenu(save.getMenu(), admin);
+        }
+
+        // 기존 하위 메뉴가 있으면 같은 트랜잭션에서 모두 수정한다
+        if (!StringUtil.isEmpty(save.getSubMenus())) {
+            // 하위 메뉴 하나라도 실패하면 기준 메뉴 변경까지 롤백되도록 순서대로 저장한다
+            for (MenuVO subMenu : save.getSubMenus()) {
+                // 기존 하위 메뉴의 변경 내용을 저장한다
+                uptMenu(subMenu, admin);
+            }
+
+        }
+
+        // 신규 하위 메뉴가 있으면 저장된 기준 메뉴 아래에 모두 등록한다
+        if (!StringUtil.isEmpty(save.getChildMenus())) {
+            // 신규 하위 메뉴 하나라도 실패하면 앞선 등록과 수정을 모두 롤백한다
+            for (MenuVO childMenu : save.getChildMenus()) {
+                // 저장된 상위 메뉴 번호를 신규 하위 메뉴 관계에 설정한다
+                childMenu.setMenuNumb(savedMenu.getMenuNumb());
+                // 신규 하위 메뉴를 같은 트랜잭션으로 등록한다
+                setMenu(childMenu, admin);
+            }
+
+        }
+
+        // 전체 저장이 완료된 기준 메뉴를 반환한다
+        return savedMenu;
     }
 
     /**

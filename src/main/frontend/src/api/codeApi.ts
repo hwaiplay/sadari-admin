@@ -61,44 +61,28 @@ export const createCodeMaster = (master: CodeMaster) =>
   )
 
 /**
- * 공통코드 수정
- * @Author SeungHyeon.Kang
- * @param commCode
- * @param master
- * @return
+ * 공통코드와 기존 및 신규 세부코드를 한 요청으로 저장한다
+ *
+ * @author SeungHyeon.Kang
+ * @param commCode 저장할 공통코드
+ * @param master 수정할 공통코드 데이터
+ * @param detailCodes 수정할 기존 세부코드
+ * @param newCodes 등록할 신규 세부코드
+ * @return 공통코드 상세 전체 저장 결과
+ * @throws 공통코드 상세 저장 요청이 실패할 때 발생한다
  */
-export const updateCodeMaster = (commCode: string, master: CodeMaster) =>
+export const saveCodeBatch = (
+  commCode: string,
+  master: CodeMaster,
+  detailCodes: DetailCodePayload[],
+  newCodes: DetailCodePayload[],
+) =>
   fetchResult<CodeMaster>(
-    `/api/code-manage/masters/${commCode}`,
-    { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(master) },
-    '공통코드 수정에 실패했습니다.',
-  )
-
-/**
- * 세부코드 등록
- * @Author SeungHyeon.Kang
- * @param commCode
- * @param payload
- * @return
- */
-export const createDetailCode = (commCode: string, payload: DetailCodePayload) =>
-  fetchResult<void>(
-    `/api/code-manage/masters/${commCode}/details`,
-    { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) },
-    '세부코드 등록에 실패했습니다.',
-  )
-
-/**
- * 세부코드 수정
- * @Author SeungHyeon.Kang
- * @param commCode
- * @param comdCode
- * @param payload
- * @return
- */
-export const updateDetailCode = (commCode: string, comdCode: string, payload: DetailCodePayload) =>
-  fetchResult<Code>(
-    `/api/code-manage/masters/${commCode}/details/${comdCode}`,
-    { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) },
-    '세부코드 수정에 실패했습니다.',
+    `/api/code-manage/masters/${commCode}/batch`,
+    {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ master, detailCodes, newCodes }),
+    },
+    '공통코드 상세 저장에 실패했습니다.',
   )

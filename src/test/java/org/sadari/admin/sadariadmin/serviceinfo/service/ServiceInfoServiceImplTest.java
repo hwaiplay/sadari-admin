@@ -4,6 +4,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.lenient;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
@@ -30,6 +31,7 @@ import org.sadari.admin.sadariadmin.serviceinfo.vo.ServiceInfoVO;
  * -----------------------------------------------------------
  * 2026-08-10        SeungHyeon.Kang    최초 생성
  * 2026-09-05        Codex               영문 서비스 정보 필수값 반영
+ * 2026-10-12        SeungHyeon.Kang    공통 본문 정책 적용 검증 반영
  */
 @ExtendWith(MockitoExtension.class)
 class ServiceInfoServiceImplTest {
@@ -51,6 +53,8 @@ class ServiceInfoServiceImplTest {
         serviceInfoService = new ServiceInfoServiceImpl(serviceInfoMapper, noticeImageService);
         admin = new AdminSessionVO();
         admin.setAdmnNumb(3L);
+        // 본문 정책 서비스가 입력 HTML을 정제한 결과를 반환하도록 설정한다
+        lenient().when(noticeImageService.sanitizeContentHtml(any())).thenCallRealMethod();
     }
 
     /** 이미 버전이 있는 카테고리에는 두 번째 논리 글 등록을 차단한다. */

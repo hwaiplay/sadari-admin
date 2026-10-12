@@ -10,11 +10,17 @@ import { NOTI_CATE } from '../../constants/codes'
 import type { Code } from '../../types/code'
 import type { PageData } from '../../types/common'
 import type { Notice, NoticeForm } from '../../types/notice'
+import { getListPageSnapshot, setListPageSnapshot } from '../../utils/search'
 
 type NoticeManagePageProps = {
   currentPath: string
   onMovePath: (path: string) => void
   onError: (message: string | null) => void
+}
+
+type NoticeSearch = {
+  keyword: string
+  cateCode: string
 }
 
 const EMPTY_PAGE: PageData<Notice> = {
@@ -23,12 +29,14 @@ const EMPTY_PAGE: PageData<Notice> = {
 
 const EMPTY_FORM: NoticeForm = { cateCode: '', notiTitl: '', notiEntl: '', notiCntn: '', notiEnct: '', topxYsno: 'N' }
 
+const DEFAULT_NOTICE_SEARCH: NoticeSearch = { keyword: '', cateCode: '' }
+
 /** 상단 고정 공지에 사용하는 핀 아이콘을 표시한다. */
 function PinIcon() {
   return (
     <svg width="19" height="19" viewBox="0 0 19 19" fill="none" xmlns="http://www.w3.org/2000/svg">
       <path d="M11 2L17 8L15 10L12.5 8.5L9.5 11.5L10 15L8 17L2 11L4 9L7.5 9.5L10.5 6.5L9 4L11 2Z" fill="#2F8F64"/>
-      <path d="M4.39415 14.0967L2 16.4908" stroke="#2F8F64" stroke-linecap="square"/>
+      <path d="M4.39415 14.0967L2 16.4908" stroke="#2F8F64" strokeLinecap="square"/>
     </svg>
   )
 }
@@ -38,6 +46,7 @@ export function NoticeManagePage({ currentPath, onMovePath, onError }: NoticeMan
   const [pageData, setPageData] = useState<PageData<Notice>>(EMPTY_PAGE)
   const [keyword, setKeyword] = useState('')
   const [searchCategoryCode, setSearchCategoryCode] = useState('')
+  const [appliedSearch, setAppliedSearch] = useState<NoticeSearch>(DEFAULT_NOTICE_SEARCH)
   const [detail, setDetail] = useState<Notice | null>(null)
   const [versions, setVersions] = useState<Notice[]>([])
   const [form, setForm] = useState<NoticeForm>(EMPTY_FORM)
@@ -56,18 +65,28 @@ export function NoticeManagePage({ currentPath, onMovePath, onError }: NoticeMan
   const isListPage = currentPath === NOTICE_LIST_PATH
   const isNewPage = currentPath === NOTICE_NEW_PATH
 
-  /** 현재 배포 버전을 우선하는 공지 목록을 검색 조건으로 조회한다. */
-  const loadList = useCallback(async (page = 1, searchKeyword = keyword, searchCateCode = searchCategoryCode): Promise<void> => {
+  /**
+   * 현재 배포 버전을 우선하는 공지 목록을 적용 검색 조건으로 조회한다
+   *
+   * @author SeungHyeon.Kang
+   * @param page 조회할 페이지 번호
+   * @param search 적용할 공지 검색 조건
+   * @return 목록 조회가 끝나면 완료되는 Promise
+   */
+  const loadList = useCallback(async (page: number, search: NoticeSearch): Promise<void> => {
     setLoading(true)
     onError(null)
     try {
-      setPageData(await getNoticeList(page, searchKeyword.trim(), searchCateCode))
+      const result = await getNoticeList(page, search.keyword.trim(), search.cateCode)
+      setPageData(result)
+      setAppliedSearch(search)
+      setListPageSnapshot(NOTICE_LIST_PATH, result.pageNumber, search)
     } catch (error: unknown) {
       onError(error instanceof Error ? error.message : '공지사항 목록을 조회하지 못했습니다.')
     } finally {
       setLoading(false)
     }
-  }, [keyword, onError, searchCategoryCode])
+  }, [onError])
 
   /** 복합키에 해당하는 공지 버전을 조회한다. */
   const loadDetail = useCallback(async (notiNumb: number, versNumb: number): Promise<void> => {
@@ -116,17 +135,64 @@ export function NoticeManagePage({ currentPath, onMovePath, onError }: NoticeMan
   useEffect(() => {
     const timer = window.setTimeout(() => {
       if (isListPage) {
-        void loadList(1, '', '')
+        const snapshot = getListPageSnapshot(NOTICE_LIST_PATH, DEFAULT_NOTICE_SEARCH)
+        setKeyword(snapshot.search.keyword)
+        setSearchCategoryCode(snapshot.search.cateCode)
+        setAppliedSearch(snapshot.search)
+        void loadList(snapshot.pageNumber, snapshot.search)
       } else if (isNewPage) {
         setDetail(null)
         setVersions([])
-        setForm({ ...EMPTY_FORM, cateCode: categoryCodes[0]?.comdCode ?? '' })
+        setForm(EMPTY_FORM)
       } else if (detailKey) {
         void loadDetail(detailKey.notiNumb, detailKey.versNumb)
       }
     }, 0)
     return () => window.clearTimeout(timer)
-  }, [categoryCodes, detailKey, isListPage, isNewPage, loadDetail, loadList])
+  }, [detailKey, isListPage, isNewPage, loadDetail, loadList])
+
+  useEffect(() => {
+    const timer = window.setTimeout(() => {
+      // 등록 화면 진입 시 이미 조회한 첫 카테고리를 기본값으로 설정한다
+      if (isNewPage && categoryCodes.length > 0) {
+        // 사용자가 선택한 값이 없을 때만 기본 카테고리를 반영한다
+        setForm((current) => current.cateCode
+          ? current
+          : { ...current, cateCode: categoryCodes[0].comdCode })
+      }
+    }, 0)
+    // 경로가 바뀌면 이전 등록 화면의 기본값 설정을 취소한다
+    return () => window.clearTimeout(timer)
+  }, [categoryCodes, isNewPage])
+
+  /**
+   * 입력한 공지 검색 조건을 첫 페이지부터 적용한다
+   *
+   * @author SeungHyeon.Kang
+   * @param event 공지 검색 폼 제출 이벤트
+   * @return 반환값이 없다
+   */
+  const handleSearch = (event: FormEvent<HTMLFormElement>): void => {
+    // 브라우저 기본 제출을 막고 현재 관리자 화면에서 목록을 갱신한다
+    event.preventDefault()
+    // 입력 중인 검색 조건을 이번 목록 조회에 적용한다
+    void loadList(1, { keyword, cateCode: searchCategoryCode })
+  }
+
+  /**
+   * 공지 검색 입력과 적용 조건을 전체 목록으로 초기화한다
+   *
+   * @author SeungHyeon.Kang
+   * @return 반환값이 없다
+   */
+  const resetSearch = (): void => {
+    // 검색 입력값을 기본 조건으로 되돌린다
+    setKeyword('')
+    // 카테고리 검색 입력값을 전체로 되돌린다
+    setSearchCategoryCode('')
+    // 기본 검색 조건으로 첫 페이지를 조회한다
+    void loadList(1, DEFAULT_NOTICE_SEARCH)
+  }
 
   /**
    * 미배포 버전은 같은 버전으로 수정하고 현재 배포 중인 버전은 다음 버전으로 저장한다
@@ -242,7 +308,7 @@ export function NoticeManagePage({ currentPath, onMovePath, onError }: NoticeMan
         <div className="content-header">
           <div><h1>공지사항</h1><p>공지별 현재 배포본을 우선하고 배포 전 공지는 최신 초안으로 관리합니다.</p></div>
         </div>
-        <form className="list-search" onSubmit={(event) => { event.preventDefault(); void loadList(1) }}>
+        <form className="list-search" onSubmit={handleSearch}>
           <label><span>제목 검색</span><input value={keyword} onChange={(event) => setKeyword(event.target.value)} /></label>
           <label>
             <span>카테고리</span>
@@ -251,7 +317,7 @@ export function NoticeManagePage({ currentPath, onMovePath, onError }: NoticeMan
               {categoryCodes.map((code) => <option key={code.comdCode} value={code.comdCode}>{code.comdName}</option>)}
             </select>
           </label>
-          <div className="list-search-actions"><button type="submit">검색</button></div>
+          <div className="list-search-actions"><button type="button" className="subtle-button" onClick={resetSearch}>초기화</button><button type="submit">검색</button></div>
         </form>
         <div className="table-wrap notice-list-table">
           <table>
@@ -273,7 +339,7 @@ export function NoticeManagePage({ currentPath, onMovePath, onError }: NoticeMan
             </tbody>
           </table>
         </div>
-        <Pagination pageNumber={pageData.pageNumber} totalPages={pageData.totalPages} onPageChange={(page) => void loadList(page)} />
+        <Pagination pageNumber={pageData.pageNumber} totalPages={pageData.totalPages} onPageChange={(page) => void loadList(page, appliedSearch)} />
         <button type="button" className="floating-button" onClick={() => onMovePath(NOTICE_NEW_PATH)}>등록</button>
       </section>
     )

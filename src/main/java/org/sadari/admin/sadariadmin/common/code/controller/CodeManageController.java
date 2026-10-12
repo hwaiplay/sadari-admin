@@ -4,6 +4,7 @@ import org.sadari.admin.sadariadmin.admin.vo.AdminSessionVO;
 import org.sadari.admin.sadariadmin.common.code.service.CodeManageService;
 import org.sadari.admin.sadariadmin.common.code.vo.CodeMasterSearchVO;
 import org.sadari.admin.sadariadmin.common.code.vo.CodeMasterVO;
+import org.sadari.admin.sadariadmin.common.code.vo.CodeSaveVO;
 import org.sadari.admin.sadariadmin.common.code.vo.CodeVO;
 import org.sadari.admin.sadariadmin.common.constant.Constant;
 import org.sadari.admin.sadariadmin.common.result.ResultData;
@@ -29,6 +30,7 @@ import org.springframework.web.bind.annotation.RestController;
  * -----------------------------------------------------------
  * 2026-07-08        SeungHyeon.Kang    최초 생성
  * 2026-07-31        SeungHyeon.Kang    공통코드 목록 검색 조건 추가
+ * 2026-10-12        SeungHyeon.Kang    공통코드 상세 일괄 저장 API 추가
  */
 @RestController
 @RequestMapping(Constant.API_CODE_MANAGE_PREFIX)
@@ -109,6 +111,22 @@ public class CodeManageController {
             @AuthenticationPrincipal AdminSessionVO admin
     ) {
         return ResultData.success(ResultEnum.UPDATE_SUCCESS, codeManageService.uptCommCode(commCode, codeMaster, admin));
+    }
+
+    /**
+     * 공통코드와 세부코드 변경을 한 요청으로 저장한다
+     *
+     * @author SeungHyeon.Kang
+     * @param commCode 수정할 공통코드
+     * @param save 공통코드 상세 일괄 저장 데이터
+     * @param admin 로그인한 관리자
+     * @return 저장된 공통코드 응답
+     */
+    @PutMapping("/masters/{commCode}/batch")
+    public ResultData uptCodeBatch(@PathVariable String commCode, @RequestBody CodeSaveVO save
+                                 , @AuthenticationPrincipal AdminSessionVO admin) {
+        // 공통코드 상세 전체 저장 결과를 공통 성공 응답으로 반환한다
+        return ResultData.success(ResultEnum.UPDATE_SUCCESS, codeManageService.uptCodeBatch(commCode, save, admin));
     }
 
     /**

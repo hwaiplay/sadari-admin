@@ -6,6 +6,7 @@ import org.sadari.admin.sadariadmin.common.result.ResultData;
 import org.sadari.admin.sadariadmin.common.result.ResultEnum;
 import org.sadari.admin.sadariadmin.menu.service.MenuService;
 import org.sadari.admin.sadariadmin.menu.vo.MenuSearchVO;
+import org.sadari.admin.sadariadmin.menu.vo.MenuSaveVO;
 import org.sadari.admin.sadariadmin.menu.vo.MenuVO;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.DeleteMapping;
@@ -28,6 +29,7 @@ import org.springframework.web.bind.annotation.RestController;
  * -----------------------------------------------------------
  * 2026-07-08        SeungHyeon.Kang    최초 생성
  * 2026-07-31        SeungHyeon.Kang    메뉴 목록 검색 조건 추가
+ * 2026-10-12        SeungHyeon.Kang    메뉴 상세 일괄 저장 API 추가
  */
 @RestController
 @RequestMapping(Constant.API_MENUS_PREFIX)
@@ -113,6 +115,21 @@ public class MenuController {
     @PostMapping
     public ResultData setMenu(@RequestBody MenuVO menu, @AuthenticationPrincipal AdminSessionVO admin) {
         return ResultData.success(ResultEnum.SAVE_SUCCESS, menuService.setMenu(menu, admin));
+    }
+
+    /**
+     * 기준 메뉴와 하위 메뉴 변경을 한 요청으로 저장한다
+     *
+     * @author SeungHyeon.Kang
+     * @param save 메뉴 상세 일괄 저장 데이터
+     * @param admin 로그인한 관리자
+     * @return 저장된 기준 메뉴 응답
+     */
+    @PostMapping("/batch")
+    public ResultData setMenuBatch(@RequestBody MenuSaveVO save
+                                 , @AuthenticationPrincipal AdminSessionVO admin) {
+        // 메뉴 상세 전체 저장 결과를 공통 성공 응답으로 반환한다
+        return ResultData.success(ResultEnum.SAVE_SUCCESS, menuService.setMenuBatch(save, admin));
     }
 
     /**

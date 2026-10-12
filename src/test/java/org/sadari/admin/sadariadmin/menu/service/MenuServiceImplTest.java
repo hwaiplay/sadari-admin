@@ -2,6 +2,7 @@ package org.sadari.admin.sadariadmin.menu.service;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -18,8 +19,20 @@ import org.sadari.admin.sadariadmin.common.result.ResultEnum;
 import org.sadari.admin.sadariadmin.menu.mapper.MenuMapper;
 import org.sadari.admin.sadariadmin.menu.service.impl.MenuServiceImpl;
 import org.sadari.admin.sadariadmin.menu.vo.MenuVO;
+import org.sadari.admin.sadariadmin.menu.vo.MenuSaveVO;
+import org.springframework.transaction.annotation.Transactional;
 
-/** 관리자 메뉴의 URL 중복과 상하위 데이터 정합성을 검증한다. */
+/**
+ * fileName       : MenuServiceImplTest
+ * author         : SeungHyeon.Kang
+ * date           : 2026-07-08
+ * description    : 관리자 메뉴의 URL 중복과 상하위 데이터 정합성을 검증한다
+ * ===========================================================
+ * DATE              AUTHOR             NOTE
+ * -----------------------------------------------------------
+ * 2026-07-08        SeungHyeon.Kang    최초 생성
+ * 2026-10-12        SeungHyeon.Kang    메뉴 상세 일괄 저장 검증 추가
+ */
 @ExtendWith(MockitoExtension.class)
 class MenuServiceImplTest {
 
@@ -69,5 +82,62 @@ class MenuServiceImplTest {
         assertEquals(ResultEnum.COMMON_INVALID_REQUEST, exception.getResultEnum());
         verify(menuMapper, never()).delMenuAuth("8", "0");
         verify(menuMapper, never()).delMenu("8", "0");
+    }
+
+    /** 메뉴 상세 전체 변경이 하나의 트랜잭션 진입점에서 저장되는지 검증한다. */
+    @Test
+    void savesMenuBatchInTx() throws NoSuchMethodException {
+        // 수정할 상위 메뉴를 준비한다
+        MenuVO parent = createMenu("8", "0", "/admin/menu");
+        // 수정할 기존 하위 메뉴를 준비한다
+        MenuVO subMenu = createMenu("8", "1", "/admin/menu/sub");
+        // 등록할 신규 하위 메뉴를 준비한다
+        MenuVO childMenu = createMenu(null, null, "/admin/menu/new");
+        // 한 요청으로 저장할 메뉴 상세 데이터를 구성한다
+        MenuSaveVO save = new MenuSaveVO();
+        // 기준 메뉴를 일괄 저장 데이터에 설정한다
+        save.setMenu(parent);
+        // 기존 하위 메뉴를 일괄 저장 데이터에 설정한다
+        save.setSubMenus(List.of(subMenu));
+        // 신규 하위 메뉴를 일괄 저장 데이터에 설정한다
+        save.setChildMenus(List.of(childMenu));
+        // 신규 하위 메뉴 번호와 저장 후 조회 결과를 설정한다
+        when(menuMapper.getSubxNumb("8")).thenReturn("2");
+        // 기준 메뉴 저장 후 조회 결과를 설정한다
+        when(menuMapper.getMenuDtl("8", "0")).thenReturn(parent);
+        // 기존 하위 메뉴 저장 후 조회 결과를 설정한다
+        when(menuMapper.getMenuDtl("8", "1")).thenReturn(subMenu);
+        // 신규 하위 메뉴 저장 후 조회 결과를 설정한다
+        when(menuMapper.getMenuDtl("8", "2")).thenReturn(childMenu);
+
+        // 메뉴 상세 전체 저장을 실행한다
+        MenuVO saved = menuService.setMenuBatch(save, admin);
+
+        // 기준 메뉴 저장 결과가 반환되는지 확인한다
+        assertEquals(parent, saved);
+        // 기준 메뉴와 기존 하위 메뉴가 수정되는지 확인한다
+        verify(menuMapper).uptMenu(parent);
+        verify(menuMapper).uptMenu(subMenu);
+        // 신규 하위 메뉴가 등록되는지 확인한다
+        verify(menuMapper).setMenu(childMenu);
+        // 전체 저장 진입점에 트랜잭션 경계가 선언됐는지 확인한다
+        assertTrue(MenuServiceImpl.class.getMethod("setMenuBatch", MenuSaveVO.class, AdminSessionVO.class)
+                .isAnnotationPresent(Transactional.class));
+    }
+
+    /** 일괄 저장 테스트에 사용할 메뉴 입력값을 생성한다. */
+    private MenuVO createMenu(String menuNumb, String subxNumb, String menuUrlx) {
+        // 메뉴 저장 필수값을 담을 객체를 생성한다
+        MenuVO menu = new MenuVO();
+        // 기존 메뉴와 신규 메뉴를 구분할 상위 번호를 설정한다
+        menu.setMenuNumb(menuNumb);
+        // 기존 메뉴와 신규 메뉴를 구분할 하위 번호를 설정한다
+        menu.setSubxNumb(subxNumb);
+        // 저장 검증을 통과할 메뉴명을 설정한다
+        menu.setMenuName("테스트 메뉴");
+        // 중복 검증에 사용할 메뉴 URL을 설정한다
+        menu.setMenuUrlx(menuUrlx);
+        // 완성된 메뉴 입력값을 반환한다
+        return menu;
     }
 }

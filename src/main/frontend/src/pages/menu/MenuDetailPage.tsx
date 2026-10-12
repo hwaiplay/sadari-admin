@@ -21,8 +21,6 @@ type MenuDetailPageProps = {
   onChangeSubMenu: (index: number, field: 'menuName' | 'menuUrlx' | 'useeYsno' | 'sortOrdr', value: string) => void
   onSubmit: (event: FormEvent<HTMLFormElement>) => void
   onAddChildForm: () => void
-  onSaveAllChildMenus: () => void
-  onSaveAllSubMenus: () => void
   onSaveAll: () => void
   onDelete: (menu: Menu) => void
 }
@@ -43,7 +41,6 @@ type MenuDetailPageProps = {
  * @param onChangeChildForm
  * @param onSubmit
  * @param onAddChildForm
- * @param onSaveAllChildMenus
  * @param onDelete
  * @return
  */

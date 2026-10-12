@@ -4,6 +4,7 @@ import org.sadari.admin.sadariadmin.admin.vo.AdminSessionVO;
 import org.sadari.admin.sadariadmin.common.code.mapper.CodeMapper;
 import org.sadari.admin.sadariadmin.common.code.vo.CodeMasterSearchVO;
 import org.sadari.admin.sadariadmin.common.code.vo.CodeMasterVO;
+import org.sadari.admin.sadariadmin.common.code.vo.CodeSaveVO;
 import org.sadari.admin.sadariadmin.common.code.vo.CodeVO;
 import org.sadari.admin.sadariadmin.common.pagination.PageData;
 import org.sadari.admin.sadariadmin.common.pagination.PageRequest;
@@ -28,6 +29,7 @@ import java.util.List;
  * 2026-07-08        SeungHyeon.Kang    최초 생성
  * 2026-07-31        SeungHyeon.Kang    공통코드 목록 검색 조건 추가
  * 2026-08-05        SeungHyeon.Kang       세부코드 상위 관계와 순환 검증 추가
+ * 2026-10-12        SeungHyeon.Kang    공통코드 상세 일괄 저장 추가
  */
 @Service
 @Transactional(readOnly = true)
@@ -142,6 +144,49 @@ public class CodeManageService {
         codeMaster.setUpdtAdmn(String.valueOf(admin.getAdmnNumb()));
         codeMapper.uptCommCode(codeMaster);
         return codeMapper.getCommCodeDtl(commCode);
+    }
+
+    /**
+     * 공통코드와 기존 및 신규 세부코드를 한 트랜잭션으로 저장한다
+     *
+     * @author SeungHyeon.Kang
+     * @param commCode 수정할 공통코드
+     * @param save 공통코드 상세 일괄 저장 데이터
+     * @param admin 로그인한 관리자
+     * @return 저장된 공통코드
+     */
+    @Transactional
+    public CodeMasterVO uptCodeBatch(String commCode, CodeSaveVO save, AdminSessionVO admin) {
+        // 기준 공통코드와 관리자 정보가 없으면 일부 저장을 시작하지 않는다
+        if (StringUtil.isEmpty(commCode) || StringUtil.isEmpty(save)
+                || StringUtil.isEmpty(save.getMaster()) || StringUtil.isEmpty(admin)) {
+            throw new BusinessException(HttpStatus.BAD_REQUEST, ResultEnum.COMMON_REQUIRED_VALUE);
+        }
+
+        // 공통코드 변경을 같은 트랜잭션의 첫 단계로 저장한다
+        CodeMasterVO savedMaster = uptCommCode(commCode, save.getMaster(), admin);
+        // 기존 세부코드가 있으면 같은 트랜잭션에서 모두 수정한다
+        if (!StringUtil.isEmpty(save.getDetailCodes())) {
+            // 하나라도 실패하면 공통코드 변경까지 롤백되도록 순서대로 저장한다
+            for (CodeVO detailCode : save.getDetailCodes()) {
+                // 기존 세부코드의 변경 내용을 저장한다
+                uptComdCode(commCode, detailCode.getComdCode(), detailCode, admin);
+            }
+
+        }
+
+        // 신규 세부코드가 있으면 같은 트랜잭션에서 모두 등록한다
+        if (!StringUtil.isEmpty(save.getNewCodes())) {
+            // 하나라도 실패하면 앞선 등록과 수정을 모두 롤백한다
+            for (CodeVO newCode : save.getNewCodes()) {
+                // 신규 세부코드를 현재 공통코드 아래에 저장한다
+                setComdCode(commCode, newCode, admin);
+            }
+
+        }
+
+        // 전체 저장이 완료된 공통코드를 반환한다
+        return savedMaster;
     }
 
     /**

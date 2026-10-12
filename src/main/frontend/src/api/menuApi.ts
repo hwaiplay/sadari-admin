@@ -40,14 +40,15 @@ export const getMenuDetail = (menuNumb: string, subxNumb: string) => fetchJson<M
 export const getSubMenus = (menuNumb: string) => fetchJson<Menu[]>(`/api/menus/${menuNumb}/children`, undefined, '하위 메뉴 조회에 실패했습니다.')
 
 /**
- * 메뉴 저장
- * @Author SeungHyeon.Kang
- * @param form
- * @param detail
- * @return
+ * 메뉴 입력값을 서버 저장 형식으로 변환한다
+ *
+ * @author SeungHyeon.Kang
+ * @param form 변환할 메뉴 입력값
+ * @return 서버에 전달할 메뉴 데이터
  */
-export const saveMenuApi = (form: MenuForm, detail: boolean) => {
-  const payload = {
+const toMenuPayload = (form: MenuForm) => {
+  // 공백과 숫자 입력값을 서버 계약에 맞게 정규화하여 반환한다
+  return {
     menuNumb: form.menuNumb || null,
     subxNumb: form.subxNumb || null,
     menuName: form.menuName.trim(),
@@ -55,10 +56,35 @@ export const saveMenuApi = (form: MenuForm, detail: boolean) => {
     sortOrdr: Number(form.sortOrdr),
     useeYsno: form.useeYsno,
   }
+}
 
+/**
+ * 기준 메뉴와 기존 및 신규 하위 메뉴를 한 요청으로 저장한다
+ *
+ * @author SeungHyeon.Kang
+ * @param menu 저장할 기준 메뉴
+ * @param subMenus 수정할 기존 하위 메뉴
+ * @param childMenus 등록할 신규 하위 메뉴
+ * @return 메뉴 상세 전체 저장 결과
+ * @throws 메뉴 상세 저장 요청이 실패할 때 발생한다
+ */
+export const saveMenuBatch = (menu: MenuForm, subMenus: Menu[], childMenus: MenuForm[]) => {
+  // 한 트랜잭션으로 처리할 메뉴 상세 전체 요청을 반환한다
   return fetchResult<Menu>(
-    detail ? `/api/menus/${form.menuNumb}/${form.subxNumb}` : '/api/menus',
-    { method: detail ? 'PUT' : 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) },
+    '/api/menus/batch',
+    {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        menu: toMenuPayload(menu),
+        subMenus: subMenus.map((subMenu) => toMenuPayload({
+          ...subMenu,
+          sortOrdr: String(subMenu.sortOrdr ?? 1),
+          useeYsno: subMenu.useeYsno ?? 'Y',
+        })),
+        childMenus: childMenus.map(toMenuPayload),
+      }),
+    },
     '메뉴 저장에 실패했습니다.',
   )
 }

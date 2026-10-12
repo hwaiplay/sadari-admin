@@ -4,6 +4,7 @@ import org.sadari.admin.sadariadmin.admin.vo.AdminSessionVO;
 import org.sadari.admin.sadariadmin.common.pagination.PageData;
 import org.sadari.admin.sadariadmin.menu.vo.MenuPermissionVO;
 import org.sadari.admin.sadariadmin.menu.vo.MenuSearchVO;
+import org.sadari.admin.sadariadmin.menu.vo.MenuSaveVO;
 import org.sadari.admin.sadariadmin.menu.vo.MenuVO;
 
 import java.util.List;
@@ -18,6 +19,7 @@ import java.util.List;
  * -----------------------------------------------------------
  * 2026-07-08        SeungHyeon.Kang    최초 생성
  * 2026-07-31        SeungHyeon.Kang    메뉴 목록 검색 조건 추가
+ * 2026-10-12        SeungHyeon.Kang    메뉴 상세 일괄 저장 추가
  */
 public interface MenuService {
 
@@ -77,6 +79,16 @@ public interface MenuService {
      * @return
      */
     MenuVO uptMenu(MenuVO menu, AdminSessionVO admin);
+
+    /**
+     * 기준 메뉴와 하위 메뉴 변경을 한 트랜잭션으로 저장한다
+     *
+     * @author SeungHyeon.Kang
+     * @param save 메뉴 상세 일괄 저장 데이터
+     * @param admin 로그인한 관리자
+     * @return 저장된 기준 메뉴
+     */
+    MenuVO setMenuBatch(MenuSaveVO save, AdminSessionVO admin);
 
     /**
      * 메뉴 삭제

@@ -5,16 +5,11 @@ import static org.sadari.admin.sadariadmin.common.constant.Constant.NOTI_CATE;
 import static org.sadari.admin.sadariadmin.common.constant.Constant.VIEW_TYPE_NOTICE;
 import static org.sadari.admin.sadariadmin.common.constant.Constant.YES;
 
-import java.io.IOException;
 import java.nio.charset.StandardCharsets;
-import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Set;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
-import org.jsoup.nodes.Element;
-import org.jsoup.safety.Cleaner;
-import org.jsoup.safety.Safelist;
 import org.sadari.admin.sadariadmin.admin.vo.AdminSessionVO;
 import org.sadari.admin.sadariadmin.common.exception.BusinessException;
 import org.sadari.admin.sadariadmin.common.pagination.PageData;
@@ -41,6 +36,7 @@ import org.springframework.transaction.annotation.Transactional;
  * 2026-08-07        SeungHyeon.Kang    버전 이력 조회와 종속 데이터 및 파일 삭제 추가
  * 2026-08-08        SeungHyeon.Kang    현재 배포 상태 기준 공지 수정 방식 분리
  * 2026-08-08        SeungHyeon.Kang    관리자 목록의 현재 배포 버전 우선 조회 적용
+ * 2026-10-12        SeungHyeon.Kang    공통 본문 정책과 커밋 후 이미지 정리 적용
  */
 @Service
 @Transactional(readOnly = true)
@@ -50,9 +46,6 @@ public class NoticeServiceImpl implements NoticeService {
     private static final int TITLE_MAX_BYTES = 300;
     // 공지 본문의 최대 UTF-8 바이트
     private static final int CONTENT_MAX_BYTES = 1_000_000;
-    // 공지 전용 저장 경로로 생성된 이미지만 허용하는 URL 형식
-    private static final String NOTICE_IMAGE_PATH = "^/uploads/notice/[0-9]{6}/[0-9a-fA-F-]{36}\\.(jpg|png)$";
-
     // 공지사항 데이터 접근 객체
     private final NoticeMapper noticeMapper;
     // 공지사항 전용 이미지 저장소 서비스
@@ -233,64 +226,15 @@ public class NoticeServiceImpl implements NoticeService {
             throw new BusinessException(HttpStatus.NOT_FOUND, ResultEnum.NOTICE_NOT_FOUND);
         }
         // 같은 이미지가 여러 버전에 포함되어도 저장소 삭제는 한 번만 수행한다.
-        Set<String> imagePaths = collectNoticeImagePaths(contents);
+        Set<String> imagePaths = noticeImageService.getNoticeImagePaths(contents);
         // 모든 계정 상태에서 생성된 공지 읽음 이력을 삭제한다.
         noticeMapper.delNoticeView(VIEW_TYPE_NOTICE, notiNumb);
         // 공지 주키에 속한 전체 버전이 삭제되지 않으면 파일 삭제를 시작하지 않는다.
         if (noticeMapper.delNotice(notiNumb) < 1) {
             throw new BusinessException(HttpStatus.NOT_FOUND, ResultEnum.NOTICE_NOT_FOUND);
         }
-        // 저장소 실패를 데이터베이스 롤백으로 연결하기 위해 트랜잭션 안에서 실제 파일을 삭제한다.
-        try {
-            noticeImageService.delNoticeImages(imagePaths);
-        // 일부 파일만 남는 상황에서 공지 행이 사라지지 않도록 업무 예외로 변환한다.
-        } catch (IOException exception) {
-            throw new BusinessException(HttpStatus.INTERNAL_SERVER_ERROR, ResultEnum.COMMON_SERVER_ERROR);
-        }
-    }
-
-    /** 모든 공지 버전 본문에서 공지 전용 이미지 공개 경로를 중복 없이 수집한다. */
-    private Set<String> collectNoticeImagePaths(List<String> contents) {
-        Set<String> imagePaths = new LinkedHashSet<>();
-        // 과거 버전에만 남아 있는 이미지도 삭제 대상에 포함한다.
-        for (String content : contents) {
-            // 외부 파일과 다른 업무 디렉터리는 저장소 삭제 대상에서 제외한다.
-            for (Element image : Jsoup.parseBodyFragment(content == null ? "" : content).select("img[src]")) {
-                String imagePath = image.attr("src");
-                // 공지 업로드 규격으로 발급한 상대 경로만 수집한다.
-                if (imagePath.matches(NOTICE_IMAGE_PATH)) {
-                    imagePaths.add(imagePath);
-                }
-
-            }
-
-        }
-        // 중복이 제거된 공지 전용 이미지 공개 경로를 반환한다.
-        return imagePaths;
-    }
-
-    /** 입력 HTML에서 실행 가능한 요소와 외부 이미지를 제거한다. */
-    private String sanitizeHtml(String html) {
-        Safelist safelist = Safelist.relaxed()
-                .addTags("div", "span", "hr", "table", "thead", "tbody", "tr", "th", "td")
-                .addAttributes(":all", "class", "style")
-                .addAttributes("a", "target", "rel")
-                .addAttributes("img", "width", "height")
-                .removeProtocols("img", "src", "http", "https");
-        Document dirty = Jsoup.parseBodyFragment(html == null ? "" : html);
-        Document clean = new Cleaner(safelist).clean(dirty);
-        for (Element image : clean.select("img")) {
-            if (!image.attr("src").matches(NOTICE_IMAGE_PATH)) {
-                image.remove();
-            }
-        }
-        for (Element styled : clean.select("[style]")) {
-            String style = styled.attr("style").toLowerCase();
-            if (style.contains("url(") || style.contains("expression") || style.contains("@import")) {
-                styled.removeAttr("style");
-            }
-        }
-        return clean.body().html().trim();
+        // 본문 행 삭제가 커밋된 뒤 실제 이미지 파일을 정리한다
+        noticeImageService.setImageCleanupOnCommit(imagePaths);
     }
 
     /** 제목과 본문을 정규화하고 저장 가능 범위를 검증한다. */
@@ -302,8 +246,8 @@ public class NoticeServiceImpl implements NoticeService {
         String topFixed = notice.getTopxYsno() == null ? NO : notice.getTopxYsno().trim();
         String title = notice.getNotiTitl() == null ? "" : notice.getNotiTitl().trim();
         String englishTitle = notice.getNotiEntl() == null ? "" : notice.getNotiEntl().trim();
-        String content = sanitizeHtml(notice.getNotiCntn());
-        String englishContent = sanitizeHtml(notice.getNotiEnct());
+        String content = noticeImageService.sanitizeContentHtml(notice.getNotiCntn());
+        String englishContent = noticeImageService.sanitizeContentHtml(notice.getNotiEnct());
         Document contentDocument = Jsoup.parseBodyFragment(content);
         Document englishContentDocument = Jsoup.parseBodyFragment(englishContent);
         boolean hasContent = !contentDocument.text().isBlank() || !contentDocument.select("img").isEmpty();

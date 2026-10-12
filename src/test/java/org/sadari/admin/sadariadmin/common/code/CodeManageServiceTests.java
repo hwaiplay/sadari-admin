@@ -9,11 +9,17 @@ import org.sadari.admin.sadariadmin.admin.vo.AdminSessionVO;
 import org.sadari.admin.sadariadmin.common.code.mapper.CodeMapper;
 import org.sadari.admin.sadariadmin.common.code.service.CodeManageService;
 import org.sadari.admin.sadariadmin.common.code.vo.CodeVO;
+import org.sadari.admin.sadariadmin.common.code.vo.CodeMasterVO;
+import org.sadari.admin.sadariadmin.common.code.vo.CodeSaveVO;
 import org.sadari.admin.sadariadmin.common.exception.BusinessException;
 import org.sadari.admin.sadariadmin.common.result.ResultEnum;
+import org.springframework.transaction.annotation.Transactional;
+
+import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -28,6 +34,7 @@ import static org.mockito.Mockito.when;
  * -----------------------------------------------------------
  * 2026-08-05        SeungHyeon.Kang       최초 생성
  * 2026-09-05        Codex                  영문 코드명 필수값 반영
+ * 2026-10-12        SeungHyeon.Kang        공통코드 상세 일괄 저장 검증 추가
  */
 @ExtendWith(MockitoExtension.class)
 class CodeManageServiceTests {
@@ -105,6 +112,49 @@ class CodeManageServiceTests {
         assertEquals(ResultEnum.CODE_DETAIL_HAS_CHILDREN, exception.getResultEnum());
         // 부모 세부코드가 삭제되지 않았는지 확인한다
         verify(codeMapper, never()).delComdCode("GROUP", "PARENT");
+    }
+
+    /** 공통코드 상세 전체 변경이 하나의 트랜잭션 진입점에서 저장되는지 검증한다. */
+    @Test
+    void savesCodeBatchInTx() throws NoSuchMethodException {
+        // 수정할 공통코드를 준비한다
+        CodeMasterVO master = new CodeMasterVO();
+        // 공통코드 식별자를 설정한다
+        master.setCommCode("GROUP");
+        // 저장 검증을 통과할 공통코드명을 설정한다
+        master.setCodeName("테스트 그룹");
+        // 수정할 기존 세부코드를 준비한다
+        CodeVO detailCode = createCode("EXISTING", null);
+        // 등록할 신규 세부코드를 준비한다
+        CodeVO newCode = createCode("NEW", null);
+        // 한 요청으로 저장할 공통코드 상세 데이터를 구성한다
+        CodeSaveVO save = new CodeSaveVO();
+        // 기준 공통코드를 일괄 저장 데이터에 설정한다
+        save.setMaster(master);
+        // 기존 세부코드를 일괄 저장 데이터에 설정한다
+        save.setDetailCodes(List.of(detailCode));
+        // 신규 세부코드를 일괄 저장 데이터에 설정한다
+        save.setNewCodes(List.of(newCode));
+        // 기준 공통코드와 기존 세부코드가 존재하도록 조회 결과를 설정한다
+        when(codeMapper.getCommCodeCnt("GROUP")).thenReturn(1);
+        when(codeMapper.getComdCodeCnt("GROUP", "EXISTING")).thenReturn(1);
+        // 공통코드 저장 후 조회 결과를 설정한다
+        when(codeMapper.getCommCodeDtl("GROUP")).thenReturn(master);
+
+        // 공통코드 상세 전체 저장을 실행한다
+        CodeMasterVO saved = codeManageService.uptCodeBatch("GROUP", save, createAdminSession());
+
+        // 기준 공통코드 저장 결과가 반환되는지 확인한다
+        assertEquals(master, saved);
+        // 공통코드와 기존 세부코드가 수정되는지 확인한다
+        verify(codeMapper).uptCommCode(master);
+        verify(codeMapper).uptComdCode(detailCode);
+        // 신규 세부코드가 등록되는지 확인한다
+        verify(codeMapper).setComdCode(newCode);
+        // 전체 저장 진입점에 트랜잭션 경계가 선언됐는지 확인한다
+        assertTrue(CodeManageService.class.getMethod(
+                "uptCodeBatch", String.class, CodeSaveVO.class, AdminSessionVO.class)
+                .isAnnotationPresent(Transactional.class));
     }
 
     /**

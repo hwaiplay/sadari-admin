@@ -3,8 +3,8 @@ import type { FormEvent } from 'react'
 import { getAdminSession, loginAdmin, logoutAdmin } from './api/adminApi'
 import { checkAlimTempDuplicate, getAlimTempDetail, getAlimTempList, saveAlimTempApi } from './api/alimTempApi'
 import { getAlimIconDetail, getAlimIconList, saveAlimIconApi } from './api/alimIconApi'
-import { checkMasterDuplicate, createCodeMaster, createDetailCode, getCodeList, getCodeMaster, getCodeMasters, getDetailCodes, updateCodeMaster, updateDetailCode } from './api/codeApi'
-import { deleteMenuApi, getMenuDetail, getMenuMngList, getSidebarMenus, getSubMenus, saveMenuApi } from './api/menuApi'
+import { checkMasterDuplicate, createCodeMaster, getCodeList, getCodeMaster, getCodeMasters, getDetailCodes, saveCodeBatch } from './api/codeApi'
+import { getSidebarMenus } from './api/menuApi'
 import './App.css'
 import { DEFAULT_USEE_YSNO, ALIM_SITU, COMM_YSNO } from './constants/codes'
 import { ADMIN_AUTH_MANAGE_PATH, ALIM_ICON_DETAIL_PREFIX, ALIM_ICON_LIST_PATH, ALIM_TEMP_DETAIL_PREFIX, ALIM_TEMP_LIST_PATH, ALIM_TEMP_NEW_PATH, AUTH_GROUP_DETAIL_PREFIX, AUTH_GROUP_LIST_PATH, AUTH_GROUP_NEW_PATH, CODE_DETAIL_PREFIX, CODE_LIST_PATH, COMPLAINT_DETAIL_PREFIX, COMPLAINT_LIST_PATH, CURRENT_USER_DETAIL_PREFIX, CURRENT_USER_LIST_PATH, HOME_PATH, LOGIN_PATH, MENU_DETAIL_PREFIX, MENU_LIST_PATH, MENU_NEW_PATH, NOTICE_DETAIL_PREFIX, NOTICE_LIST_PATH, NOTICE_NEW_PATH, POPUP_CONTENT_DETAIL_PREFIX, POPUP_CONTENT_LIST_PATH, POPUP_CONTENT_NEW_PATH, SCHEDULE_LOG_DETAIL_PREFIX, SCHEDULE_LOG_LIST_PATH, SERVICE_INFO_DETAIL_PREFIX, SERVICE_INFO_LIST_PATH, SERVICE_INFO_NEW_PATH, USER_MENU_DETAIL_PREFIX, USER_MENU_LIST_PATH, USER_MENU_NEW_PATH, USER_STATISTICS_PATH } from './constants/routes'
@@ -17,8 +17,7 @@ import { AlimIconListPage } from './pages/alim/AlimIconListPage'
 import { CodeDetailPage } from './pages/code/CodeDetailPage'
 import { CodeListPage } from './pages/code/CodeListPage'
 import { CodeMasterModal } from './pages/code/CodeMasterModal'
-import { MenuDetailPage } from './pages/menu/MenuDetailPage'
-import { MenuListPage } from './pages/menu/MenuListPage'
+import { MenuManagePage } from './pages/menu/MenuManagePage'
 import { UserMenuManagePage } from './pages/userMenu/UserMenuManagePage'
 import { AuthGroupManagePage } from './pages/authGroup/AuthGroupManagePage'
 import { AdminAuthManagePage } from './pages/adminAuth/AdminAuthManagePage'
@@ -41,9 +40,9 @@ import { UserStatisticsPage } from './pages/statistics/UserStatisticsPage'
 import type { AdminSession } from './types/admin'
 import type { AlimIcon, AlimIconSearch, AlimTemp, AlimTempForm, AlimTempSearch } from './types/alim'
 import type { Code, CodeMaster, CodeMasterSearch, DetailCodeForm, DetailCodePayload } from './types/code'
-import type { Menu, MenuForm, MenuSearch } from './types/menu'
+import type { Menu } from './types/menu'
 import type { PageData } from './types/common'
-import { emptyDetailForm, emptyMenuForm, getNextSortOrdr, toDetailCodeForm, toMenuForm } from './utils/forms'
+import { emptyDetailForm, getNextSortOrdr, toDetailCodeForm } from './utils/forms'
 import { getListPageSnapshot, setListPageSnapshot } from './utils/search'
 import { DELETED_SUSPENSION_PATH, INQUIRY_DETAIL_PREFIX, INQUIRY_LIST_PATH } from './constants/routes'
 import { WELCOME_PAGE_DETAIL_PREFIX, WELCOME_PAGE_LIST_PATH, WELCOME_PAGE_NEW_PATH } from './constants/routes'
@@ -51,7 +50,6 @@ import { READING_CLUB_DETAIL_PREFIX, READING_CLUB_LIST_PATH } from './constants/
 
 const emptyPageData = <T,>(): PageData<T> => ({ items: [], totalCount: 0, pageNumber: 1, pageSize: 20, totalPages: 0 })
 
-const DEFAULT_MENU_SEARCH: MenuSearch = { keyword: '', useeYsno: '' }
 const DEFAULT_CODE_SEARCH: CodeMasterSearch = { keyword: '', useeYsno: '' }
 const DEFAULT_ALIM_SEARCH: AlimTempSearch = { keyword: '', alimSitu: '', useeYsno: '' }
 const DEFAULT_ALIM_ICON_SEARCH: AlimIconSearch = { keyword: '', useeYsno: '' }
@@ -64,14 +62,8 @@ const DEFAULT_ALIM_ICON_SEARCH: AlimIconSearch = { keyword: '', useeYsno: '' }
 function App() {
   const [admin, setAdmin] = useState<AdminSession | null>(null)
   const [menus, setMenus] = useState<Menu[]>([])
-  const [menuRows, setMenuRows] = useState<Menu[]>([])
-  const [menuPageData, setMenuPageData] = useState<PageData<Menu>>(emptyPageData())
-  const [menuDetail, setMenuDetail] = useState<Menu | null>(null)
-  const [subMenus, setSubMenus] = useState<Menu[]>([])
   const [alimSituCodes, setAlimSituCodes] = useState<Code[]>([])
   const [useeYsnoCodes, setUseeYsnoCodes] = useState<Code[]>([])
-  const [menuForm, setMenuForm] = useState<MenuForm>(emptyMenuForm())
-  const [childForms, setChildForms] = useState<MenuForm[]>([])
   const [codeMasters, setCodeMasters] = useState<CodeMaster[]>([])
   const [codePageData, setCodePageData] = useState<PageData<CodeMaster>>(emptyPageData())
   const [codeAppliedSearch, setCodeAppliedSearch] = useState<CodeMasterSearch>(DEFAULT_CODE_SEARCH)
@@ -99,18 +91,6 @@ function App() {
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [currentPath, setCurrentPath] = useState(window.location.pathname)
-
-  const detailKey = useMemo(() => {
-    if (!currentPath.startsWith(MENU_DETAIL_PREFIX)) return null
-    const [, , , , , menuNumb, subxNumb] = currentPath.split('/')
-    return menuNumb && subxNumb ? { menuNumb, subxNumb } : null
-  }, [currentPath])
-
-  const parentMenuNumb = useMemo(() => {
-    if (!currentPath.startsWith(MENU_NEW_PATH)) return ''
-    const [, , , , , menuNumb] = currentPath.split('/')
-    return menuNumb ?? ''
-  }, [currentPath])
 
   const codeDetailKey = useMemo(() => {
     // 코드 상세 경로가 아니면 조회 키를 만들지 않는다
@@ -168,9 +148,10 @@ function App() {
     return Number.isInteger(inqrNumb) && inqrNumb > 0 ? inqrNumb : null
   }, [currentPath])
 
-  const isMenuListPage = currentPath === MENU_LIST_PATH
-  const isMenuNewPage = currentPath === MENU_NEW_PATH || currentPath.startsWith(`${MENU_NEW_PATH}/`)
-  const isMenuDetailPage = detailKey !== null
+  const isMenuPage = currentPath === MENU_LIST_PATH
+    || currentPath === MENU_NEW_PATH
+    || currentPath.startsWith(`${MENU_NEW_PATH}/`)
+    || currentPath.startsWith(MENU_DETAIL_PREFIX)
   const isCodeListPage = currentPath === CODE_LIST_PATH
   const isCodeDetailPage = codeDetailKey !== null
   const isAlimTempListPage = currentPath === ALIM_TEMP_LIST_PATH
@@ -324,56 +305,6 @@ function App() {
   }, [])
 
   /**
-   * 메뉴관리 목록 화면 열기
-   *
-   * @author SeungHyeon.Kang
-   * @param pageNumber 조회할 페이지 번호
-   * @param search 적용할 메뉴 검색 조건
-   * @return 반환값이 없다
-   */
-  const openMenuListPage = async (pageNumber = 1, search = DEFAULT_MENU_SEARCH) => {
-    setError(null)
-    setChildForms([])
-    setMenuDetail(null)
-    const [pageData] = await Promise.all([getMenuMngList(pageNumber, search), loadUseeYsnoCodeList()])
-    setMenuPageData(pageData)
-    setMenuRows(pageData.items)
-    // 상세 화면에서 돌아올 때 현재 메뉴 검색 결과를 복원하도록 조회 상태를 저장한다
-    setListPageSnapshot(MENU_LIST_PATH, pageData.pageNumber, search)
-  }
-
-  /**
-   * 메뉴 등록 화면 열기
-   * @Author SeungHyeon.Kang
-   * @param parentNumb
-   * @return
-   */
-  const openMenuNewPage = async (parentNumb: string) => {
-    setError(null)
-    await loadUseeYsnoCodeList()
-    setMenuDetail(null)
-    setSubMenus([])
-    setChildForms([])
-    setMenuForm(emptyMenuForm(parentNumb))
-  }
-
-  /**
-   * 메뉴 상세 화면 열기
-   * @Author SeungHyeon.Kang
-   * @param menuNumb
-   * @param subxNumb
-   * @return
-   */
-  const openMenuDetailPage = async (menuNumb: string, subxNumb: string) => {
-    setError(null)
-    const [detail, children] = await Promise.all([getMenuDetail(menuNumb, subxNumb), getSubMenus(menuNumb), loadUseeYsnoCodeList()])
-    setMenuDetail(detail)
-    setMenuForm(toMenuForm(detail))
-    setSubMenus(children)
-    setChildForms([])
-  }
-
-  /**
    * 코드관리 목록 화면 열기
    *
    * @author SeungHyeon.Kang
@@ -482,52 +413,62 @@ function App() {
   }
 
   /**
+   * 관리자 화면 조회 실패를 공통 오류 영역에 표시한다
+   *
+   * @author SeungHyeon.Kang
+   * @param request 실행 중인 관리자 화면 조회 요청
+   * @param fallback 오류 객체에 문구가 없을 때 표시할 기본 문구
+   * @return 조회 오류 처리가 끝나면 완료되는 Promise
+   */
+  const handlePageLoad = async (request: Promise<void>, fallback: string): Promise<void> => {
+    // 화면별 조회 예외가 미처리 Promise로 남지 않도록 공통 오류 상태로 격리한다
+    try {
+      // 호출 화면의 조회와 상태 갱신이 끝날 때까지 기다린다
+      await request
+    }
+
+    // 서버 또는 네트워크 실패를 현재 관리자 화면의 오류 영역에 표시한다
+    catch (error: unknown) {
+      // 표준 오류 문구가 있으면 서버가 제공한 업무 메시지를 우선 사용한다
+      setError(error instanceof Error ? error.message : fallback)
+    }
+  }
+
+  /**
    * 현재 경로에 해당하는 기존 관리자 관리 화면 데이터를 조회한다
    * @Author SeungHyeon.Kang
    * @return
    */
   const loadCurrentAdminPage = useEffectEvent(() => {
-    // 메뉴 목록은 마지막으로 조회한 페이지와 검색 조건으로 복원한다
-    if (isMenuListPage) {
-      // 저장된 메뉴 목록 조회 상태를 확인한다
-      const snapshot = getListPageSnapshot(MENU_LIST_PATH, DEFAULT_MENU_SEARCH)
-      // 저장된 메뉴 페이지를 같은 검색 조건으로 다시 조회한다
-      void openMenuListPage(snapshot.pageNumber, snapshot.search)
-    }
-
-    // 메뉴 등록 경로에서는 신규 입력값을 준비한다
-    else if (isMenuNewPage) void openMenuNewPage(parentMenuNumb)
-    // 메뉴 상세 경로에서는 선택한 메뉴 정보를 조회한다
-    else if (detailKey) void openMenuDetailPage(detailKey.menuNumb, detailKey.subxNumb)
     // 코드 목록은 마지막으로 조회한 페이지와 검색 조건으로 복원한다
-    else if (isCodeListPage) {
+    if (isCodeListPage) {
       // 저장된 코드 목록 조회 상태를 확인한다
       const snapshot = getListPageSnapshot(CODE_LIST_PATH, DEFAULT_CODE_SEARCH)
       // 저장된 코드 페이지를 같은 검색 조건으로 다시 조회한다
-      void openCodeListPage(snapshot.pageNumber, snapshot.search)
+      void handlePageLoad(openCodeListPage(snapshot.pageNumber, snapshot.search), '공통코드 목록을 조회하지 못했습니다.')
     }
 
     // 코드 상세 경로에서는 선택한 공통코드와 세부코드 정보를 조회한다
-    else if (codeDetailKey) void openCodeDetailPage(codeDetailKey.commCode, codeDetailKey.comdCode)
+    else if (codeDetailKey) void handlePageLoad(openCodeDetailPage(codeDetailKey.commCode, codeDetailKey.comdCode), '공통코드 상세를 조회하지 못했습니다.')
     // 알림 템플릿 목록은 마지막으로 조회한 페이지와 검색 조건으로 복원한다
     else if (isAlimTempListPage) {
       // 저장된 알림 템플릿 목록 조회 상태를 확인한다
       const snapshot = getListPageSnapshot(ALIM_TEMP_LIST_PATH, DEFAULT_ALIM_SEARCH)
       // 저장된 알림 템플릿 페이지를 같은 검색 조건으로 다시 조회한다
-      void openAlimTempListPage(snapshot.pageNumber, snapshot.search)
+      void handlePageLoad(openAlimTempListPage(snapshot.pageNumber, snapshot.search), '알림 템플릿 목록을 조회하지 못했습니다.')
     }
 
     // 알림 템플릿 등록 경로에서는 신규 입력값을 준비한다
-    else if (isAlimTempNewPage) void openAlimTempNewPage()
+    else if (isAlimTempNewPage) void handlePageLoad(openAlimTempNewPage(), '알림 템플릿 등록 화면을 준비하지 못했습니다.')
     // 알림 템플릿 상세 경로에서는 선택한 템플릿 정보를 조회한다
-    else if (alimTempDetailKey) void openAlimTempDetailPage(alimTempDetailKey.alimSitu, alimTempDetailKey.tempCode)
+    else if (alimTempDetailKey) void handlePageLoad(openAlimTempDetailPage(alimTempDetailKey.alimSitu, alimTempDetailKey.tempCode), '알림 템플릿 상세를 조회하지 못했습니다.')
     // 알림 아이콘 목록은 마지막 검색 조건과 페이지로 복원한다
     else if (isAlimIconListPage) {
       const snapshot = getListPageSnapshot(ALIM_ICON_LIST_PATH, DEFAULT_ALIM_ICON_SEARCH)
-      void openAlimIconListPage(snapshot.pageNumber, snapshot.search)
+      void handlePageLoad(openAlimIconListPage(snapshot.pageNumber, snapshot.search), '알림 아이콘 목록을 조회하지 못했습니다.')
     }
     // 선택한 알림 아이콘 상세를 조회한다
-    else if (alimIconDetailKey) void openAlimIconDetailPage(alimIconDetailKey)
+    else if (alimIconDetailKey) void handlePageLoad(openAlimIconDetailPage(alimIconDetailKey), '알림 아이콘 상세를 조회하지 못했습니다.')
   })
 
   useEffect(() => {
@@ -575,100 +516,6 @@ function App() {
   }
 
   /**
-   * 메뉴 삭제 처리
-   *
-   * @author SeungHyeon.Kang
-   * @param menu 삭제할 메뉴 식별정보
-   * @param search 삭제 후 유지할 메뉴 검색 조건
-   * @return 반환값이 없다
-   */
-  const deleteMenu = async (
-    menu: Pick<Menu, 'menuNumb' | 'subxNumb'>,
-    search = DEFAULT_MENU_SEARCH,
-  ) => {
-    await deleteMenuApi(menu)
-    await loadSidebarMenuList()
-    if (isMenuDetailPage && menu.menuNumb === menuForm.menuNumb && menu.subxNumb === menuForm.subxNumb) movePath(MENU_LIST_PATH)
-    else if (isMenuDetailPage) await openMenuDetailPage(menuForm.menuNumb, menuForm.subxNumb)
-    else await openMenuListPage(menuPageData.pageNumber, search)
-  }
-
-  /**
-   * 기존 하위메뉴 입력값 변경
-   * @Author SeungHyeon.Kang
-   * @param index
-   * @param field
-   * @param value
-   * @return
-   */
-  const changeSubMenu = (index: number, field: 'menuName' | 'menuUrlx' | 'useeYsno' | 'sortOrdr', value: string) => {
-    setSubMenus(subMenus.map((menu, menuIndex) => (
-      menuIndex === index
-        ? { ...menu, [field]: field === 'sortOrdr' ? Number(value) : value }
-        : menu
-    )))
-  }
-
-  /**
-   * 기존 하위메뉴 일괄 수정
-   * @Author SeungHyeon.Kang
-   * @return
-   */
-  const saveAllSubMenus = async () => {
-    if (subMenus.some((menu) => !menu.menuName.trim() || !menu.menuUrlx.trim())) {
-      alert('하위메뉴명과 URL을 입력해 주세요.')
-      return
-    }
-    setSaving(true)
-    setError(null)
-    try {
-      const results = await Promise.all(subMenus.map((menu) => saveMenuApi(toMenuForm(menu), true)))
-      alert(results.at(-1)?.message ?? '수정했습니다.')
-      await openMenuDetailPage(menuForm.menuNumb, menuForm.subxNumb)
-      await loadSidebarMenuList()
-    } catch (err: unknown) {
-      setError(err instanceof Error ? err.message : '하위메뉴 수정 중 오류가 발생했습니다.')
-    } finally {
-      setSaving(false)
-    }
-  }
-
-  /**
-   * 메뉴 상세 전체 정보 저장
-   * @Author SeungHyeon.Kang
-   * @return
-   */
-  const saveAllMenuDetail = async () => {
-    if (!menuForm.menuName.trim() || !menuForm.menuUrlx.trim()) {
-      alert('메뉴명과 URL을 입력해 주세요.')
-      return
-    }
-    if (subMenus.some((menu) => !menu.menuName.trim() || !menu.menuUrlx.trim())
-      || childForms.some((menu) => !menu.menuName.trim() || !menu.menuUrlx.trim())) {
-      alert('하위메뉴명과 URL을 입력해 주세요.')
-      return
-    }
-    setSaving(true)
-    setError(null)
-    try {
-      const result = await saveMenuApi(menuForm, isMenuDetailPage)
-      if (isMenuDetailPage) {
-        await Promise.all(subMenus.map((menu) => saveMenuApi(toMenuForm(menu), true)))
-        await Promise.all(childForms.map((menu) => saveMenuApi(menu, false)))
-        await openMenuDetailPage(menuForm.menuNumb, menuForm.subxNumb)
-        await loadSidebarMenuList()
-      } else {
-        movePath(`${MENU_DETAIL_PREFIX}/${result.data.menuNumb}/${result.data.subxNumb}`)
-      }
-      alert(result.message)
-    } catch (err: unknown) {
-      setError(err instanceof Error ? err.message : '메뉴 저장 중 오류가 발생했습니다.')
-    } finally {
-      setSaving(false)
-    }
-  }
-
-  /**
    * 코드 상세 전체 정보 저장
    * @Author SeungHyeon.Kang
    * @return
@@ -685,76 +532,16 @@ function App() {
     setSaving(true)
     setError(null)
     try {
-      const masterResult = await updateCodeMaster(masterEditForm.commCode, masterEditForm)
-      await Promise.all(detailEditForms.map((form) => updateDetailCode(selectedMaster.commCode, form.comdCode, toDetailPayload(form))))
-      await Promise.all(detailForms.map((form) => createDetailCode(selectedMaster.commCode, toDetailPayload(form))))
+      const masterResult = await saveCodeBatch(
+        masterEditForm.commCode,
+        masterEditForm,
+        detailEditForms.map(toDetailPayload),
+        detailForms.map(toDetailPayload),
+      )
       alert(masterResult.message)
       await openCodeDetailPage(selectedMaster.commCode, selectedDetailCode)
     } catch (err: unknown) {
       setError(err instanceof Error ? err.message : '코드 상세 저장 중 오류가 발생했습니다.')
-    } finally {
-      setSaving(false)
-    }
-  }
-
-  /**
-   * 하위메뉴 입력 폼 추가
-   * @Author SeungHyeon.Kang
-   * @return
-   */
-  const addChildForm = () => {
-    // 기존 하위메뉴와 아직 저장하지 않은 입력 행을 합쳐 다음 정렬값을 계산한다
-    const nextSortOrdr = getNextSortOrdr([...subMenus, ...childForms])
-    // 현재 메뉴 아래에 다음 정렬값이 입력된 신규 하위메뉴 행을 추가한다
-    setChildForms([
-      ...childForms,
-      { ...emptyMenuForm(menuForm.menuNumb), sortOrdr: nextSortOrdr },
-    ])
-  }
-
-  /**
-   * 하위메뉴 입력값 변경
-   * @Author SeungHyeon.Kang
-   * @param index
-   * @param field
-   * @param value
-   * @return
-   */
-  const changeChildForm = (index: number, field: keyof MenuForm, value: string) => {
-    setChildForms(childForms.map((form, formIndex) => (formIndex === index ? { ...form, [field]: value } : form)))
-  }
-
-  /**
-   * 하위메뉴 입력값 검증
-   * @Author SeungHyeon.Kang
-   * @return
-   */
-  const validateChildForms = () => {
-    const hasEmptyRequired = childForms.some((form) => !form.menuName.trim() || !form.menuUrlx.trim())
-    if (hasEmptyRequired) {
-      setError('하위메뉴명과 URL을 입력해 주세요.')
-      return false
-    }
-    return true
-  }
-
-  /**
-   * 하위메뉴 일괄 저장
-   * @Author SeungHyeon.Kang
-   * @return
-   */
-  const saveAllChildMenus = async () => {
-    if (childForms.length === 0 || !validateChildForms()) return
-    setSaving(true)
-    setError(null)
-    try {
-      const results = await Promise.all(childForms.map((form) => saveMenuApi(form, false)))
-      alert(results[results.length - 1]?.message ?? '저장했습니다.')
-      await openMenuDetailPage(menuForm.menuNumb, menuForm.subxNumb)
-      await loadSidebarMenuList()
-      setChildForms([])
-    } catch (err: unknown) {
-      setError(err instanceof Error ? err.message : '하위메뉴 저장 중 오류가 발생했습니다.')
     } finally {
       setSaving(false)
     }
@@ -1058,30 +845,16 @@ function App() {
 
   return (
     <AdminLayout admin={admin} menus={menus} currentPath={currentPath} activePath={activeMenuPath} error={error} onMovePath={movePath} onLogout={handleLogout}>
-      {isMenuListPage && <MenuListPage menuRows={menuRows} pageData={menuPageData} useeYsnoCodes={useeYsnoCodes} onSearch={(pageNumber, search) => void openMenuListPage(pageNumber, search)} onMovePath={movePath} onDelete={(menu, search) => void deleteMenu(menu, search)} />}
-      {(isMenuDetailPage || isMenuNewPage) && (
-        <MenuDetailPage
-          isNewPage={isMenuNewPage}
-          pageTitle={isMenuNewPage ? '메뉴 등록' : `${activeMenuName || '메뉴관리'} 상세`}
-          saving={saving}
-          menuForm={menuForm}
-          menuDetail={menuDetail}
-          childForms={childForms}
-          subMenus={subMenus}
-          useeYsnoCodes={useeYsnoCodes}
+      {isMenuPage && (
+        <MenuManagePage
+          currentPath={currentPath}
+          activeMenuName={activeMenuName}
           onMovePath={movePath}
-          onChangeMenuForm={(field, value) => setMenuForm({ ...menuForm, [field]: value })}
-          onChangeChildForm={changeChildForm}
-          onChangeSubMenu={changeSubMenu}
-          onSubmit={(event) => { event.preventDefault(); void saveAllMenuDetail() }}
-          onAddChildForm={addChildForm}
-          onSaveAllChildMenus={() => void saveAllChildMenus()}
-          onSaveAllSubMenus={() => void saveAllSubMenus()}
-          onSaveAll={() => void saveAllMenuDetail()}
-          onDelete={(menu) => void deleteMenu(menu)}
+          onError={setError}
+          onSidebarRefresh={loadSidebarMenuList}
         />
       )}
-      {isAlimIconListPage && <AlimIconListPage icons={alimIcons} pageData={alimIconPageData} useeYsnoCodes={useeYsnoCodes} onSearch={(pageNumber, search) => void openAlimIconListPage(pageNumber, search)} onMovePath={movePath} />}
+      {isAlimIconListPage && <AlimIconListPage icons={alimIcons} pageData={alimIconPageData} useeYsnoCodes={useeYsnoCodes} onSearch={(pageNumber, search) => void handlePageLoad(openAlimIconListPage(pageNumber, search), '알림 아이콘 목록을 조회하지 못했습니다.')} onMovePath={movePath} />}
       {isAlimIconDetailPage && alimIconDetail && (
         <AlimIconDetailPage
           key={alimIconDetail.alimSitu}
@@ -1152,7 +925,7 @@ function App() {
           codeMasters={codeMasters}
           pageData={codePageData}
           useeYsnoCodes={useeYsnoCodes}
-          onSearch={(pageNumber, search) => void openCodeListPage(pageNumber, search)}
+          onSearch={(pageNumber, search) => void handlePageLoad(openCodeListPage(pageNumber, search), '공통코드 목록을 조회하지 못했습니다.')}
           onSelect={selectCodeMaster}
           onSelectDetail={(detail) => selectDetailCode(detail.commCode, detail.comdCode)}
           onLoadDetails={getDetailCodes}
@@ -1181,7 +954,7 @@ function App() {
           onSaveAll={() => void saveAllCodeDetail()}
         />
       )}
-      {isAlimTempListPage && <AlimTempListPage alimTemps={alimTemps} pageData={alimPageData} alimSituCodes={alimSituCodes} useeYsnoCodes={useeYsnoCodes} onSearch={(pageNumber, search) => void openAlimTempListPage(pageNumber, search)} onMovePath={movePath} />}
+      {isAlimTempListPage && <AlimTempListPage alimTemps={alimTemps} pageData={alimPageData} alimSituCodes={alimSituCodes} useeYsnoCodes={useeYsnoCodes} onSearch={(pageNumber, search) => void handlePageLoad(openAlimTempListPage(pageNumber, search), '알림 템플릿 목록을 조회하지 못했습니다.')} onMovePath={movePath} />}
       {(isAlimTempDetailPage || isAlimTempNewPage) && (
         <AlimTempDetailPage
           key={isAlimTempNewPage ? 'new' : `${alimTempDetail?.alimSitu ?? ''}-${alimTempDetail?.tempCode ?? ''}`}
